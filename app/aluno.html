@@ -814,7 +814,7 @@ function blocoEquipe() {
   const q = SNAP.equipe || {}, it = (ic, o, papel) => `<div class="eq-i"><i>${ic}</i><div><b>${esc((o && o.nome) || papel)}</b>${o && o.nome ? `<small>${esc(papel)}${o.reg ? ' · ' + esc(o.reg) : ''}</small>` : ''}</div></div>`;
   return `<section class="eq"><h2>Sua equipe <span class="mk">anab<b>tech</b></span></h2>
     ${it('🥗', q.nutri && q.nutri.nome ? q.nutri : null, 'Nutricionista')}${it('🏋️', q.ef && q.ef.nome ? q.ef : null, 'Educador físico')}${it('💬', { nome: q.coach || SNAP.coach || 'Matheus Garrido' }, 'Atendimento e suporte')}
-    <p>A dieta é elaborada pela nutricionista e o treino é prescrito pelo educador físico. No dia a dia, quem te acompanha no app e no WhatsApp é o ${esc(String(q.coach || SNAP.coach || 'Matheus').split(' ')[0])}.</p></section>`;
+    <p>A dieta é elaborada pelo nutricionista e o treino é prescrito pelo educador físico. No dia a dia, quem te acompanha no app e no WhatsApp é o ${esc(String(q.coach || SNAP.coach || 'Matheus').split(' ')[0])}.</p></section>`;
 }
 function blocoRespostas() {
   const L = SNAP.respostas || []; if (!L.length) return '';
