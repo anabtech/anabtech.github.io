@@ -224,7 +224,7 @@ a{color:inherit}
 .band-dark .eyebrow{color:rgba(255,255,255,.72)}
 .band-dark .lead{color:rgba(255,255,255,.72)}
 .plans{display:grid;gap:14px;margin-top:40px}
-@media (min-width:860px){.plans{grid-template-columns:1fr 1fr;align-items:stretch}}
+@media (min-width:960px){.plans{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}}
 .plan{border-radius:24px;padding:clamp(22px,4vw,40px);display:flex;flex-direction:column;gap:22px}
 .plan-a{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04)}
 .plan-b{background:#fff;color:var(--ink);box-shadow:0 0 0 3px var(--accent)}
@@ -298,6 +298,7 @@ a{color:inherit}
 .rx-table th:last-child,.rx-table td:last-child{text-align:right;padding-right:0}
 .rx-table td s{font-size:13px;font-weight:500;color:rgba(255,255,255,.55);margin-right:8px}
 .rx-table td strong{font-size:18px;font-weight:800;letter-spacing:-0.02em}
+.rx-3 td,.rx-3 th{text-align:right;padding-left:6px}.rx-3 td:first-child,.rx-3 th:first-child{text-align:left;padding-left:0}.rx-3 .pct{font-size:15px;font-weight:800;color:var(--tip)}.rx-3 tr.base td{font-size:13.5px;font-weight:500;color:rgba(255,255,255,.6)}.rx-3 td strong{font-size:16px}
 .rx-table tr.more td{font-size:14px;font-weight:500;color:rgba(255,255,255,.72);white-space:normal;text-align:left}
 .rx-couple{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
 .rx-couple b{font-size:15px;letter-spacing:-0.01em}
@@ -1015,15 +1016,15 @@ footer span{font-size:13px;color:var(--ink-2)}
     <div class="split-head">
       <div class="head">
         <span class="eyebrow">Investimento</span>
-        <h2 class="h2">Menos de R$2,50 por dia para ter nutricionista, educador físico e um app só seu.</h2>
+        <h2 class="h2">Menos de R$3 por dia para ter nutricionista, educador físico e um app só seu.</h2>
       </div>
-      <p class="lead">Os dois planos incluem tudo: equipe, app e acompanhamento diário. A diferença é o tempo de acompanhamento. Vai treinar a dois? Veja a <a href="#casal">promoção casal</a>.</p>
+      <p class="lead">Os três planos incluem tudo: equipe, app e acompanhamento diário. Quanto mais tempo, menor o valor por mês. Vai treinar a dois? Veja a <a href="#casal">promoção casal</a>.</p>
     </div>
 
     <div class="plans">
       <div class="plan plan-a">
-        <div class="plan-name"><b>2 meses</b><span>Para testar o método e ver os primeiros resultados</span></div>
-        <div class="price"><b>R$150</b><small>pagamento único · R$75 por mês · R$2,50 por dia</small></div>
+        <div class="plan-name"><b>Mensal</b><span>Para começar e conhecer o método</span></div>
+        <div class="price"><b>R$130</b><small>por mês · R$4,33 por dia</small></div>
         <ul>
           <li>Anamnese completa de rotina e objetivo</li>
           <li>Dieta por nutricionista, com lista de substituições</li>
@@ -1032,27 +1033,40 @@ footer span{font-size:13px;color:var(--ink-2)}
           <li>Feedbacks semanais com ajustes</li>
           <li>App AnabTech: treino, dieta, registros e evolução</li>
         </ul>
-        <a class="btn btn-white" href="https://anabtech.github.io/anamnese/" target="_blank" rel="noopener">Começar com 2 meses</a>
+        <a class="btn btn-white" href="https://anabtech.github.io/anamnese/" target="_blank" rel="noopener">Começar no mensal</a>
+      </div>
+      <div class="plan plan-a">
+        <div class="plan-name"><b>Trimestral</b><span>Tempo para ver a mudança acontecer</span></div>
+        <div class="price">
+          <div class="price-row"><b>R$300</b><s>R$390</s></div>
+          <small>pagamento único · R$100 por mês · R$3,33 por dia</small>
+          <span class="save">Você economiza R$90</span>
+        </div>
+        <ul>
+          <li><strong>Tudo do plano mensal</strong></li>
+          <li>3 meses para sair do começo e ver mudança real</li>
+          <li>Revisões do protocolo a cada nova fase</li>
+          <li>Ajustes de treino e dieta em tempo real</li>
+        </ul>
+        <a class="btn btn-white" href="https://anabtech.github.io/anamnese/" target="_blank" rel="noopener">Quero o trimestral</a>
       </div>
       <div class="plan plan-b">
         <div class="plan-head">
-          <div class="plan-name"><b>4 meses</b><span>Para consolidar hábitos e chegar mais longe</span></div>
+          <div class="plan-name"><b>Semestral</b><span>Para consolidar hábitos e chegar mais longe</span></div>
           <span class="tag">Melhor custo-benefício</span>
         </div>
         <div class="price">
-          <div class="price-row"><b>R$250</b><s>R$300</s></div>
-          <small>pagamento único · R$62,50 por mês · <strong style="color:var(--ink)">R$2,08 por dia</strong></small>
-          <span class="save">Você economiza R$50</span>
+          <div class="price-row"><b>R$500</b><s>R$780</s></div>
+          <small>pagamento único · R$83,33 por mês · <strong style="color:var(--ink)">R$2,78 por dia</strong></small>
+          <span class="save">Você economiza R$280</span>
         </div>
         <ul>
-          <li><strong>Tudo do plano de 2 meses</strong></li>
-          <li>O dobro de tempo para transformar estratégia em hábito</li>
-          <li>Revisões do protocolo a cada nova fase</li>
-          <li>Ajustes de treino e dieta em tempo real</li>
+          <li><strong>Tudo do plano trimestral</strong></li>
+          <li>6 meses para transformar estratégia em hábito</li>
+          <li>Planejamento das fases: ganho de massa, ajuste e manutenção</li>
           <li>Acompanhamento mais profundo da evolução</li>
         </ul>
-        <a class="btn btn-primary" href="https://anabtech.github.io/anamnese/" target="_blank" rel="noopener">Quero o plano de 4 meses
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-primary" href="https://anabtech.github.io/anamnese/" target="_blank" rel="noopener">Quero o semestral</a>
       </div>
     </div>
 
@@ -1072,20 +1086,26 @@ footer span{font-size:13px;color:var(--ink-2)}
       </div>
       <div class="couple-options">
         <div class="copt">
-          <div class="copt-head"><b>2 meses · casal</b></div>
-          <div class="copt-price"><b>R$250</b><s>R$300</s></div>
-          <small>R$125 por pessoa · <strong>R$2,08 por dia cada</strong></small>
-          <span class="save">Vocês economizam R$50</span>
+          <div class="copt-head"><b>Mensal · casal</b></div>
+          <div class="copt-price"><b>R$220</b><s>R$260</s></div>
+          <small>R$110 por pessoa · <strong>R$3,67 por dia cada</strong></small>
+          <span class="save">Vocês economizam R$40 por mês</span>
+        </div>
+        <div class="copt">
+          <div class="copt-head"><b>Trimestral · casal</b></div>
+          <div class="copt-price"><b>R$510</b><s>R$600</s></div>
+          <small>R$255 por pessoa · <strong>R$2,83 por dia cada</strong></small>
+          <span class="save">Vocês economizam R$90</span>
         </div>
         <div class="copt copt-best">
-          <div class="copt-head"><b>4 meses · casal</b><span class="tag">Maior economia</span></div>
-          <div class="copt-price"><b>R$425</b><s>R$500</s></div>
-          <small>R$212,50 por pessoa · <strong>R$1,77 por dia cada</strong></small>
-          <span class="save">Vocês economizam R$75</span>
+          <div class="copt-head"><b>Semestral · casal</b><span class="tag">Maior economia</span></div>
+          <div class="copt-price"><b>R$850</b><s>R$1.000</s></div>
+          <small>R$425 por pessoa · <strong>R$2,36 por dia cada</strong></small>
+          <span class="save">Vocês economizam R$150</span>
         </div>
         <a class="btn btn-primary" href="https://wa.me/5571992241609?text=Ol%C3%A1%21%20Quero%20o%20plano%20casal%20da%20AnabTech." target="_blank" rel="noopener">Quero o plano casal
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <p class="micro">Pagamento único por casal · cada um preenche a própria anamnese</p>
+        <p class="micro">Um pagamento por casal · cada um preenche a própria anamnese</p>
       </div>
     </div>
 
@@ -1100,7 +1120,7 @@ footer span{font-size:13px;color:var(--ink-2)}
     </div>
 
     <div class="perks">
-      <div class="perk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e3ff9a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Pagamento único, sem mensalidade escondida</div>
+      <div class="perk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e3ff9a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Sem taxa escondida: o valor é o que está aqui</div>
       <div class="perk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e3ff9a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>Ajustes ilimitados no protocolo durante o plano</div>
       <div class="perk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e3ff9a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg>Conversa inicial sem compromisso</div>
     </div>
@@ -1121,18 +1141,19 @@ footer span{font-size:13px;color:var(--ink-2)}
     <div class="refer">
       <div class="rx">
         <div class="rx-top"><span class="rx-big">−20%</span><span>na primeira indicação, e mais 10% a cada nova</span></div>
-        <table class="rx-table">
-          <thead><tr><th scope="col">Indicações ativas</th><th scope="col">Desconto</th><th scope="col">Renovação de 4 meses</th></tr></thead>
+        <table class="rx-table rx-3">
+          <thead><tr><th scope="col">Indicações ativas</th><th scope="col">Mensal</th><th scope="col">Trimestral</th><th scope="col">Semestral</th></tr></thead>
           <tbody>
-            <tr><td>1 indicação</td><td class="pct">20%</td><td><s>R$250</s><strong>R$200</strong></td></tr>
-            <tr><td>2 indicações</td><td class="pct">30%</td><td><s>R$250</s><strong>R$175</strong></td></tr>
-            <tr><td>3 indicações</td><td class="pct">40%</td><td><s>R$250</s><strong>R$150</strong></td></tr>
-            <tr class="more"><td colspan="3">E mais 10% a cada nova indicação.</td></tr>
+            <tr class="base"><td>Sem indicação</td><td>R$130</td><td>R$300</td><td>R$500</td></tr>
+            <tr><td>1 · <span class="pct">−20%</span></td><td><strong>R$104</strong></td><td><strong>R$240</strong></td><td><strong>R$400</strong></td></tr>
+            <tr><td>2 · <span class="pct">−30%</span></td><td><strong>R$91</strong></td><td><strong>R$210</strong></td><td><strong>R$350</strong></td></tr>
+            <tr><td>3 · <span class="pct">−40%</span></td><td><strong>R$78</strong></td><td><strong>R$180</strong></td><td><strong>R$300</strong></td></tr>
+            <tr class="more"><td colspan="4">E mais 10% a cada nova indicação.</td></tr>
           </tbody>
         </table>
         <div class="rx-couple">
           <b>No plano casal também vale</b>
-          <p>10% de desconto na renovação do casal com a primeira indicação, e mais 5% a cada nova.</p>
+          <p>10% de desconto na renovação do casal com a primeira indicação, e mais 5% a cada nova. No semestral casal: R$765 com 1 indicação, R$722,50 com 2 e R$680 com 3.</p>
           <div class="rx-chips"><span>1 indicação · <em>10%</em></span><span>2 indicações · <em>15%</em></span><span>3 indicações · <em>20%</em></span></div>
         </div>
         <small>Os descontos valem enquanto as pessoas que você indicou permanecerem na consultoria.</small>
@@ -1189,11 +1210,11 @@ footer span{font-size:13px;color:var(--ink-2)}
       </details>
       <details>
         <summary>Em quanto tempo vejo resultado?</summary>
-        <p>Os alunos costumam perceber mudança real em cerca de 2 meses de execução consistente. Com o plano de 4 meses, você tem tempo para transformar isso em hábito.</p>
+        <p>Os alunos costumam perceber mudança real em cerca de 2 meses de execução consistente. Com os planos trimestral e semestral, você tem tempo para transformar isso em hábito.</p>
       </details>
       <details>
         <summary>Como funciona o plano casal?</summary>
-        <p>Vocês fecham juntos e pagam um valor único: R$250 por 2 meses ou R$425 por 4 meses. Cada um preenche a própria anamnese e recebe um protocolo individual de dieta e treino, com acompanhamento diário e feedbacks semanais para os dois.</p>
+        <p>Vocês fecham juntos e pagam um valor por casal: R$220 no mensal, R$510 no trimestral ou R$850 no semestral. Cada um preenche a própria anamnese e recebe um protocolo individual de dieta e treino, com acompanhamento diário e feedbacks semanais para os dois.</p>
       </details>
       <details>
         <summary>Como funciona a indicação para quem já é aluno?</summary>
