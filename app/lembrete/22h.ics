@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AnabTech//Lembrete de registro//PT
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:mgcoach-lembrete-registro-22h@mgcoach.github.io
+DTSTAMP:20261111T120000Z
+DTSTART:20261111T220000
+DURATION:PT10M
+RRULE:FREQ=DAILY
+SUMMARY:Registrar treino e refeições (AnabTech)
+DESCRIPTION:Abra o app AnabTech e registre o treino de hoje (carga e repetições) e marque as refeições. Esqueceu algum dia? No topo da aba Treino ou Dieta\, escolha o dia em Registrando.
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Registrar treino e refeições no app AnabTech
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+END:VCALENDAR
