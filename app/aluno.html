@@ -750,7 +750,7 @@ function cardPag() {
   const P = SNAP.pag; if (!P || !P.venc) return '';
   const d = diasAte(P.venc), inf = pgInformado();
   if (d > 7) return ''; /* semana da renovação */
-  if (inf) return `<div class="mgc pgok" role="status"><h3><i>✅</i>Pagamento informado</h3><p>Você avisou que pagou por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'}. Assim que eu confirmar, o seu plano renova.</p></div>`;
+  if (inf) return `<div class="mgc pgok" role="status"><h3><i>✅</i>Pagamento informado</h3><p>Você avisou que pagou por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'}. Assim que a gente confirmar, o seu plano renova.</p></div>`;
   const t = d < 0 ? `Seu plano venceu em ${dataBR(P.venc)}` : d === 0 ? 'Seu plano vence hoje' : d === 1 ? 'Seu plano vence amanhã' : `Semana de renovação: seu plano vence em ${d} dias`;
   return `<div class="mgc mpg" role="status"><h3><i>💳</i>${esc(t)}</h3><p>${d < 0 ? 'Faça o pagamento para retomar o acompanhamento' : `Faça o pagamento até ${dataBR(P.venc)} para seguir sem pausa no acompanhamento`}. É rápido: Pix ou cartão aqui mesmo no app.</p><div class="lb"><button type="button" id="mgPg">Pagar plano</button></div></div>`;
 }
@@ -768,9 +768,9 @@ function blocoPag() {
     ${C ? `<div data-pp="cartao" hidden><div class="pg-c"><b>${brl(C.valor)}</b> <span style="font-size:13px;color:var(--ink-3)">no cartão</span></div>
       <p class="note">O valor no cartão inclui a taxa da operadora (${String(C.taxa).replace('.', ',')}%), para a consultoria custar o mesmo que no Pix. Se parcelar, os juros do cartão aparecem no Mercado Pago antes de você confirmar.</p>
       <a class="pg-bt pri" href="${esc(C.link)}" target="_blank" rel="noopener">Pagar com cartão</a></div>` : ''}
-    ${inf ? `<div class="pg-inf">✓ Você informou o pagamento por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'} em ${dataBR(inf.data)}. Eu confirmo em breve.</div>`
-      : P.aviso ? `<button class="pg-bt ok" type="button" id="pgJa">Já paguei</button><p class="note" style="text-align:center">Toque depois de pagar. Eu confiro e confirmo a renovação.</p>`
-      : `<p class="note" style="text-align:center;margin-top:12px">Depois de pagar, me mande o comprovante no WhatsApp.</p>`}</section>`;
+    ${inf ? `<div class="pg-inf">✓ Você informou o pagamento por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'} em ${dataBR(inf.data)}. A gente confirma em breve.</div>`
+      : P.aviso ? `<button class="pg-bt ok" type="button" id="pgJa">Já paguei</button><p class="note" style="text-align:center">Toque depois de pagar. A gente confere e confirma a renovação.</p>`
+      : `<p class="note" style="text-align:center;margin-top:12px">Depois de pagar, mande o comprovante no WhatsApp.</p>`}</section>`;
 }
 let _qrLib;
 /* gerador de QR Code (qrcode-generator, MIT, Kazuhiko Arase) fica junto do app: qr.js */
@@ -797,8 +797,8 @@ const ultFbData = () => { const a = String(LS.get('ultFb', '')), b = String(SNAP
 function cardFb() {
   /* vale como feedback desta semana o que foi mandado a partir de quarta (2 dias antes da sexta) */
   const ult = ultFbData(), P = SNAP.pedidoFb, dow = new Date().getDay(), sexta = isoMenos((dow - 5 + 7) % 7 + 2);
-  if (P && P.data && ult < P.data) return { t: 'A equipe pediu o seu feedback da semana', p: P.msg || 'Me conta como foi a sua semana para eu ajustar o seu plano.' };
-  if ([5, 6, 0, 1].includes(dow) && ult < sexta) return { t: dow === 5 ? 'Hoje é sexta: dia do feedback semanal' : 'Tarefa da semana: feedback semanal', p: 'Peso, sono, energia, fome e como foi a dieta. Leva 1 minuto e me ajuda a ajustar o seu plano.' };
+  if (P && P.data && ult < P.data) return { t: 'A equipe pediu o seu feedback da semana', p: P.msg || 'Conta como foi a sua semana para a equipe ajustar o seu plano.' };
+  if ([5, 6, 0, 1].includes(dow) && ult < sexta) return { t: dow === 5 ? 'Hoje é sexta: dia do feedback semanal' : 'Tarefa da semana: feedback semanal', p: 'Peso, sono, energia, fome e como foi a dieta. Leva 1 minuto e ajuda a equipe a ajustar o seu plano.' };
   return null;
 }
 function cardsMG() {
@@ -852,7 +852,7 @@ function mostrarLembrete() {
   const box = $('lembAv'); if (!box) return;
   const falta = DIA_REG ? [] : faltouOntem();
   if (!falta.length) { box.innerHTML = ''; return; }
-  box.innerHTML = `<div class="lemb" role="status"><h3>Ficou faltando ontem</h3><p>Você ainda não registrou ${esc(falta.map(f => f[1]).join(' e '))} de ontem. Leva 1 minuto e me ajuda a ajustar o seu plano.</p><div class="lb"><button type="button" id="lbSim">Registrar ontem</button><button type="button" class="ln" id="lbNao">${falta.length === 1 && falta[0][0] === 't' ? 'Não treinei' : 'Agora não'}</button></div></div>`;
+  box.innerHTML = `<div class="lemb" role="status"><h3>Ficou faltando ontem</h3><p>Você ainda não registrou ${esc(falta.map(f => f[1]).join(' e '))} de ontem. Leva 1 minuto e ajuda a equipe a ajustar o seu plano.</p><div class="lb"><button type="button" id="lbSim">Registrar ontem</button><button type="button" class="ln" id="lbNao">${falta.length === 1 && falta[0][0] === 't' ? 'Não treinei' : 'Agora não'}</button></div></div>`;
   $('lbSim').onclick = () => { const tb = $('tb-' + falta[0][0]); if (tb) { tb.checked = true; LS.set('aba', tb.id); } mudarDia(isoMenos(1)); };
   $('lbNao').onclick = () => { LS.set('lembOk.' + isoMenos(1), true); box.innerHTML = ''; };
 }
@@ -1130,7 +1130,7 @@ function resumoSemana() {
     <p class="sem-n">Conta só os dias com registro neste celular. Refeição sem marcar conta como não comida.</p></div>`;
 }
 function guiaPorcoes() {
-  return `<div class="gu"><p>Sem balança? Use a <b>sua mão</b> e as <b>medidas da cozinha</b>. Não precisa ser exato: uma boa estimativa já me ajuda muito a ajustar o seu plano.</p>
+  return `<div class="gu"><p>Sem balança? Use a <b>sua mão</b> e as <b>medidas da cozinha</b>. Não precisa ser exato: uma boa estimativa já ajuda muito a equipe a ajustar o seu plano.</p>
     <h4>Com a mão</h4><div class="gu-m">
       <div><span class="ic">✋🍗</span><b>Palma da mão</b><span>A palma, sem os dedos, na espessura dela ≈ <b>100 a 120 g</b> de carne, frango ou peixe.</span></div>
       <div><span class="ic">✊🍚</span><b>Punho fechado</b><span>≈ <b>1 xícara</b>: uns 150 g de arroz ou macarrão cozido, ou 1 fruta média.</span></div>
@@ -1194,7 +1194,7 @@ function enviarDieta(t, hoje) {
 function montarFeedback(sec) {
   const ult = LS.get('ultFb', '') > (SNAP.ultFeedback || '') ? LS.get('ultFb', '') : (SNAP.ultFeedback || '');
   const escala = (k, a, b) => `<div class="esc" data-k="${k}">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-v="${n}">${n}</button>`).join('')}</div><div class="esc-l"><span>${a}</span><span>${b}</span></div>`;
-  sec.innerHTML = `<section class="head"><h1>Feedback da semana</h1><p class="foco">Conte como foi a sua semana. Leva 1 minuto e me ajuda a ajustar o seu protocolo.</p></section>
+  sec.innerHTML = `<section class="head"><h1>Feedback da semana</h1><p class="foco">Conte como foi a sua semana. Leva 1 minuto e ajuda a equipe a ajustar o seu protocolo.</p></section>
     ${ult ? `<p class="fb-ult">Último feedback enviado em ${esc(dataBR(ult))}.</p>` : ''}
     <form class="fbf block" id="fbf">
       <label class="c">Peso hoje (kg)<span>Em jejum, de preferência. Deixe em branco se não se pesou.</span><input type="text" inputmode="decimal" id="fPeso" placeholder="Ex.: 72,4"></label>
@@ -1204,7 +1204,7 @@ function montarFeedback(sec) {
       <div class="c"><label class="c">Quanto da dieta você seguiu?</label><div class="ch" data-k="dieta">${['Quase nada', 'Metade', 'Quase tudo', 'Tudo'].map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div></div>
       <label class="c">Quantos treinos você fez nesta semana?<input type="number" inputmode="numeric" id="fTreinos" min="0" max="14" placeholder="Ex.: 4"></label>
       <label class="c">Alguma dor ou desconforto?<span>Onde, em qual exercício e quando começou.</span><textarea id="fDores" placeholder="Se não teve, deixe em branco."></textarea></label>
-      <label class="c">Comentário para o coach<textarea id="fCom" placeholder="Dificuldades, vitórias, dúvidas, mudanças na rotina…"></textarea></label>
+      <label class="c">Comentário para a equipe<textarea id="fCom" placeholder="Dificuldades, vitórias, dúvidas, mudanças na rotina…"></textarea></label>
       <button class="bt" type="submit">Enviar feedback</button><p class="erro" id="fe" style="text-align:center"></p>
     </form>`;
   const val = {};
@@ -1215,7 +1215,7 @@ function montarFeedback(sec) {
     if (!reg.peso && !reg.sono && !reg.energia && !reg.fome && !reg.dieta && !reg.treinos && !reg.dores && !reg.comentario) { $('fe').textContent = 'Preencha pelo menos uma resposta.'; return; }
     LS.set('ultFb', reg.data); cardsMG();
     enfileirar(reg).then(() => { if (fila().some(x => x.id === reg.id)) aviso('Feedback salvo. Vai para o seu coach quando tiver internet.', 4000); });
-    sec.querySelector('#fbf').outerHTML = `<div class="block" style="text-align:center;padding:26px 18px"><h3 style="font-size:19px;margin-bottom:6px">Feedback enviado ✓</h3><p style="color:var(--ink-2)">Obrigado! Eu leio e, se precisar, ajusto o seu protocolo.</p></div>`;
+    sec.querySelector('#fbf').outerHTML = `<div class="block" style="text-align:center;padding:26px 18px"><h3 style="font-size:19px;margin-bottom:6px">Feedback enviado ✓</h3><p style="color:var(--ink-2)">Obrigado! A equipe lê e, se precisar, ajusta o seu protocolo.</p></div>`;
     window.scrollTo(0, 0);
   };
 }
@@ -1255,7 +1255,7 @@ function ultFotos() {
 function montarFotos(sec) {
   const ant = $('fts'); if (ant) ant.remove();
   const u = ultFotos();
-  sec.insertAdjacentHTML('beforeend', `<section class="block fts" id="fts"><h3>Fotos de progresso</h3><p>É pelas fotos que a gente enxerga a mudança que a balança não mostra. Só o seu coach vê.</p>
+  sec.insertAdjacentHTML('beforeend', `<section class="block fts" id="fts"><h3>Fotos de progresso</h3><p>É pelas fotos que a gente enxerga a mudança que a balança não mostra. Só a sua equipe vê.</p>
     <div class="ft-g">${POS.map(([k, t]) => `<label class="ft-s${FOTOS[k] ? ' tem' : ''}${FOTOS[k] && FOTOS[k].ok ? ' ok' : ''}" data-pos="${k}"><input type="file" accept="image/*" aria-label="Foto: ${t}"><span class="ft-i">${FOTOS[k] ? `<img src="${FOTOS[k].url}" alt="">` : '+'}</span>${t}</label>`).join('')}</div>
     <ul class="ft-dica"><li>Mesmo lugar, mesma luz e mesma roupa de sempre.</li><li>Corpo inteiro, celular na altura do umbigo.</li><li>De manhã, em jejum, se der.</li></ul>
     <button class="bt" type="button" id="ftOk" disabled>Enviar fotos</button><p class="erro" id="ftE" style="text-align:center"></p>
@@ -1290,7 +1290,7 @@ function montarFotos(sec) {
     if (ok) { const env = LS.get('fotosEnv', []); env.push({ data: hojeISO(), n: ok }); LS.set('fotosEnv', env.slice(-30)); }
     if (erro) { $('ftE').textContent = erro; return pintar(); }
     FOTOS = {};
-    box.innerHTML = `<div style="text-align:center;padding:12px 0"><h3 style="font-size:19px;margin-bottom:6px">${ok === 1 ? 'Foto enviada' : ok + ' fotos enviadas'} ✓</h3><p style="color:var(--ink-2)">Chegaram para o seu coach. Na próxima vez, repita o mesmo lugar e a mesma luz para a comparação ficar justa.</p><button class="bt ln" type="button" id="ftMais" style="margin-top:14px">Mandar outras fotos</button></div>`;
+    box.innerHTML = `<div style="text-align:center;padding:12px 0"><h3 style="font-size:19px;margin-bottom:6px">${ok === 1 ? 'Foto enviada' : ok + ' fotos enviadas'} ✓</h3><p style="color:var(--ink-2)">Chegaram para a sua equipe. Na próxima vez, repita o mesmo lugar e a mesma luz para a comparação ficar justa.</p><button class="bt ln" type="button" id="ftMais" style="margin-top:14px">Mandar outras fotos</button></div>`;
     $('ftMais').onclick = () => montarFotos(sec);
   };
   pintar();
