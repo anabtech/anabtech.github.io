@@ -30,5 +30,6 @@ rep("float fib = mix(1.0, mix(0.87, 1.03, st * st), aa * cov * (1.0 - tend));", 
 # sulcos entre os músculos mais marcados
 rep("diffuseColor.rgb *= 1.0 - 0.38 * clamp(vCav, 0.0, 1.0) + 0.06 * clamp(-vCav, 0.0, 1.0); }", "diffuseColor.rgb *= 1.0 - 0.5 * clamp(vCav, 0.0, 1.0) + 0.09 * clamp(-vCav, 0.0, 1.0); }")
 rep('const api={n,c,tl,camF,gl,cam,sc,key,W,H,V:p,','const api={n,c,tl,camF,gl,cam,sc,key,W,H,V:p,ct2,')
+rep('const ee=tl.at(M);n.pose(c,ee,M);', 'const ee=tl.at(M);window.__resp=window.__respDe?window.__respDe(tl,M):0;n.pose(c,ee,M);')
 open(B+'../viewer-pro.js','w').write(s)
 print('ok', len(s))

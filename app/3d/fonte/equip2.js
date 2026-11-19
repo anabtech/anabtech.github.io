@@ -170,6 +170,22 @@ W.prototype.twoBone = function (e, t, i, o, a) {
   for (const sg of [1, -1]) for (let k = 1; k <= 12; k++) { const c = _tb.call(this, e, t, i, o, a.clone().applyAxisAngle(eixo, sg * k * .13)); if (c.y + y0 >= rMeio) return c; if (c.y > by) { by = c.y; melhor = c; } }
   return melhor;
 };
+/* tronco e cabeça nunca abaixo do piso: se alguma parte afunda, a pelve sobe o que falta; se a dobra do tronco é que está exagerada (cabeça muito abaixo), corrige a inclinação.
+   Respiração: o peito e os ombros sobem de leve quando o exercício pede para inspirar (window.__resp vai de 0, pulmão vazio, a 1). */
+const PROXY = [['Head', .095], ['HeadTop_End', .015], ['Neck', .06], ['Spine2', .115], ['Spine', .105], ['Hips', .105], ['LeftArm', .055], ['RightArm', .055], ['LeftUpLeg', .085], ['RightUpLeg', .085]];
+const _pose = W.prototype.pose;
+W.prototype.pose = function (e) {
+  if (!V2.on || this._fx) return _pose.call(this, e);
+  const y0 = this.root.position.y, pen = () => { let m = 0; for (const [b, r] of PROXY) { if (!this.B[b]) continue; const d = r - (this.P(b).y + y0); if (d > m) m = d; } return m; };
+  const posa = () => { _pose.call(this, e); const b = window.__resp || 0; if (b) { const lat = this.boneVec('Spine2', p(1, 0, 0)), fr = this.boneVec('Spine2', p(0, 0, 1)); this.rotW(this.B.Spine2, Di(lat, -.014 * b)); this.rotW(this.B.LeftShoulder, Di(fr, .016 * b)); this.rotW(this.B.RightShoulder, Di(fr, -.016 * b)); this.root.updateMatrixWorld(true); } };
+  this._fx = 1;
+  try { posa(); let d = pen(); if (d < .012 || !e.pelvis || !e.pelvis.pos) return;
+    const pit0 = e.pelvis.pitch || 0;
+    if (d > .14) { let melhor = null; for (const sg of [-1, 1]) { let ok = false, lo = 0, hi = 0; for (let k = 1; k <= 12; k++) { e.pelvis.pitch = pit0 + sg * k * .1; posa(); if (pen() < .14) { ok = true; hi = k * .1; lo = hi - .1; break; } } if (ok && (!melhor || hi < melhor[1])) melhor = [sg, hi]; }
+      e.pelvis.pitch = melhor ? pit0 + melhor[0] * melhor[1] : pit0; posa(); d = pen(); }
+    for (let k = 0; k < 3 && d > .004; k++) { e.pelvis.pos = e.pelvis.pos.clone(); e.pelvis.pos.y += d; posa(); d = pen(); }
+  } finally { this._fx = 0; }
+};
 const _curl = W.prototype.curl;
 W.prototype.curl = function (lado, t, inf) {
   if (!V2.on || !inf || t < .95) return _curl.call(this, lado, t);
@@ -206,6 +222,8 @@ function contato2(c, n, tl, sc) {
   res.minY = +res.minY.toFixed(4); res.n = pads.length; return res;
 }
 window.__contato2 = contato2;
+/* volume de ar ao longo do exercício: enche na fase em que o movimento volta (s caindo) e esvazia no esforço (s subindo); suavizado para não dar tranco */
+window.__respDe = (tl, M) => { const f = t => { const e = tl.at(Math.max(0, Math.min(tl.dur, t))); return 1 - Math.max(0, Math.min(1, e.s)); }; let a = 0, n = 0; for (let k = -4; k <= 4; k++) { a += f(M + k * .08); n++; } return a / n; };
 
 /* ---------- acabamento depois que a cena do exercício está montada ---------- */
 function apura2(sc, c, gl) {
