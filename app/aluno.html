@@ -166,6 +166,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .eq{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px;margin:18px 0 0}.eq h2{font-size:16px;margin-bottom:10px;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}.eq h2 .mk{font-size:13px}
 .eq-i{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--rule-soft)}.eq-i i{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}.eq-i b{display:block;font-size:14.5px}.eq-i small{display:block;font-size:12.5px;color:var(--ink-2)}
 .eq p{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.5}
+.eq-rt{font-size:11.5px;line-height:1.5;color:var(--ink-3);text-align:center;margin:22px 8px 0}
 .bv.mud{background:#0b0c0e;box-shadow:inset 0 0 0 1px rgba(200,255,61,.35)}
 .bv{background:#0b0c0e;color:#fff;border-radius:16px;padding:16px 16px 14px;margin:12px 0 16px;position:relative}
 .bv h3{font-size:17px;margin-bottom:4px}.bv p{color:rgba(255,255,255,.75);font-size:14px}
@@ -396,7 +397,7 @@ function montar() {
   /* dia do registro (hoje, ou o dia que o aluno escolheu) */
   const r = app.querySelector('#d-' + DIAS_JS[dowISO(dataReg())]); if (r) r.checked = true;
   montarTreino(app); montarDieta(app); montarFeedback(pf); if (SNAP.fotosOn) montarFotos(pf);
-  pf.insertAdjacentHTML('beforeend', blocoEquipe()); pf.insertAdjacentHTML('afterbegin', blocoCalendario()); if (SNAP.pag) { pf.insertAdjacentHTML('afterbegin', blocoPag()); ligarPag(); } pf.insertAdjacentHTML('beforeend', blocoRespostas());
+  pf.insertAdjacentHTML('afterbegin', blocoCalendario()); if (SNAP.pag) { pf.insertAdjacentHTML('afterbegin', blocoPag()); ligarPag(); } pf.insertAdjacentHTML('beforeend', blocoRespostas());
   cardsMG(); ligarBarraDia(); if (!LS.get('desde', '')) LS.set('desde', LS.get('feitos', []).length || Object.keys(LS.get('hist', {})).length ? isoMenos(30) : hojeISO()); mostrarLembrete();
   const abaSalva = LS.get('aba', ''); if (abaSalva && $(abaSalva)) $(abaSalva).checked = true;
   app.querySelectorAll('input.rd[name=tab]').forEach(x => x.addEventListener('change', () => { LS.set('aba', x.id); window.scrollTo(0, 0); }));
@@ -811,10 +812,11 @@ function cardsMG() {
   box.querySelectorAll('[data-lida]').forEach(x => x.onclick = () => { LS.set('respLidas', [...LS.get('respLidas', []), x.dataset.lida].slice(-100)); cardsMG(); });
 }
 function blocoEquipe() {
-  const q = SNAP.equipe || {}, it = (ic, o, papel) => `<div class="eq-i"><i>${ic}</i><div><b>${esc((o && o.nome) || papel)}</b>${o && o.nome ? `<small>${esc(papel)}${o.reg ? ' · ' + esc(o.reg) : ''}</small>` : ''}</div></div>`;
-  return `<section class="eq"><h2>Sua equipe <span class="mk">anab<b>tech</b></span></h2>
-    ${it('🥗', q.nutri && q.nutri.nome ? q.nutri : null, 'Nutricionista')}${it('🏋️', q.ef && q.ef.nome ? q.ef : null, 'Educador físico')}${it('💬', { nome: q.coach || SNAP.coach || 'Matheus Garrido' }, 'Atendimento e suporte')}
-    <p>A dieta é elaborada pelo nutricionista e o treino é prescrito pelo educador físico. No dia a dia, quem te acompanha no app e no WhatsApp é o ${esc(String(q.coach || SNAP.coach || 'Matheus').split(' ')[0])}.</p></section>`;
+  const q = SNAP.equipe || {}, rg = [];
+  if (q.nutri && q.nutri.reg) rg.push(esc(q.nutri.reg));
+  if (q.ef && q.ef.reg) rg.push(esc(q.ef.reg));
+  const coach = esc(q.coach || SNAP.coach || 'Matheus Garrido');
+  return `<p class="eq-rt">Dieta elaborada por nutricionista e treino prescrito por educador físico${rg.length ? ` (${rg.join(' · ')})` : ''}. Atendimento: ${coach}.</p>`;
 }
 function blocoRespostas() {
   const L = SNAP.respostas || []; if (!L.length) return '';
