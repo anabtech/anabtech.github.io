@@ -141,13 +141,71 @@ const _V = V;
 V = function (sc, e = 1.5, t = 1.1, i = 0, o = .05) {
   if (!V2.on) return _V(sc, e, t, i, o);
   const forma = (w, d, r) => { const s = new T3.Shape(), a = w / 2, b = d / 2; s.moveTo(-a + r, -b); s.lineTo(a - r, -b); s.quadraticCurveTo(a, -b, a, -b + r); s.lineTo(a, b - r); s.quadraticCurveTo(a, b, a - r, b); s.lineTo(-a + r, b); s.quadraticCurveTo(-a, b, -a, b - r); s.lineTo(-a, -b + r); s.quadraticCurveTo(-a, -b, -a + r, -b); return s; };
-  const mp = rep2(txPiso(), e / .9, t / .9), geo = new T3.ExtrudeGeometry(forma(e, t, .07), { depth: .01, bevelEnabled: true, bevelThickness: .003, bevelSize: .003, bevelSegments: 2, curveSegments: 10 });
+  const mp = rep2(txPiso(), e / .9, t / .9), geo = new T3.ExtrudeGeometry(forma(e, t, .07), { depth: .003, bevelEnabled: true, bevelThickness: .0015, bevelSize: .0015, bevelSegments: 2, curveSegments: 10 });
   const pos = geo.attributes.position, uv = geo.attributes.uv; for (let k = 0; k < pos.count; k++) uv.setXY(k, pos.getX(k) / e + .5, pos.getY(k) / t + .5);
   const m = M2(geo, new T3.MeshStandardMaterial({ map: mp, color: 0xffffff, roughness: .92, metalness: 0, envMapIntensity: 1.2, bumpMap: rep2(txGrao(), e / .25, t / .25), bumpScale: .25 }));
-  m.rotation.x = -Math.PI / 2; m.position.set(i, .003, o); m.receiveShadow = true; sc.add(m);
-  const fx = new T3.ExtrudeGeometry(forma(e + .012, t + .012, .076), { depth: .004, bevelEnabled: false, curveSegments: 10 }), f = M2(fx, m2.lima()); f.rotation.x = -Math.PI / 2; f.position.set(i, .0006, o); f.receiveShadow = true; sc.add(f);
+  m.rotation.x = -Math.PI / 2; m.position.set(i, -.0025, o); m.receiveShadow = true; sc.add(m);
+  const fx = new T3.ExtrudeGeometry(forma(e + .012, t + .012, .076), { depth: .003, bevelEnabled: false, curveSegments: 10 }), f = M2(fx, m2.lima()); f.rotation.x = -Math.PI / 2; f.position.set(i, -.0026, o); f.receiveShadow = true; sc.add(f);
   m.userData.tapete = f.userData.tapete = true; return m;
 };
+
+/* ---------- pegada: os dedos fecham até encostar na barra (em vez de um ângulo fixo), sem atravessar ---------- */
+Object.assign(window.__GR, { rec: .018, gd0: .035, c1: 1.05, c2: 1.2, c3: 1.0, th: .7, R: .0148, tf: [.011, .010, .009], ...(window.__GR_USER || {}) });
+/* onde a barra fica na mão: na pegada fechada, logo antes da base dos dedos (medida na própria mão); com a mão aberta, o ponto de apoio pedido pelo exercício, na proporção da mão nova */
+window.__GR.alc = (rig, u) => { const G = window.__GR, HL = rig._HL || (rig._HL = rig.P('LeftHand').distanceTo(rig.P('LeftHandMiddle1'))); if (!V2.on) return u.gripReach ?? .075; return (u.curl ?? 1) >= .95 ? HL - G.rec + ((u.gripReach ?? .075) - .075) * .3 : (u.gripReach ?? .075) * HL / .095; };
+window.__GR.prof = (rig, u) => { const G = window.__GR; if (!V2.on) return u.gripDepth ?? .022; return G.gd0 + ((u.gripDepth ?? .022) - .022) + ((u.gripR || G.R) - G.R); };
+/* pés: ponta do pé nunca abaixo do piso (o tornozelo sobe o que faltar) e dedos com a inclinação natural do repouso */
+const SOLA = -.0055;
+window.__GR.tornozelo = (rig, u) => { const m = u.ankle.clone(); if (!V2.on) return m; const b = u.fwd.clone().normalize(), up = p(0, 1, 0), M = b.clone().cross(up).normalize(), d = p(0, rig.restToe.y - rig.restAnkle.y, rig.restToe.z - rig.restAnkle.z);
+  const T = b.clone().multiplyScalar(d.z).add(p(0, d.y, 0)).applyAxisAngle(M, -(u.pitch || 0)), hT = rig.restToe.y - SOLA, y = m.y + T.y; if (y < hT) m.y += hT - y; return m; };
+window.__GR.dedos = (rig, u, b, M) => { const tp = u.toePitch ?? Math.min(0, u.pitch || 0), dz = rig.restToeEnd.z - rig.restToe.z, dy = V2.on ? rig.restToeEnd.y - rig.restToe.y : 0; return b.clone().multiplyScalar(dz).add(p(0, dy, 0)).applyAxisAngle(M, -tp); };
+/* braços e pernas nunca atravessam o piso: o punho ou o tornozelo sobem até o nível do chão e o cotovelo ou o joelho giram para cima o quanto for preciso */
+const _tb = W.prototype.twoBone;
+W.prototype.twoBone = function (e, t, i, o, a) {
+  if (!V2.on) return _tb.call(this, e, t, i, o, a);
+  const perna = Math.abs(i - this.Lth) < 1e-6, y0 = this.root.position.y, rFim = perna ? .03 : .032, rMeio = perna ? .05 : .042;
+  if (t.y + y0 < rFim) t.y = rFim - y0;
+  let x = _tb.call(this, e, t, i, o, a); if (x.y + y0 >= rMeio) return x;
+  const eixo = t.clone().sub(e).normalize(); let melhor = x, by = x.y;
+  for (const sg of [1, -1]) for (let k = 1; k <= 12; k++) { const c = _tb.call(this, e, t, i, o, a.clone().applyAxisAngle(eixo, sg * k * .13)); if (c.y + y0 >= rMeio) return c; if (c.y > by) { by = c.y; melhor = c; } }
+  return melhor;
+};
+const _curl = W.prototype.curl;
+W.prototype.curl = function (lado, t, inf) {
+  if (!V2.on || !inf || t < .95) return _curl.call(this, lado, t);
+  const G = window.__GR, sg = lado === 'Left' ? 1 : -1, g = inf.g, ax = inf.f.clone().cross(inf.m).normalize(), R = inf.r || G.R;
+  /* distância, no plano perpendicular à barra, do eixo da barra ao segmento a-b */
+  const dseg = (a, b) => { const pa = a.clone().sub(g), pb = b.clone().sub(g); pa.addScaledVector(ax, -pa.dot(ax)); pb.addScaledVector(ax, -pb.dot(ax)); const ab = pb.clone().sub(pa), l2 = ab.lengthSq(), u = l2 > 1e-10 ? Math.min(1, Math.max(0, -pa.dot(ab) / l2)) : 0; return pa.addScaledVector(ab, u).length(); };
+  for (const d of ['Index', 'Middle', 'Ring', 'Pinky']) for (let k = 1; k <= 3; k++) {
+    const nome = lado + 'Hand' + d + k, osso = this.B[nome], filho = this.B[lado + 'Hand' + d + (k + 1)]; if (!osso || !filho) continue;
+    const eixo = this.boneVec(nome, p(0, 0, 1)), J = this.P(nome), C0 = this.P(lado + 'Hand' + d + (k + 1)).sub(J), alvo = R + G.tf[k - 1], max = (k === 1 ? 1.45 : k === 2 ? 1.7 : 1.35);
+    const dist = th => dseg(J, J.clone().add(C0.clone().applyAxisAngle(eixo, -sg * th)));
+    let th = 0;
+    if (dist(0) > alvo) { let a = 0, b = -1; for (let x = .06; x <= max + 1e-6; x += .06) { if (dist(x) <= alvo) { b = x; break; } a = x; } if (b < 0) th = Math.min(max, [G.c1, G.c2, G.c3][k - 1]); else { for (let n = 0; n < 12; n++) { const m = (a + b) / 2; if (dist(m) > alvo) a = m; else b = m; } th = a; } }
+    this.rotW(osso, Di(eixo, -sg * th));
+  }
+  for (let k = 1; k <= 2; k++) { const nome = lado + 'HandThumb' + k; this.B[nome] && this.rotW(this.B[nome], Di(this.boneVec(nome, p(1, 0, 0)), G.th * t)); }
+};
+
+/* ---------- contato do corpo com os estofados: cada almofada (assento, encosto, banco, apoio) é ajustada até encostar no corpo, sem atravessar ---------- */
+function contato2(c, n, tl, sc) {
+  if (!V2.on || n.noSeparate) return null;
+  const rigs = new Set(); for (const r of c.rigs) r.root.traverse(o => rigs.add(o));
+  const malhas = []; for (const r of c.rigs) r.root.traverse(o => { if (o.isSkinnedMesh && o.visible) malhas.push(o); });
+  const pads = []; sc.traverse(o => { if (!o.isMesh || rigs.has(o) || !o.visible || !o.geometry || !o.material || !o.material.color) return; const t = o.geometry.type, q = o.geometry.parameters; if ((t === 'BoxGeometry' || t === 'RoundedBoxGeometry') && (o.material.bumpMap && o.material.userData.realSpec && o.material.userData.realSpec.leather || [1908515, 1780280].includes(o.material.color.getHex()))) { const h = [q.width / 2, q.height / 2, q.depth / 2], e = h.indexOf(Math.min(...h)); if (Math.min(...h) < .08 && h.filter(x => x > .07).length >= 2) pads.push({ o, h, e, pen: [0, 0], np: [0, 0], gap: [9, 9], ng: [0, 0] }); } });
+  const res = { pads: [], minY: 9 }; if (!malhas.length) return res;
+  const amostra = malhas.map(m => { const si = m.geometry.attributes.skinIndex, sw = m.geometry.attributes.skinWeight, bs = m.skeleton.bones, L = []; for (let i = 0; i < si.count; i += 4) { let w = 0; for (let k = 0; k < 4; k++) if (/Hand/.test(bs[si.getComponent(i, k)].name)) w += sw.getComponent(i, k); if (w < .3) L.push(i); } return L; });
+  const v = new T3.Vector3(), l = new T3.Vector3(), NS = 12;
+  for (let k = 0; k < NS; k++) { const M = tl.dur * (k + .5) / NS; n.pose(c, tl.at(M), M); sc.updateMatrixWorld(true); const inv = pads.map(pd => pd.o.matrixWorld.clone().invert()), esc = pads.map(pd => pd.o.getWorldScale(new T3.Vector3()));
+    malhas.forEach((m, mi) => { for (const i of amostra[mi]) { m.getVertexPosition(i, v); v.applyMatrix4(m.matrixWorld); if (v.y < res.minY) { res.minY = v.y; res.onde = m.skeleton.bones[m.geometry.attributes.skinIndex.getComponent(i, 0)].name.replace('mixamorig', '') + '@' + k; }
+      for (let j = 0; j < pads.length; j++) { const pd = pads[j], e = pd.e, a1 = (e + 1) % 3, a2 = (e + 2) % 3; l.copy(v).applyMatrix4(inv[j]); const x = l.getComponent(e), u1 = Math.abs(l.getComponent(a1)), u2 = Math.abs(l.getComponent(a2)); if (u1 > pd.h[a1] - .012 || u2 > pd.h[a2] - .012) continue;
+        const lado = x >= 0 ? 0 : 1, d = (Math.abs(x) - pd.h[e]) * esc[j].getComponent(e); if (d < 0) { if (-d > pd.pen[lado]) pd.pen[lado] = -d; pd.np[lado]++; } else if (d < .06) { if (d < pd.gap[lado]) pd.gap[lado] = d; pd.ng[lado]++; } } } }); }
+  for (const pd of pads) { let mov = 0; const lado = pd.np[0] + pd.ng[0] >= pd.np[1] + pd.ng[1] ? 0 : 1, sg = lado ? -1 : 1;     /* lado em que o corpo está */
+    if (pd.np[lado] >= 3 && pd.pen[lado] > .005) mov = -sg * Math.min(.06, pd.pen[lado] - .003); else if (!pd.np[lado] && pd.ng[lado] >= 10 && pd.gap[lado] > .004 && pd.gap[lado] < .05) mov = sg * (pd.gap[lado] + .003);
+    if (mov) { const eixo = new T3.Vector3().setComponent(pd.e, 1).applyQuaternion(pd.o.quaternion), ep = pd.o.parent ? pd.o.parent.getWorldScale(new T3.Vector3()).x : 1; pd.o.position.addScaledVector(eixo, mov / ep); pd.o.updateMatrixWorld(true); res.pads.push({ m: +(mov * 1000).toFixed(1), pen: +(pd.pen[lado] * 1000).toFixed(1), gap: +(pd.gap[lado] * 1000).toFixed(1) }); } }
+  res.minY = +res.minY.toFixed(4); res.n = pads.length; return res;
+}
+window.__contato2 = contato2;
 
 /* ---------- acabamento depois que a cena do exercício está montada ---------- */
 function apura2(sc, c, gl) {
@@ -181,9 +239,12 @@ function apura2(sc, c, gl) {
     if (CLARO.includes(cor(o)) && !vistos.has(m)) { vistos.add(m); m.color.setHex(0x3b4149); m.metalness = .65; m.roughness = .36; m.envMapIntensity = 5; m.userData.estrutura = 1; }
     else if (ESC.includes(cor(o)) && !vistos.has(m)) { vistos.add(m); m.color.setHex(0x3b4149); m.metalness = .65; m.roughness = .36; m.envMapIntensity = 5; m.userData.estrutura = 1; }
     if (m.userData.estrutura && ehCaixa(o)) { const q = o.geometry.parameters; if (q.height >= 1 && q.width <= .14 && q.depth <= .14) { const m3 = m.clone(); m3.userData = { estrutura: 1 }; m3.map = rep2(txFuros(), 1, Math.round(q.height / .09)); o.material = m3; } } });
+  /* 2c) luz: uma principal mais lateral e alta (desenha o relevo dos músculos), contraluz para recortar o corpo e menos preenchimento vindo de trás */
+  sc.traverse(o => { if (!o.isDirectionalLight) return; const k = o.intensity; if (Math.abs(k - 1.3) < .01) o.intensity = .9; else if (Math.abs(k - .9) < .01) o.intensity = .6; else if (Math.abs(k - 2.3) < .01) o.intensity = 2.7; else if (Math.abs(k - 1.6) < .01) o.intensity = 2.0; else if (Math.abs(k - 1.5) < .01) o.intensity = 1.25; });
+  sc.traverse(o => { if (o.isHemisphereLight) o.intensity = .16; });
   /* 3) sombra de contato: escurece o piso logo abaixo do que está perto dele (pés, corpo deitado, base dos aparelhos) */
   const TAM = 6, ALT = .42, RES = 512, rtA = new T3.WebGLRenderTarget(RES, RES), rtB = new T3.WebGLRenderTarget(RES, RES); rtA.texture.generateMipmaps = rtB.texture.generateMipmaps = false;
-  const grp = new T3.Group(); grp.position.y = .0172; sc.add(grp);
+  const grp = new T3.Group(); grp.position.y = .005; sc.add(grp);
   const cam = new T3.OrthographicCamera(-TAM / 2, TAM / 2, TAM / 2, -TAM / 2, 0, ALT); cam.rotation.x = Math.PI / 2; grp.add(cam);
   const pg = new T3.PlaneGeometry(TAM, TAM).rotateX(Math.PI / 2), plano = M2(pg, new T3.MeshBasicMaterial({ map: rtA.texture, transparent: true, depthWrite: false, toneMapped: false, opacity: 1 })); plano.scale.y = -1; plano.renderOrder = 1; grp.add(plano);
   const borra = M2(pg, null); borra.visible = false; grp.add(borra);
@@ -194,7 +255,7 @@ function apura2(sc, c, gl) {
   const passa = (larg) => { borra.visible = true; borra.material = bh; bh.uniforms.t.value = rtA.texture; bh.uniforms.k.value = larg / RES; gl.setRenderTarget(rtB); gl.render(borra, cam); borra.material = bv; bv.uniforms.t.value = rtB.texture; bv.uniforms.k.value = larg / RES; gl.setRenderTarget(rtA); gl.render(borra, cam); borra.visible = false; };
   const some = []; sc.traverse(o => { if (o === plano || o === borra) return; if (o.isMesh && (o.material && (o.material.isShadowMaterial || o.material.isMeshBasicMaterial || o.material.isLineBasicMaterial) || o.userData.tapete || (o.geometry && o.geometry.type === 'ExtrudeGeometry' && o.position.y < .02) || o.renderOrder >= 20) || o.isLine || o.isSprite || o.isPoints) some.push(o); });
   /* o plano que recebe a sombra da luz principal sobe para cima do tapete: a sombra passa a cair também sobre ele */
-  sc.traverse(o => { if (o.isMesh && o.material && o.material.isShadowMaterial) { o.material.opacity = .25; o.position.y = .0166; } });
+  sc.traverse(o => { if (o.isMesh && o.material && o.material.isShadowMaterial) { o.material.opacity = .25; o.position.y = .0045; } });
   return {
     antes(alvo) { grp.position.x = alvo.x; grp.position.z = alvo.z; const vis = some.map(o => o.visible); some.forEach(o => { o.visible = false; }); plano.visible = false;
       const fundo = sc.background, au = gl.shadowMap.autoUpdate, ca = gl.getClearAlpha(), cc = gl.getClearColor(new T3.Color()); sc.background = null; gl.shadowMap.autoUpdate = false; sc.overrideMaterial = dm; gl.setClearColor(0x000000, 0);
