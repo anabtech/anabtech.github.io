@@ -15,7 +15,7 @@ rep('"models/Atleta.glb"', '(new URLSearchParams(location.search).get("corpo")==
 rep("attribute vec4 _musi; attribute vec4 _musw; attribute float _cavity; attribute float _fibk; attribute float _musp; uniform float uAct[", "attribute vec3 _rest; attribute vec4 _musi; attribute vec4 _musw; attribute float _cavity; attribute float _fibk; attribute float _musp; uniform float uAct[")
 rep("vProf = _musp; vRest = position; vFibK = _fibk; }", "vProf = _musp; vRest = _rest; vFibK = _fibk; }")
 # pegada calibrada para a mão do corpo novo (valores em window.__GR, definidos em equip2.js)
-rep("sub(f.clone().multiplyScalar(u.gripReach??.075)).sub(m.clone().multiplyScalar(u.gripDepth??.022))", "sub(f.clone().multiplyScalar(__GR.alc(this,u))).sub(m.clone().multiplyScalar(__GR.prof(this,u)))")
+rep("b=u.grip.clone().sub(f.clone().multiplyScalar(u.gripReach??.075)).sub(m.clone().multiplyScalar(u.gripDepth??.022)),", "b=__GR.punho(this,u,f,m,h),")
 rep("this.rotW(r,Di(l,-i*t*(a===1?1.15:1.3)))", "this.rotW(r,Di(l,-i*t*(a===1?__GR.c1:a===2?__GR.c2:__GR.c3)))")
 rep("Di(this.boneVec(a,p(1,0,0)),.5*t))", "Di(this.boneVec(a,p(1,0,0)),__GR.th*t))")
 rep("this.curl(h,u.curl??1)", "this.curl(h,u.curl??1,{g:u.grip,f:f,m:m,r:u.gripR})")
@@ -23,6 +23,11 @@ rep("this.curl(h,u.curl??1)", "this.curl(h,u.curl??1,{g:u.grip,f:f,m:m,r:u.gripR
 rep("m=u.ankle.clone(),", "m=__GR.tornozelo(this,u),")
 rep("let S=b.clone().applyAxisAngle(M,-(u.toePitch??(Qn?Math.min(0,u.pitch||0):0)));", "let S=__GR.dedos(this,u,b,M);")
 rep("E.clone().add(S.multiplyScalar(this.restToeEnd.z-this.restToe.z))", "E.clone().add(S)")
+# esqueleto de referência criado logo depois da montagem do exercício
+rep("await n.setup(c);", "await n.setup(c);await window.__fantasma(c,sc);")
+# mãos montadas a partir do braço (halteres, cabos): o punho fica onde o exercício pediu e a pegada usa as medidas da mão nova
+rep("gripReach:l,gripDepth:c", "gripReach:l,gripDepth:c,anc:1")
+rep("gripReach:f,gripDepth:m", "gripReach:f,gripDepth:m,anc:1")
 # luz principal mais lateral e mais alta
 rep("d.position.copy(f).addScaledVector(b,3).addScaledVector(g,2.6).addScaledVector(y,.9)", "d.position.copy(f).addScaledVector(b,3.6).addScaledVector(g,3.1).addScaledVector(y,1.1)")
 # fibras mais discretas no músculo em repouso e nítidas no músculo que trabalha
