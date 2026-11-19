@@ -1,6 +1,12 @@
 {
  "itens": [
   {
+   "data": "2026-11-19",
+   "titulo": "Treino mais rápido de anotar",
+   "resumo": "Check por série, descanso que conta sozinho, vídeo do exercício no topo e menu embaixo.",
+   "texto": "<b>Check da série</b>: terminou a série, toque no <b>✓</b>. Se você deixou em branco, ele repete a carga e as repetições da última vez.<br><br><b>Descanso automático</b>: ao marcar a série, o cronômetro começa com o descanso do seu protocolo e avisa quando acabar. Dá para somar ou tirar 15 segundos, ou pular.<br><br><b>Vídeo no topo</b>: toque na foto do exercício para ver a execução sem sair do app.<br><br><b>Menu embaixo</b>: Treino, Dieta, Evolução, Feedback e Protocolo agora ficam na parte de baixo da tela. As novidades ficam no sino, lá em cima.<br><br><b>Tela acesa</b>: enquanto você anota o treino, o celular não bloqueia sozinho.<br><br><b>Feedback mais curto</b>: o app já preenche quantos treinos você salvou e quanto da dieta marcou. É só conferir."
+  },
+  {
    "data": "2026-11-18",
    "titulo": "Agora somos AnabTech",
    "resumo": "Nome novo, endereço novo e uma equipe com nutricionista e educador físico.",

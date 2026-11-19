@@ -243,11 +243,68 @@ button.ev-c{display:block;width:100%;text-align:left;font:inherit;color:inherit;
 .evx-m{background:var(--ink);color:#fff;border-radius:14px;padding:11px 13px;margin-bottom:10px}.evx-m span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.7}.evx-m p{font-size:13.5px;line-height:1.5;margin-top:3px}.evx-m b{color:#fff}
 .evx-cg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.evx-cg div{background:var(--paper);border-radius:10px;padding:8px}.evx-cg b{display:block;font-size:16px}.evx-cg span{font-size:11px;color:var(--ink-2)}
 .evx-pr{width:100%;border-collapse:collapse}.evx-pr th,.evx-pr td{padding:6px 2px;border-bottom:1px solid var(--rule-soft,#eee);text-align:left;font-size:13px}.evx-pr th{font-weight:500;color:var(--ink-2)}.evx-pr td:last-child{text-align:right;color:var(--ink-3)}.evx-u{font-size:13px;margin:5px 0}.evx-u span{display:inline-block;width:48px;color:var(--ink-3)}
+
+/* ===== 2.1 · abas embaixo, check de série, descanso, vídeo no topo ===== */
+#app .navs{display:none}
+#app main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.sino{position:relative;display:grid;place-items:center;width:40px;height:40px;margin-right:-8px;border-radius:50%;color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sino svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sino .nvdot{position:absolute;top:7px;right:7px;margin:0;width:10px;height:10px;border:2px solid var(--paper);background:#e5484d}
+#tb-n:checked~.bar .sino{color:var(--ink);background:var(--card)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:center;background:rgba(255,255,255,.95);-webkit-backdrop-filter:saturate(1.6) blur(12px);backdrop-filter:saturate(1.6) blur(12px);border-top:1px solid var(--rule);padding:6px max(4px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+.tabbar label{flex:1;max-width:104px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 2px;font-size:10.5px;font-weight:500;line-height:1.3;color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.tabbar .ic{display:grid;place-items:center;width:54px;height:30px;border-radius:999px;transition:background .15s}
+.tabbar svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#tb-t:checked~.tabbar label[for=tb-t],#tb-d:checked~.tabbar label[for=tb-d],#tb-e:checked~.tabbar label[for=tb-e],#tb-f:checked~.tabbar label[for=tb-f],#tb-p:checked~.tabbar label[for=tb-p]{color:var(--ink);font-weight:700}
+#tb-t:checked~.tabbar label[for=tb-t] .ic,#tb-d:checked~.tabbar label[for=tb-d] .ic,#tb-e:checked~.tabbar label[for=tb-e] .ic,#tb-f:checked~.tabbar label[for=tb-f] .ic,#tb-p:checked~.tabbar label[for=tb-p] .ic{background:var(--accent);color:var(--on-accent)}
+.tabbar .tbdot{position:absolute;margin:-2px 0 0 26px;width:9px;height:9px;border-radius:50%;background:#e5484d;border:2px solid #fff}
+.st{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+body.tmr-on .st{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+/* check da série */
+.lg-r{grid-template-columns:minmax(22px,auto) 1fr 14px 1fr 42px}
+.lg-ok{width:42px;height:40px;border-radius:10px;border:1.5px solid var(--rule);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink-3);padding:0;-webkit-tap-highlight-color:transparent;transition:background .12s,transform .12s}
+.lg-ok:active{transform:scale(.92)}
+.lg-ok svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.lg-r.ok .lg-ok{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.lg-r.ok input{background:var(--accent-soft);border-color:#d3e8a0}
+.lg-tip{font-size:12px;color:var(--ink-2);line-height:1.45;margin:2px 0 8px;display:flex;gap:6px;align-items:flex-start}
+.lg-tip b{flex:none;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:11px}
+@media (max-width:420px){#app .lg{margin-left:15px}#app .lg-r input{padding:0 8px}}
+/* miniatura do exercício */
+.ex-th{flex:none;position:relative;width:56px;height:56px;border-radius:12px;overflow:hidden;border:0;padding:0;background:#0a0a0a;cursor:pointer;margin:-2px 0 0 4px;-webkit-tap-highlight-color:transparent}
+.ex-th img{width:100%;height:100%;object-fit:cover;object-position:50% 38%;display:block}
+.ex-th i{position:absolute;right:4px;bottom:4px;width:20px;height:20px;border-radius:50%;background:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.ex-th i::after{content:'';position:absolute;left:8px;top:5.5px;border-style:solid;border-width:4.5px 0 4.5px 7px;border-color:transparent transparent transparent #0b0c0e}
+/* vídeo por cima da página */
+.vov{position:fixed;inset:0;z-index:95;background:rgba(11,12,14,.72);display:flex;align-items:flex-end;justify-content:center;animation:vovA .18s ease-out}
+@keyframes vovA{from{opacity:0}to{opacity:1}}
+.vov-c{position:relative;width:100%;max-width:560px;max-height:94vh;max-height:94dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--card);border-radius:22px 22px 0 0;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.vov-v{position:relative;background:#0a0a0a;border-radius:14px;overflow:hidden;display:flex;justify-content:center}
+.vov-v video{display:block;width:auto;max-width:100%;height:58vh;height:58dvh;max-height:520px;background:#0a0a0a}
+.vov-e{color:#fff;font-size:14px;padding:60px 24px;text-align:center}
+.vov-x{position:absolute;top:22px;right:24px;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(11,12,14,.6);color:#fff;font-size:16px;cursor:pointer}
+.vov-c h3{font-size:19px;letter-spacing:-.02em;margin:14px 2px 2px}
+.vov-c .vov-s{font-size:13px;color:var(--ink-2);margin:0 2px 10px}
+.vov-c ol.ins{margin:10px 2px 0 20px;font-size:14px;line-height:1.5;color:var(--ink-2)}.vov-c ol.ins li{margin-bottom:6px}
+.vov-c .b3d-al{margin-top:10px}
+/* cronômetro de descanso */
+.tmr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:70;width:calc(100% - 20px);max-width:540px;background:#0b0c0e;color:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(11,12,14,.32)}
+.tmr-b{position:absolute;left:0;top:0;height:3px;background:var(--accent);width:0;transition:width .25s linear}
+.tmr-in{display:flex;flex-wrap:wrap;align-items:center;gap:2px 7px;padding:11px 10px 10px 14px}
+.tmr-in>small{flex:0 0 100%;font-size:12px;color:rgba(255,255,255,.66);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tmr-l{flex:1;min-width:0}
+.tmr-l b{display:block;font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tmr button{flex:none;height:38px;padding:0 11px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tmr .tmr-x{background:#fff;color:#0b0c0e;border-color:#fff}
+.tmr.fim{background:var(--accent);color:#0b0c0e}.tmr.fim .tmr-in>small{color:rgba(11,12,14,.72)}.tmr.fim button[data-d]{display:none}.tmr.fim .tmr-x{background:#0b0c0e;color:#fff;border-color:#0b0c0e}
+/* feedback: o que o app já sabe */
+.fbf .fb-sabe,.fbf label.c .fb-sabe{display:block;margin-top:6px;font-size:12.5px;color:var(--accent-ink);font-weight:500;line-height:1.4}
+@media print{.tabbar,.tmr,.sino,.ex-th,.lg-ok{display:none!important}}
 </style>
 </head>
 <body>
 <div id="app"><div class="tela"><span class="carregando"></span></div></div>
 <div class="st" id="st"></div>
+<div class="tmr" id="tmr" hidden role="timer"><i class="tmr-b" id="tmrB"></i><div class="tmr-in"><small id="tmrN">Descanso</small><div class="tmr-l"><b id="tmrT">0:00</b></div><button type="button" data-d="-15" aria-label="Tirar 15 segundos">−15 s</button><button type="button" data-d="15" aria-label="Somar 15 segundos">+15 s</button><button type="button" class="tmr-x">Pular</button></div></div>
 <script>
 'use strict';
 const API = 'https://script.google.com/macros/s/AKfycbySZvMkRRn4x4WagqeLlU2m8urelZt2q_vnlHVDwHLYGnLgj891lNzCCE-AArD_MRBYFA/exec';
@@ -367,6 +424,7 @@ function montar() {
   const doc = new DOMParser().parseFromString(SNAP.html, 'text/html');
   let st = $('pcss'); if (!st) { st = document.createElement('style'); st.id = 'pcss'; document.head.appendChild(st); }
   st.textContent = [...doc.querySelectorAll('style')].map(x => x.textContent).join('\n') + `\n#tb-f:checked~main .pg-f{display:block}#tb-f:checked~.bar label[for=tb-f]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-n:checked~main .pg-n{display:block}#tb-n:checked~.bar label[for=tb-n]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-e:checked~main .pg-e{display:block}#tb-e:checked~.bar label[for=tb-e]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}`;
+  doc.querySelectorAll('.vlink img').forEach(i => i.setAttribute('loading', 'lazy'));
   $('app').innerHTML = doc.body.innerHTML;
   const app = $('app');
   /* aba Feedback */
@@ -374,10 +432,13 @@ function montar() {
   ult.insertAdjacentHTML('afterend', '<input type="radio" class="rd" name="tab" id="tb-f">');
   app.querySelector('.navs').insertAdjacentHTML('beforeend', '<label class="linkbtn" for="tb-f">Feedback</label>');
   app.querySelector('#tb-f').insertAdjacentHTML('afterend', '<input type="radio" class="rd" name="tab" id="tb-n">');
-  app.querySelector('.navs').insertAdjacentHTML('beforeend', '<label class="linkbtn" for="tb-n">Novidades<i class="nvdot" id="nvDot" hidden></i></label>');
+  app.querySelector('.bar-in').insertAdjacentHTML('beforeend', '<label class="sino" for="tb-n" role="button" aria-label="Novidades do app"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg><i class="nvdot" id="nvDot" hidden></i></label>');
   app.querySelector('#tb-n').insertAdjacentHTML('afterend', '<input type="radio" class="rd" name="tab" id="tb-e">');
   { const lt = app.querySelector('.navs label[for=tb-t]'); (lt || app.querySelector('.navs label')).insertAdjacentHTML('afterend', '<label class="linkbtn" for="tb-e">Evolução</label>'); }
   const main = app.querySelector('main');
+  { const ic = { t: '<rect x="5" y="6.5" width="3.4" height="11" rx="1.2"/><rect x="15.6" y="6.5" width="3.4" height="11" rx="1.2"/><path d="M8.4 12h7.2M2.6 9.8v4.4M21.4 9.8v4.4"/>', d: '<path d="M7 3v7a2.5 2.5 0 0 0 5 0V3M9.5 3v18M17 21v-7M17 14c-1.7-.6-2.5-2.3-2.5-5 0-3 1.2-5.2 2.5-6z"/>', e: '<path d="M4 20V4M4 20h16M8 16l3.5-4.5 3 2.5L19 8"/>', f: '<path d="M20 12a8 8 0 0 1-11.8 7L4 20l1.1-4A8 8 0 1 1 20 12z"/><path d="M9 11h6M9 14h4"/>', p: '<path d="M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5"/>' };
+    const tem = id => !!app.querySelector('#tb-' + id);
+    main.insertAdjacentHTML('afterend', `<nav class="tabbar" aria-label="Seções do app">${[['t', 'Treino'], ['d', 'Dieta'], ['e', 'Evolução'], ['f', 'Feedback'], ['p', 'Protocolo']].filter(x => tem(x[0])).map(([id, n]) => `<label for="tb-${id}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${ic[id]}</svg></span>${id === 'f' ? '<i class="tbdot" id="fbDot" hidden></i>' : ''}${n}</label>`).join('')}</nav>`); }
   main.insertAdjacentHTML('afterbegin', '<p class="fila" id="filaAv" hidden></p><div id="mgAv"></div><div id="lembAv"></div>' + barraDia());
   const instalado = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   if (!LS.get('bv', false)) {
@@ -401,7 +462,7 @@ function montar() {
   cardsMG(); ligarBarraDia(); if (!LS.get('desde', '')) LS.set('desde', LS.get('feitos', []).length || Object.keys(LS.get('hist', {})).length ? isoMenos(30) : hojeISO()); mostrarLembrete();
   const abaSalva = LS.get('aba', ''); if (abaSalva && $(abaSalva)) $(abaSalva).checked = true;
   app.querySelectorAll('input.rd[name=tab]').forEach(x => x.addEventListener('change', () => { LS.set('aba', x.id); window.scrollTo(0, 0); }));
-  mostrarFila(); ligar3D(app); montarNovidades(pn); montarEvolucao(pe); aplicarFC();
+  mostrarFila(); ligar3D(app); ligarVideos(app); montarNovidades(pn); montarEvolucao(pe); aplicarFC();
   app.querySelector('#tb-e').addEventListener('change', () => montarEvolucao(pe));
 }
 
@@ -807,6 +868,7 @@ function cardsMG() {
   const lidas = LS.get('respLidas', []), novas = (SNAP.respostas || []).filter(r => !lidas.includes(r.id)).slice(0, 3), fb = cardFb();
   box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3><i>📋</i>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
     novas.map(r => `<div class="mgc rs" role="status"><h3><i>💬</i>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
+  { const d = $('fbDot'); if (d) d.hidden = !fb; }
   const bp = $('mgPg'); if (bp) bp.onclick = irPagamento;
   const b = $('mgFb'); if (b) b.onclick = () => { const tb = $('tb-f'); if (tb) { tb.checked = true; LS.set('aba', 'tb-f'); } window.scrollTo(0, 0); };
   box.querySelectorAll('[data-lida]').forEach(x => x.onclick = () => { LS.set('respLidas', [...LS.get('respLidas', []), x.dataset.lida].slice(-100)); cardsMG(); });
@@ -921,18 +983,29 @@ function montarTreino(app) {
       const n = Math.max(rot ? rot.length : (x.series || 1), (r0.sets || []).length);
       const ultTxt = h ? `Última vez (${dataBR(h.data)}): ${h.sets.filter(z => z.kg || z.reps).map(z => `${z.kg ? kgTxt(z.kg) : '—'} kg × ${z.reps || '—'}`).join(' · ')}` : '';
       const dica = dicaProgressao(x, h);
+      const metaH = usaAlt ? null : proxMeta(x, h), Fx = faixaDe(x);
       const lin = j => { const s = (r0.sets || [])[j] || {}, hs = h && h.sets[Math.min(j, h.sets.length - 1)] || {};
-        const rt = (rot && rot[j]) || String(j + 1), nome = /^\d+$/.test(rt) ? 'série ' + rt : rt.replace('C', 'cluster ').replace('·B', ', bloco ');
-        return `<div class="lg-r${/^\d+$/.test(rt) ? '' : ' tec'}" data-rot="${esc(rt)}"><span class="lg-n">${esc(rt)}</span><input class="kg" inputmode="decimal" placeholder="${esc(hs.kg ? kgTxt(hs.kg) + ' kg' : 'kg')}" value="${esc(s.kg || '')}" aria-label="Carga: ${esc(nome)}"><span class="x">×</span><input class="rp" inputmode="numeric" placeholder="${esc(hs.reps ? hs.reps + ' reps' : x.rp ? x.rp + ' reps' : 'reps')}" value="${esc(s.reps || '')}" aria-label="Repetições: ${esc(nome)}"></div>`; };
+        const rt = (rot && rot[j]) || String(j + 1), num = /^\d+$/.test(rt), nome = num ? 'série ' + rt : rt.replace('C', 'cluster ').replace('·B', ', bloco ');
+        /* um toque no check repete a última vez; se a meta de hoje é subir a carga, já entra a carga nova e o aluno anota as repetições */
+        const sobe = num && metaH && metaH.t === 'sobe' && Fx, uKg = sobe ? kgTxt(metaH.novo) : hs.kg ? kgTxt(hs.kg) : '', uRp = sobe ? '' : hs.reps ? String(parseInt(hs.reps, 10) || '') : /^\d+$/.test(String(x.rp || '')) ? String(x.rp) : '';
+        const phR = sobe ? `${Fx[0]}–${Fx[1]}` : hs.reps ? hs.reps + ' reps' : x.rp ? x.rp + ' reps' : 'reps';
+        return `<div class="lg-r${num ? '' : ' tec'}${s.ok ? ' ok' : ''}" data-rot="${esc(rt)}"><span class="lg-n">${esc(rt)}</span><input class="kg" inputmode="decimal" placeholder="${esc(uKg ? uKg + ' kg' : 'kg')}" data-u="${esc(uKg)}" value="${esc(s.kg || '')}" aria-label="Carga: ${esc(nome)}"><span class="x">×</span><input class="rp" inputmode="numeric" placeholder="${esc(phR)}" data-u="${esc(uRp)}" value="${esc(s.reps || '')}" aria-label="Repetições: ${esc(nome)}"><button type="button" class="lg-ok" aria-pressed="${s.ok ? 'true' : 'false'}" aria-label="Marcar ${esc(nome)} como feita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`; };
       const div = document.createElement('div'); div.className = 'lg'; div.dataset.k = k; div.dataset.uid = x.uid;
-      div.innerHTML = `${x.alt ? `<div class="lg-alt" role="group" aria-label="Qual exercício você fez"><span>Fiz:</span><button type="button" data-alt="0" class="${usaAlt ? '' : 'on'}">${esc(curtoN(x.n))}</button><button type="button" data-alt="1" class="${usaAlt ? 'on' : ''}">ou ${esc(curtoN(x.alt.n))}</button></div>` : ''}<div class="lg-h"><b>${rot && /^(Bloco|C\d)/.test(rot[0]) ? 'Anote cada bloco' : 'Anote suas séries'}</b>${ultTxt ? `<span class="lg-ult">${esc(ultTxt)}</span>` : ''}</div>${dica ? `<p class="lg-dica">${dica}</p>` : ''}${blocoAq(x, h, r0)}<div class="lg-rows">${[...Array(n)].map((_, j) => lin(j)).join('')}</div>
+      div.innerHTML = `${x.alt ? `<div class="lg-alt" role="group" aria-label="Qual exercício você fez"><span>Fiz:</span><button type="button" data-alt="0" class="${usaAlt ? '' : 'on'}">${esc(curtoN(x.n))}</button><button type="button" data-alt="1" class="${usaAlt ? 'on' : ''}">ou ${esc(curtoN(x.alt.n))}</button></div>` : ''}<div class="lg-h"><b>${rot && /^(Bloco|C\d)/.test(rot[0]) ? 'Anote cada bloco' : 'Anote suas séries'}</b>${ultTxt ? `<span class="lg-ult">${esc(ultTxt)}</span>` : ''}</div>${dica ? `<p class="lg-dica">${dica}</p>` : ''}${blocoAq(x, h, r0)}${i === 0 && LS.get('okUsos', 0) < 3 ? `<p class="lg-tip"><b>✓</b><span>Terminou a série? Toque no ✓: ele ${h ? 'repete a carga da última vez, ' : ''}marca a série e já começa a contar o descanso.</span></p>` : ''}<div class="lg-rows">${[...Array(n)].map((_, j) => lin(j)).join('')}</div>
         <button class="lg-add" type="button">+ série</button>
         <div class="lg-rir"><span>Na última série, quantas repetições ainda dava para fazer?${x.rir ? ` <i>alvo: ${esc(x.rir)}</i>` : rirAlvo ? ` <i>alvo da semana: ${esc(rirAlvo)}</i>` : ''}</span><div>${[0, 1, 2, 3, 4].map(n => `<button type="button" data-r="${n}" class="${String(r0.rir) === String(n) ? 'on' : ''}">${n === 4 ? '4+' : n}</button>`).join('')}</div></div>
         <textarea class="lg-nota" rows="1" placeholder="Anotação: como foi, desconforto, ajuste…">${esc(r0.nota || '')}</textarea>`;
       const tb = art.querySelector('.ex-tb'); (tb || art.querySelector('.ex-top')).insertAdjacentElement('afterend', div);
       div.querySelector('.lg-add').onclick = () => { const rows = div.querySelector('.lg-rows'); rows.insertAdjacentHTML('beforeend', lin(rows.children.length)); };
       pintarAq(div);
-      div.addEventListener('input', ev => { if (ev.target.classList.contains('aq-alvo')) { ev.target.dataset.mexeu = '1'; pintarAq(div); const sc = div.querySelector('.aq-src'); if (sc) sc.textContent = (/dumbbell/.test(div.querySelector('.lg-aq').dataset.eq) ? 'em cada halter · ' : '') + 'você ajustou'; } else marcarInicio(k); salvarRascunho(k); });
+      div.addEventListener('click', ev => { const b = ev.target.closest('.lg-ok'); if (!b) return; const row = b.closest('.lg-r'), kg = row.querySelector('.kg'), rp = row.querySelector('.rp');
+        somPronto(); telaAcesa();
+        if (row.classList.contains('ok')) { row.classList.remove('ok'); b.setAttribute('aria-pressed', 'false'); if (_tm && _tm.row === row) pararDescanso(); salvarRascunho(k); return; }
+        if (!kg.value.trim() && kg.dataset.u) kg.value = kg.dataset.u; if (!rp.value.trim() && rp.dataset.u) rp.value = rp.dataset.u;
+        if (!rp.value.trim()) { salvarRascunho(k); rp.focus(); aviso('Anote as repetições e toque no ✓ de novo.'); return; }
+        row.classList.add('ok'); b.setAttribute('aria-pressed', 'true'); marcarInicio(k); salvarRascunho(k); art.classList.add('feito'); LS.set('okUsos', LS.get('okUsos', 0) + 1);
+        const d = descansoDaLinha(row); iniciarDescanso(d.seg, d.tit, x.uid + '|' + d.tipo, row); });
+      div.addEventListener('input', ev => { telaAcesa(); if (ev.target.classList.contains('aq-alvo')) { ev.target.dataset.mexeu = '1'; pintarAq(div); const sc = div.querySelector('.aq-src'); if (sc) sc.textContent = (/dumbbell/.test(div.querySelector('.lg-aq').dataset.eq) ? 'em cada halter · ' : '') + 'você ajustou'; } else marcarInicio(k); salvarRascunho(k); });
       if (r0.rir !== undefined && r0.rir !== '') div.dataset.rir = String(r0.rir);
       div.querySelectorAll('.lg-rir button').forEach(b => b.onclick = () => { div.dataset.rir = div.dataset.rir === b.dataset.r ? '' : b.dataset.r; div.querySelectorAll('.lg-rir button').forEach(o => o.classList.toggle('on', o.dataset.r === div.dataset.rir)); salvarRascunho(k); });
       div.querySelectorAll('[data-alt]').forEach(b => b.onclick = () => { div.dataset.alt = b.dataset.alt; div.querySelectorAll('[data-alt]').forEach(o => o.classList.toggle('on', o === b)); const hh = histDe(x, b.dataset.alt === '1'); const u = div.querySelector('.lg-ult'); const t = hh ? `Última vez (${dataBR(hh.data)}): ${hh.sets.filter(z => z.kg || z.reps).map(z => `${z.kg ? kgTxt(z.kg) : '—'} kg × ${z.reps || '—'}`).join(' · ')}` : ''; if (u) u.textContent = t; else if (t) div.querySelector('.lg-h').insertAdjacentHTML('beforeend', `<span class="lg-ult">${esc(t)}</span>`); salvarRascunho(k); });
@@ -966,7 +1039,7 @@ function montarTreino(app) {
 function lerSessao(k) {
   const out = {};
   document.querySelectorAll(`.lg[data-k="${k}"]:not(.cdlg)`).forEach(div => {
-    const sets = [...div.querySelectorAll('.lg-r')].map(r => { const o = { kg: r.querySelector('.kg').value.trim().replace(',', '.'), reps: r.querySelector('.rp').value.trim() }; if (r.dataset.rot && !/^\d+$/.test(r.dataset.rot)) o.rot = r.dataset.rot; return o; });
+    const sets = [...div.querySelectorAll('.lg-r')].map(r => { const o = { kg: r.querySelector('.kg').value.trim().replace(',', '.'), reps: r.querySelector('.rp').value.trim() }; if (r.classList.contains('ok')) o.ok = 1; if (r.dataset.rot && !/^\d+$/.test(r.dataset.rot)) o.rot = r.dataset.rot; return o; });
     while (sets.length && !sets[sets.length - 1].kg && !sets[sets.length - 1].reps) sets.pop();
     out[div.dataset.uid] = { sets, nota: div.querySelector('.lg-nota').value.trim(), alt: div.dataset.alt === '1', rir: div.dataset.rir || '' };
     const al = div.querySelector('.aq-alvo'); if (al && al.dataset.mexeu) out[div.dataset.uid].alvo = al.value.trim();
@@ -981,7 +1054,7 @@ function marcarInicio(k) { const key = 'ini.' + dataReg() + '.' + k; if (!LS.get
 function minDesde(k) { const t = LS.get('ini.' + dataReg() + '.' + k, 0); if (!t) return 0; const m = Math.round((Date.now() - t) / 60000); return m >= 5 && m <= 240 ? m : 0; }
 function salvarTreino(k, fim) {
   const dados = lerSessao(k); const L = (SNAP.treino[k] || {}).ex || [];
-  const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: d.sets || [], nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; return o; }).filter(x => x.sets.length || x.nota);
+  const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: (d.sets || []).map(z => { const c = Object.assign({}, z); delete c.ok; return c; }), nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; return o; }).filter(x => x.sets.length || x.nota);
   const cardio = ((SNAP.treino[k] || {}).cardio || []).map(c => { const d = dados['c:' + c.id] || {}; return { id: c.id, mod: c.mod, eq: c.eq, zona: c.zona, min: d.min, fc: d.fc, km: d.km, pse: d.pse, nota: d.nota }; }).filter(c => c.min || c.fc || c.km || c.pse !== '' && c.pse != null || c.nota);
   if (!exs.length && !cardio.length) { aviso(L.length ? 'Anote pelo menos uma série antes de salvar.' : 'Anote o tempo ou o esforço do cardio antes de salvar.'); return; }
   const data = dataReg(); const feitos = LS.get('feitos', []);
@@ -997,6 +1070,7 @@ function salvarTreino(k, fim) {
   LS.set('feitos', [{ id: reg.id, data, dia: k }, ...feitos.filter(t => !(t.data === data && t.dia === k))].slice(0, 40));
   document.querySelectorAll(`.lg[data-k="${k}"]:not(.cdlg)`).forEach(div => { const d = dados[div.dataset.uid]; if (d && d.sets.some(z => z.kg || z.reps)) div.closest('article.ex').classList.add('feito'); });
   document.querySelectorAll(`.cdlg[data-k="${k}"]`).forEach(b => { const d = dados['c:' + b.dataset.cid]; if (d && (d.min || d.fc || d.pse)) b.closest('article.cardio').classList.add('feito'); });
+  pararDescanso(); soltarTela();
   fim.querySelector('.bt').textContent = 'Atualizar treino ' + deDia(data);
   const p = fim.querySelector('p'); p.className = 'ok'; p.textContent = data === hojeISO() ? 'Treino salvo. Bom trabalho!' : `Treino ${deDia(data)} salvo. Valeu por registrar!`; mostrarLembrete();
   enfileirar(reg).then(n => { if (fila().some(x => x.id === reg.id)) { p.className = ''; p.textContent = 'Treino salvo no celular. Vai para o seu coach quando tiver internet.'; } });
@@ -1192,8 +1266,89 @@ function enviarDieta(t, hoje) {
   enfileirar({ tipo: 'dieta', id: 'dieta-' + hoje, _v: Date.now(), data: hoje, plano: t, feitas: f.map(j => nomes[j] || ('Refeição ' + (j + 1))), total: nomes.length, det, refs: nomes, alvo: (D.alvo || {})[t] || null, nota: String(e.nota || '').trim().slice(0, 1000), agua: Math.max(0, Math.min(10000, Math.round(+e.agua || 0))) });
 }
 
+
+/* ---------- 2.1: descanso automático, som, vibração e tela acesa ---------- */
+let _ac = null, _tm = null, _tmI = 0, _tmF = 0, _wl = null, _wlAte = 0, _wlT = 0; const _descAj = {};
+function somPronto() { try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; _ac = _ac || new AC(); if (_ac.state === 'suspended') _ac.resume(); } catch (e) {} }
+function bipe(n = 3) { if (!_ac) return; try { const t0 = _ac.currentTime + 0.02; for (let i = 0; i < n; i++) { const o = _ac.createOscillator(), g = _ac.createGain(), t = t0 + i * 0.3; o.type = 'sine'; o.frequency.value = i === n - 1 ? 1175 : 880; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + (i === n - 1 ? 0.5 : 0.22)); o.connect(g); g.connect(_ac.destination); o.start(t); o.stop(t + 0.55); } } catch (e) {} }
+/* a tela fica acesa enquanto o aluno mexe no treino; 20 minutos sem tocar em nada e ela volta ao normal */
+async function telaAcesa() {
+  _wlAte = Date.now() + 20 * 60000; clearTimeout(_wlT); _wlT = setTimeout(soltarTela, 20 * 60000 + 500);
+  if (_wl || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try { const w = await navigator.wakeLock.request('screen'); _wl = w; w.addEventListener('release', () => { if (_wl === w) _wl = null; }); } catch (e) {}
+}
+function soltarTela() { _wlAte = 0; clearTimeout(_wlT); const w = _wl; _wl = null; if (w) { try { w.release(); } catch (e) {} } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; if (Date.now() < _wlAte) telaAcesa(); pintarTmr(); });
+function segDesc(txt) {
+  const t = String(txt || '').replace(',', '.'); let m = t.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)\s*(min|s)/);
+  if (m) return Math.round((+m[1] + +m[2]) / 2 * (m[3] === 'min' ? 60 : 1));
+  let s = 0; m = t.match(/(\d+(?:\.\d+)?)\s*min/); if (m) s += +m[1] * 60; m = t.match(/(\d+)\s*s(?![a-zà-ú])/i); if (m) s += +m[1]; return Math.round(s);
+}
+/* descanso prescrito na tabela do exercício; "30–40 s antes" (backoff) vale para a pausa que vem antes daquela série */
+function descansoDaLinha(row) {
+  const div = row.closest('.lg'), art = div.closest('article'), M = {}; let num = '';
+  art.querySelectorAll('.ex-tb tbody tr').forEach(tr => { const th = tr.querySelector('th'), td = tr.querySelectorAll('td'); if (!th || !td.length) return; const kk = th.textContent.trim(), v = td[td.length - 1].textContent.trim(); M[kk] = v; if (/^\d+$/.test(kk) && !num) num = v; });
+  const de = r => { const kk = r.dataset.rot || ''; return M[kk] != null ? M[kk] : /^(Bloco|C\d)/.test(kk) ? (M.Cluster || '') : /^\d+$/.test(kk) ? num : ''; };
+  const rows = [...div.querySelectorAll('.lg-r')], prox = rows[rows.indexOf(row) + 1], pt = prox ? de(prox) : '';
+  let t = prox && /antes/.test(pt) ? pt : de(row), tipo = prox && /antes/.test(pt) ? 'antes' : /^(Bloco|C\d)/.test(row.dataset.rot || '') && prox ? 'bloco' : 'serie';
+  if (!prox && /antes|entre/.test(t)) t = num; if (!t || !segDesc(t)) t = num;
+  const pr = prox ? (prox.dataset.rot || '') : '', pn = !prox ? 'próximo exercício' : /^\d+$/.test(pr) ? 'série ' + pr : pr.toLowerCase();
+  return { seg: segDesc(t) || 120, tipo, tit: 'Descanso · a seguir: ' + pn };
+}
+function iniciarDescanso(seg, tit, chave, row) {
+  clearInterval(_tmI); clearTimeout(_tmF); if (_descAj[chave]) seg = _descAj[chave];
+  _tm = { fim: Date.now() + seg * 1000, tot: seg, chave, row, ok: false };
+  const el = $('tmr'); el.hidden = false; el.classList.remove('fim'); document.body.classList.add('tmr-on'); $('tmrN').textContent = tit; el.querySelector('.tmr-x').textContent = 'Pular';
+  pintarTmr(); _tmI = setInterval(pintarTmr, 250);
+}
+function pintarTmr() {
+  if (!_tm || _tm.ok) return; const r = Math.max(0, Math.ceil((_tm.fim - Date.now()) / 1000));
+  $('tmrT').textContent = Math.floor(r / 60) + ':' + String(r % 60).padStart(2, '0'); $('tmrB').style.width = Math.max(0, Math.min(100, 100 - (_tm.fim - Date.now()) / (_tm.tot * 10))) + '%';
+  if (r > 0) return;
+  _tm.ok = true; clearInterval(_tmI); const el = $('tmr'); el.classList.add('fim'); $('tmrT').textContent = 'Bora!'; $('tmrN').textContent = $('tmrN').textContent.replace('Descanso · a seguir', 'Acabou o descanso · agora'); el.querySelector('.tmr-x').textContent = 'OK';
+  if (Date.now() - _tm.fim < 5000) { bipe(); try { if (navigator.vibrate) navigator.vibrate([220, 120, 220, 120, 400]); } catch (e) {} }
+  _tmF = setTimeout(pararDescanso, 12000);
+}
+function pararDescanso() { clearInterval(_tmI); clearTimeout(_tmF); _tm = null; const el = $('tmr'); if (el) el.hidden = true; document.body.classList.remove('tmr-on'); }
+$('tmr').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.classList.contains('tmr-x')) return pararDescanso(); if (!_tm || _tm.ok) return;
+  const d = +b.dataset.d, resta = (_tm.fim - Date.now()) / 1000; if (resta + d < 3) return pararDescanso();
+  _tm.fim += d * 1000; _tm.tot = Math.max(15, _tm.tot + d); _descAj[_tm.chave] = _tm.tot; telaAcesa(); pintarTmr(); });
+
+/* ---------- 2.1: miniatura no topo do exercício e vídeo sem sair do app ---------- */
+function fecharVideo(viaVoltar) { const o = $('vov'); if (!o) return; const v = o.querySelector('video'); if (v) { try { v.pause(); } catch (e) {} } o.remove(); document.body.style.overflow = ''; if (!viaVoltar && history.state && history.state.vov) history.back(); }
+function abrirVideo(a, nome) {
+  if ($('vov')) fecharVideo();
+  const href = a.getAttribute('href') || '', img = a.querySelector('img'), art = a.closest('article'), ins = art && art.querySelector('.exec ol.ins'), m = href.match(/videos\/([\w-]+)\.mp4/), vt = a.querySelector('.vt'), varios = a.parentElement && a.parentElement.children.length > 1;
+  const o = document.createElement('div'); o.className = 'vov'; o.id = 'vov';
+  o.innerHTML = `<div class="vov-c" role="dialog" aria-modal="true" aria-label="Execução: ${esc(nome)}"><button class="vov-x" type="button" aria-label="Fechar">✕</button><div class="vov-v"><video src="${esc(href)}"${img ? ` poster="${esc(img.getAttribute('src'))}"` : ''} playsinline webkit-playsinline autoplay muted loop controls preload="metadata"></video><p class="vov-e" hidden>Não deu para carregar o vídeo. Confira a internet e tente de novo.</p></div><h3>${esc(nome)}</h3>${varios && vt ? `<p class="vov-s">${esc(vt.textContent)}</p>` : ''}${m ? `<button type="button" class="b3d-al" data-v="${esc(m[1])}"><i>3D</i>Girar e pausar em 3D</button>` : ''}${ins ? `<ol class="ins">${ins.innerHTML}</ol>` : ''}</div>`;
+  document.body.appendChild(o); document.body.style.overflow = 'hidden'; try { history.pushState({ vov: 1 }, ''); } catch (e) {}
+  const v = o.querySelector('video'); v.addEventListener('error', () => { v.hidden = true; o.querySelector('.vov-e').hidden = false; });
+  o.addEventListener('click', e => { const b3 = e.target.closest('.b3d-al'); if (b3) { const s = b3.dataset.v; fecharVideo(true); return abrir3D(s); } if (e.target === o || e.target.closest('.vov-x')) fecharVideo(); });
+}
+window.addEventListener('popstate', () => fecharVideo(true));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharVideo(); });
+function ligarVideos(app) {
+  app.querySelectorAll('article.ex').forEach(art => { const a = art.querySelector('details.exec a.vlink'), top = art.querySelector('.ex-top'), img = a && a.querySelector('img'); if (!img || !top || top.querySelector('.ex-th')) return;
+    const n = (art.querySelector('.ex-name') || {}).textContent || 'exercício';
+    top.insertAdjacentHTML('beforeend', `<button type="button" class="ex-th" aria-label="Ver a execução: ${esc(n)}"><img loading="lazy" src="${esc(img.getAttribute('src'))}" alt=""><i></i></button>`); });
+  app.querySelectorAll('.vnota').forEach(p => { if (/Toque no vídeo/.test(p.textContent)) p.textContent = 'Toque no vídeo para assistir aqui mesmo. Precisa de internet.'; });
+  if (app._vid) return; app._vid = 1;
+  app.addEventListener('click', e => { const th = e.target.closest('.ex-th'), a = th ? th.closest('article').querySelector('details.exec a.vlink') : e.target.closest('a.vlink'); if (!a || !/\.mp4(\?|#|$)/.test(a.getAttribute('href') || '')) return;
+    e.preventDefault(); const art = a.closest('article'); abrirVideo(a, ((art && art.querySelector('.ex-name')) || {}).textContent || 'Execução'); });
+}
+
+/* ---------- 2.1: o que o app já sabe da semana, para o feedback ---------- */
+function semanaSabida() {
+  const dias = [...Array(7)].map((_, i) => isoMenos(6 - i)), S = new Set();
+  (SNAP.treinosFeitos || []).concat(LS.get('feitos', [])).forEach(t => { if (t && dias.includes(t.data)) S.add(t.data + '|' + t.dia); });
+  const D = SNAP.dieta || {}; let prev = 0, fez = 0, reg = 0;
+  dias.forEach(d => { const t = tipoDoDia(d), n = ((D.refs || {})[t] || []).length, e = LS.get('dieta.' + d, null), f = e && e.feitas ? (e.feitas[t] || []).length : 0; prev += n; fez += Math.min(f, n); if (f > 0) reg++; });
+  return { treinos: S.size, prev, fez, reg };
+}
+
 /* ---------- feedback semanal ---------- */
 function montarFeedback(sec) {
+  const W = semanaSabida(), pD = W.prev ? W.fez / W.prev : 0, dSug = W.reg >= 3 ? (pD >= 0.9 ? 'Tudo' : pD >= 0.65 ? 'Quase tudo' : pD >= 0.35 ? 'Metade' : 'Quase nada') : '';
   const ult = LS.get('ultFb', '') > (SNAP.ultFeedback || '') ? LS.get('ultFb', '') : (SNAP.ultFeedback || '');
   const escala = (k, a, b) => `<div class="esc" data-k="${k}">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-v="${n}">${n}</button>`).join('')}</div><div class="esc-l"><span>${a}</span><span>${b}</span></div>`;
   sec.innerHTML = `<section class="head"><h1>Feedback da semana</h1><p class="foco">Conte como foi a sua semana. Leva 1 minuto e ajuda a equipe a ajustar o seu protocolo.</p></section>
@@ -1203,13 +1358,13 @@ function montarFeedback(sec) {
       <div class="c"><label class="c">Sono</label>${escala('sono', 'Muito ruim', 'Ótimo')}</div>
       <div class="c"><label class="c">Energia nos treinos</label>${escala('energia', 'Sem energia', 'Muita energia')}</div>
       <div class="c"><label class="c">Fome durante o dia</label>${escala('fome', 'Pouca fome', 'Muita fome')}</div>
-      <div class="c"><label class="c">Quanto da dieta você seguiu?</label><div class="ch" data-k="dieta">${['Quase nada', 'Metade', 'Quase tudo', 'Tudo'].map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div></div>
-      <label class="c">Quantos treinos você fez nesta semana?<input type="number" inputmode="numeric" id="fTreinos" min="0" max="14" placeholder="Ex.: 4"></label>
+      <div class="c"><label class="c">Quanto da dieta você seguiu?</label><div class="ch" data-k="dieta">${['Quase nada', 'Metade', 'Quase tudo', 'Tudo'].map(v => `<button type="button" data-v="${v}" class="${v === dSug ? 'on' : ''}">${v}</button>`).join('')}</div>${dSug ? `<span class="fb-sabe">Pelos seus registros: ${W.fez} de ${W.prev} refeições marcadas em 7 dias. Mude se não for isso.</span>` : ''}</div>
+      <label class="c">Quantos treinos você fez nesta semana?<input type="number" inputmode="numeric" id="fTreinos" min="0" max="14" placeholder="Ex.: 4" value="${W.treinos || ''}">${W.treinos ? `<span class="fb-sabe">O app contou ${W.treinos} treino${W.treinos > 1 ? 's' : ''} salvo${W.treinos > 1 ? 's' : ''} nos últimos 7 dias. Corrija se fez algum sem anotar.</span>` : ''}</label>
       <label class="c">Alguma dor ou desconforto?<span>Onde, em qual exercício e quando começou.</span><textarea id="fDores" placeholder="Se não teve, deixe em branco."></textarea></label>
       <label class="c">Comentário para a equipe<textarea id="fCom" placeholder="Dificuldades, vitórias, dúvidas, mudanças na rotina…"></textarea></label>
       <button class="bt" type="submit">Enviar feedback</button><p class="erro" id="fe" style="text-align:center"></p>
     </form>`;
-  const val = {};
+  const val = {}; if (dSug) val.dieta = dSug;
   sec.querySelectorAll('.esc,.ch').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; val[g.dataset.k] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
   $('fbf').onsubmit = e => {
     e.preventDefault();
