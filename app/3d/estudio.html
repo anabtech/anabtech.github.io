@@ -58,7 +58,11 @@ if (LOTE) { document.body.classList.add('lote'); st.remove();
     await Promise.all(['700 40px "Space Grotesk"', '500 40px "Space Grotesk"', '500 40px Inter', '600 40px Inter', '700 40px Inter'].map(f => document.fonts.load(f)));
     let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) {}
     const L = todos.filter(s => window.__EX[s]); let feitos = 0, falhas = 0, novos = 0, t0 = performance.now();
-    for (const slug of L) { try { let ja = false; if (pasta) { try { await pasta.getFileHandle(slug + '.mp4'); ja = true; } catch (e) {} } if (ja) log(slug + ': já estava pronto'); else { for (let vez = 1; ; vez++) { try { await gravar(slug, pasta, log); break; } catch (e) { if (vez >= 3) throw e; log(`${slug}: tentando de novo (${e && e.message || e})`); await new Promise(r => setTimeout(r, 3000)); } } } } catch (e) { falhas++; log(`${slug}: ERRO ${e && e.message || e}`); }
+    /* vídeos de uma versão anterior do 3D que estejam na pasta são refeitos; os da versão atual são aproveitados (dá para parar e continuar) */
+    const VERSAO = '3d-v2'; let refazer = false;
+    if (pasta) { try { const f = await (await pasta.getFileHandle('versao.txt')).getFile(); refazer = (await f.text()).trim() !== VERSAO; } catch (e) { refazer = true; }
+      if (refazer) log('Os vídeos que já estavam na pasta são de uma versão anterior e serão refeitos.'); const w = await (await pasta.getFileHandle('versao.txt', { create: true })).createWritable(); await w.write(VERSAO); await w.close(); }
+    for (const slug of L) { try { let ja = false; if (pasta && !refazer) { try { await pasta.getFileHandle(slug + '.mp4'); ja = true; } catch (e) {} } if (ja) log(slug + ': já estava pronto'); else { for (let vez = 1; ; vez++) { try { await gravar(slug, pasta, log); break; } catch (e) { if (vez >= 3) throw e; log(`${slug}: tentando de novo (${e && e.message || e})`); await new Promise(r => setTimeout(r, 3000)); } } } } catch (e) { falhas++; log(`${slug}: ERRO ${e && e.message || e}`); }
       feitos++; document.querySelector('#barra i').style.width = (feitos / L.length * 100) + '%'; const dt = (performance.now() - t0) / 1000; document.getElementById('prog').textContent = `${feitos} de ${L.length} vídeos · ${Math.round(dt / 60)} min`; }
     document.getElementById('prog').textContent = falhas ? `Terminou com ${falhas} vídeo(s) com erro. Clique no botão de novo e escolha a mesma pasta para refazer só os que faltam.` : `Pronto: ${L.length} vídeos na pasta. Pode fechar esta aba.`; if (falhas) bt.disabled = false; if (wl) wl.release(); };
 }

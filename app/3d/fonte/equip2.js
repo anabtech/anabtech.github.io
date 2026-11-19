@@ -176,7 +176,7 @@ const PROXY = [['Head', .095], ['HeadTop_End', .015], ['Neck', .06], ['Spine2', 
 const _pose = W.prototype.pose;
 W.prototype.pose = function (e) {
   if (!V2.on || this._fx) return _pose.call(this, e);
-  const y0 = this.root.position.y, pen = () => { let m = 0; for (const [b, r] of PROXY) { if (!this.B[b]) continue; const d = r - (this.P(b).y + y0); if (d > m) m = d; } return m; };
+  const y0 = this.root.position.y, pen = () => { let m = 0; for (const [b, r] of PROXY) { if (!this.B[b]) continue; const d = r - (this.P(b).y + y0); if (d > m) m = d; } const rosto = this.P('Head').add(this.boneVec('Head', p(0, .07, .1))), dr = .035 - (rosto.y + y0); return Math.max(m, dr); };   /* inclui o rosto */
   const posa = () => { _pose.call(this, e); const b = window.__resp || 0; if (b) { const lat = this.boneVec('Spine2', p(1, 0, 0)), fr = this.boneVec('Spine2', p(0, 0, 1)); this.rotW(this.B.Spine2, Di(lat, -.014 * b)); this.rotW(this.B.LeftShoulder, Di(fr, .016 * b)); this.rotW(this.B.RightShoulder, Di(fr, -.016 * b)); this.root.updateMatrixWorld(true); } };
   this._fx = 1;
   try { posa(); let d = pen(); if (d < .012 || !e.pelvis || !e.pelvis.pos) return;
