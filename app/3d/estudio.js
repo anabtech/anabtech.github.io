@@ -20,9 +20,11 @@ function simbolo(g, x, y, s, cor) { g.save(); g.translate(x, y); g.scale(s / 100
 /* texto com <b>negrito</b>, quebrado em linhas */
 function linhasRicas(g, html, larg, fReg, fBold) {
   const runs = []; String(html).split(/(<b>|<\/b>)/).reduce((b, p) => { if (p === '<b>') return true; if (p === '</b>') return false; p.split(/(\s+)/).forEach(w => { if (w) runs.push({ t: w, b }); }); return b; }, false);
-  const L = [[]]; let x = 0;
-  for (const r of runs) { g.font = r.b ? fBold : fReg; const w = g.measureText(r.t).width; if (/^\s+$/.test(r.t)) { if (x > 0) { L[L.length - 1].push({ ...r, t: ' ', w: g.measureText(' ').width }); x += g.measureText(' ').width; } continue; }
-    if (x + w > larg && x > 0) { const ul = L[L.length - 1]; if (ul.length && ul[ul.length - 1].t === ' ') ul.pop(); L.push([]); x = 0; } L[L.length - 1].push({ ...r, w }); x += w; }
+  /* quebra por palavra inteira: um ponto ou vírgula logo depois de um negrito fica colado na palavra, nunca sozinho na linha de baixo */
+  const L = [[]]; let x = 0; const esp = f => { g.font = f; return g.measureText(' ').width; };
+  for (let i = 0; i < runs.length;) { if (/^\s+$/.test(runs[i].t)) { if (x > 0) { const w = esp(runs[i].b ? fBold : fReg); L[L.length - 1].push({ ...runs[i], t: ' ', w }); x += w; } i++; continue; }
+    const pal = []; let pw = 0; while (i < runs.length && !/^\s+$/.test(runs[i].t)) { g.font = runs[i].b ? fBold : fReg; const w = g.measureText(runs[i].t).width; pal.push({ ...runs[i], w }); pw += w; i++; }
+    if (x + pw > larg && x > 0) { const ul = L[L.length - 1]; if (ul.length && ul[ul.length - 1].t === ' ') ul.pop(); L.push([]); x = 0; } L[L.length - 1].push(...pal); x += pw; }
   return L;
 }
 function textoRico(g, L, x, y, lh, fReg, fBold, cor, corB, max = 9) { L.slice(0, max).forEach((ln, i) => { let cx = x; ln.forEach(r => { g.font = r.b ? fBold : fReg; g.fillStyle = r.b ? corB : cor; g.fillText(r.t, cx, y + i * lh); cx += r.w; }); }); return Math.min(L.length, max) * lh; }
@@ -65,12 +67,24 @@ function roteiro(api, K) {
 function ancora(api, nome) { const B = (ANC[nome] || [nome]).map(b => api.bone(b)).filter(Boolean); if (!B.length) return null; const m = B[0].clone().multiplyScalar(0); B.forEach(b => m.add(b)); m.multiplyScalar(1 / B.length); return { m, B: UM[nome] ? [m] : B }; }
 function camBase(api, M) { const c = api.camF(M); return { az: c.az, el: c.el ?? 12, dist: c.dist * DK, tx: c.tx ?? 0, ty: c.ty, tz: c.tz ?? 0 }; }
 function camMix(a, b, t) { const o = {}; for (const k of ['az', 'el', 'dist', 'tx', 'ty', 'tz']) o[k] = lerp(a[k], b[k], t); return o; }
+/* pose e mira sem desenhar: servem para medir onde cada pino cai na tela */
+function posar(api, M) { api.n.pose(api.c, api.tl.at(M), M); api.sc.updateMatrixWorld(true); }
+function mirar(api, c) { const cam = api.cam, T = api.V(c.tx ?? 0, c.ty, c.tz ?? 0), k = Math.PI / 180, el = (c.el ?? 12) * k, az = c.az * k, d = c.dist;
+  cam.position.set(T.x + d * Math.sin(az) * Math.cos(el), T.y + d * Math.sin(el), T.z + d * Math.cos(az) * Math.cos(el)); cam.lookAt(T); cam.setViewOffset(W, H, 0, OFF, W, H); cam.updateMatrixWorld(); }
+/* câmera de um passo do posicionamento: aproxima do ponto e garante que todos os pinos fiquem na área livre do quadro */
+const SEG = [96, 984, 210, PY - 84];
+function camPasso(api, K, i) { posar(api, .02); const b0 = camBase(api, 0), p = K.setup[i], A = ancora(api, p.a), z = p.zoom || .66, k = p.puxa ?? .78, T = A ? A.m : null;
+  const c = { az: b0.az + (p.az || 0), el: p.el ?? b0.el, dist: b0.dist * z, tx: T ? lerp(b0.tx, T.x, k) : b0.tx, ty: T ? lerp(b0.ty, T.y, k) : b0.ty, tz: T ? lerp(b0.tz, T.z, k) : b0.tz };
+  if (A) for (let n = 0; n < 16; n++) { mirar(api, c); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, tras = false; A.B.forEach(b => { const [x, y, zz] = api.proj(b); if (zz > 1) tras = true; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
+    if (!tras && x0 >= SEG[0] && x1 <= SEG[1] && y0 >= SEG[2] && y1 <= SEG[3]) break;
+    if (tras || x1 - x0 > (SEG[1] - SEG[0]) * .96 || y1 - y0 > (SEG[3] - SEG[2]) * .96) c.dist *= 1.1;
+    c.tx = lerp(c.tx, T.x, .6); c.ty = lerp(c.ty, T.y, .6); c.tz = lerp(c.tz, T.z, .6); c.aj = n + 1; }
+  return c; }
 /* câmera de cada trecho (estado final) */
 function camDe(api, K, seg, tt) {
   const b0 = camBase(api, 0);
   if (seg.tipo === 'intro') return { ...b0, az: b0.az - 26 + 26 * eout(tt / seg.d), dist: b0.dist * (1.1 - .1 * eout(tt / seg.d)) };
-  if (seg.tipo === 'setup') { const p = K.setup[seg.i], A = ancora(api, p.a), z = p.zoom || .66, k = p.puxa ?? .78, dr = 1.2 * (tt / seg.d - .5);
-    const T = A ? A.m : null; return { az: b0.az + (p.az || 0) + dr, el: p.el ?? b0.el, dist: b0.dist * z, tx: T ? lerp(b0.tx, T.x, k) : b0.tx, ty: T ? lerp(b0.ty, T.y, k) : b0.ty, tz: T ? lerp(b0.tz, T.z, k) : b0.tz }; }
+  if (seg.tipo === 'setup') { const c = (api._cs || (api._cs = []))[seg.i] || (api._cs[seg.i] = camPasso(api, K, seg.i)); return { ...c, az: c.az + 1.2 * (tt / seg.d - .5) }; }
   if (seg.tipo === 'exec') return camBase(api, seg.m0 + tt);
   return { ...b0, az: b0.az - 8 + 10 * (tt / seg.d), dist: b0.dist * 1.04 };
 }
@@ -80,7 +94,7 @@ function trilhaDe(api, K) { if (!K.trilha) return null; const sg = api.tl.segs.f
 function criarQuadro(api, K, cv, tema) {
   const g = cv.getContext('2d'), R = roteiro(api, K), n = api.n, nome = K.nome || n.title;
   const claro = tema !== 'escuro';
-  const TRILHA = trilhaDe(api, K);
+  const TRILHA = trilhaDe(api, K); api._cs = (K.setup || []).map((p, i) => camPasso(api, K, i));
   const TR = .95; /* transição de câmera entre trechos, em segundos */
   function desenhar(t) {
     t = clamp(t, 0, R.dur - 1e-4); const si = R.S.findIndex(s => t < s.t1), seg = R.S[si], tt = t - seg.t0, ant = R.S[si - 1];
@@ -116,14 +130,21 @@ function criarQuadro(api, K, cv, tema) {
         g.fillStyle = COR.lime; g.beginPath(); g.arc(x, y, 27 * ap, 0, 7); g.fill(); g.fillStyle = COR.ink; g.font = `700 34px ${SG}`; g.textAlign = 'center'; g.fillText(String(seg.i + 1), x, y + 12); g.textAlign = 'left'; g.restore(); }); }
     /* ----- execução: ângulos e músculos ----- */
     if (seg.tipo === 'exec') {
+      let TLB = null;
       if (TRILHA && TRILHA.length > 2) { const a = clamp(tt / .8) * clamp((seg.d - tt) / .4), Pp = TRILHA.map(w => api.proj(w)); g.save(); g.globalAlpha = a; g.lineCap = 'round'; g.lineJoin = 'round';
         g.strokeStyle = 'rgba(11,12,14,.85)'; g.lineWidth = 9; g.beginPath(); Pp.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); g.strokeStyle = COR.lime; g.lineWidth = 5; g.stroke();
         const At = ancora(api, K.trilha); if (At) { const [x, y] = api.proj(At.m); g.fillStyle = COR.ink; g.beginPath(); g.arc(x, y, 15, 0, 7); g.fill(); g.fillStyle = COR.lime; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }
-        if (K.trilhaNome) { const [x0, y0] = Pp[0]; g.font = `700 25px ${IN}`; const tw = g.measureText(K.trilhaNome).width + 34; g.fillStyle = COR.ink; rr(g, clamp(x0 - tw / 2, 40, W - tw - 110), y0 - 74, tw, 46, 23); g.fill(); g.fillStyle = COR.lime; g.fillText(K.trilhaNome, clamp(x0 - tw / 2, 40, W - tw - 110) + 17, y0 - 43); }
+        if (K.trilhaNome) { const [x0, y0] = Pp[0]; g.font = `700 25px ${IN}`; const tw = g.measureText(K.trilhaNome).width + 34; g.fillStyle = COR.ink; const alto = y0 - 74 < 236, lx = clamp(alto ? x0 + 30 : x0 - tw / 2, 40, W - tw - 110), ly = alto ? Math.max(236, y0 - 23) : y0 - 74; /* não invade o cabeçalho */ TLB = { x: lx + tw / 2, y: ly + 23, bw: tw, bh: 46 }; rr(g, lx, ly, tw, 46, 23); g.fill(); g.fillStyle = COR.lime; g.fillText(K.trilhaNome, lx + 17, ly + 31); }
         g.restore(); }
-      F.chips.forEach(c => { if (c.op <= .02) return; const k = W / 864 * 1.25, x = clamp(c.x + c.dx * k, 130, W - 230), y = clamp(c.y + c.dy * k, 280, PY - 130); g.save(); g.globalAlpha = c.op;
+      /* caixas dos ângulos: medidas antes de desenhar, para que uma não cubra a outra nem fique embaixo de um rótulo de músculo */
+      const CH = F.chips.filter(c => c.op > .02).map(c => { const k = W / 864 * 1.25; g.font = `700 50px ${SG}`; const tv = c.v + '°', w1 = g.measureText(tv).width; g.font = `600 24px ${IN}`; const lb = String(c.l || '').toUpperCase() === c.l ? c.l.charAt(0) + c.l.slice(1).toLowerCase() : (c.l || ''), w2 = g.measureText(lb).width;
+        return { c, tv, lb, bw: Math.max(w1, w2) + 44, bh: 104, x: clamp(c.x + c.dx * k, 130, W - 230), y: clamp(c.y + c.dy * k, 280, PY - 130), op: c.op }; });
+      for (let a = 0; a < CH.length; a++) for (let b = -1; b < a; b++) { const A = CH[a], B = b < 0 ? TLB : CH[b]; if (!B) continue; const px = (A.bw + B.bw) / 2 + 14 - Math.abs(A.x - B.x), pyy = (A.bh + B.bh) / 2 + 14 - Math.abs(A.y - B.y); if (px <= 0 || pyy <= 0) continue;
+        if (pyy <= px) A.y = clamp(A.y + (A.y >= B.y ? pyy : -pyy), 280, PY - 130); else A.x = clamp(A.x + (A.x >= B.x ? px : -px), 130, W - 230); }
+      const LB = F.labels && F.labels.op > 0 ? F.labels.items.map(l => { const k = W / 864; g.font = `700 32px ${IN}`; const w1 = g.measureText(l.t).width; g.font = `500 25px ${IN}`; const w2 = g.measureText(l.s).width; return { x: clamp(l.x + l.dir * 150 * Math.max(.8, k * 1.5), 190, W - 190), y: clamp(l.y + l.dy * k * 1.3, 290, PY - 90), bw: Math.max(w1, w2) + 44, bh: 100 }; }) : [];
+      CH.forEach(A => { if (LB.some(B => Math.abs(A.x - B.x) < (A.bw + B.bw) / 2 + 8 && Math.abs(A.y - B.y) < (A.bh + B.bh) / 2 + 8)) A.op *= 1 - clamp(F.labels.op); });
+      CH.forEach(({ c, tv, lb, bw, bh, x, y, op }) => { if (op <= .02) return; g.save(); g.globalAlpha = op;
         g.strokeStyle = claro ? 'rgba(11,12,14,.5)' : 'rgba(255,255,255,.6)'; g.lineWidth = 3; g.setLineDash([2, 9]); g.lineCap = 'round'; g.beginPath(); g.moveTo(c.x, c.y); g.lineTo(x, y); g.stroke(); g.setLineDash([]);
-        g.font = `700 50px ${SG}`; const tv = c.v + '°', w1 = g.measureText(tv).width; g.font = `600 24px ${IN}`; const lb = String(c.l || '').toUpperCase() === c.l ? c.l.charAt(0) + c.l.slice(1).toLowerCase() : (c.l || ''), w2 = g.measureText(lb).width, bw = Math.max(w1, w2) + 44, bh = 104;
         g.shadowColor = 'rgba(11,12,14,.22)'; g.shadowBlur = 22; g.shadowOffsetY = 8; g.fillStyle = '#fff'; rr(g, x - bw / 2, y - bh / 2, bw, bh, 22); g.fill(); g.shadowColor = 'transparent';
         g.textAlign = 'center'; g.fillStyle = COR.ink; g.font = `700 50px ${SG}`; g.fillText(tv, x, y + 8); g.fillStyle = 'rgba(11,12,14,.6)'; g.font = `600 24px ${IN}`; g.fillText(lb, x, y + 38); g.textAlign = 'left'; g.restore(); });
       if (F.labels) F.labels.items.forEach(l => { const k = W / 864, x = clamp(l.x + l.dir * 150 * Math.max(.8, k * 1.5), 190, W - 190), y = clamp(l.y + l.dy * k * 1.3, 290, PY - 90); g.save(); g.globalAlpha = F.labels.op;
@@ -160,16 +181,16 @@ function criarQuadro(api, K, cv, tema) {
       g.translate(0, -dy); g.globalAlpha = sub;
       /* progresso dos passos */
       const bw = 44, gp = 10, x0 = W - X - N * bw - (N - 1) * gp; for (let i = 0; i < N; i++) { g.fillStyle = i < seg.i ? 'rgba(200,255,61,.55)' : i === seg.i ? COR.lime : 'rgba(255,255,255,.18)'; rr(g, x0 + i * (bw + gp), H - 66, bw, 8, 4); g.fill(); }
-    } else if (seg.tipo === 'exec') { const ph = F.ph, P = n.phases;
+    } else if (seg.tipo === 'exec') { const FT = faseTexto(api, M), pt = FT.ph, ph = pt, P = n.phases;
       /* abas das fases: a atual com nome, as outras só com o número */
       let x = X; P.forEach((f, i) => { const at = i === ph, tx = at ? `${i + 1} · ${f.n}` : String(i + 1); g.font = `${at ? 700 : 600} 28px ${IN}`; const w = at ? g.measureText(tx).width + 40 : 56; g.fillStyle = at ? COR.lime : 'rgba(255,255,255,.1)'; rr(g, x, py + 46, w, 56, 28); g.fill(); g.fillStyle = at ? COR.ink : COR.d1; g.textAlign = 'center'; g.fillText(tx, x + w / 2, py + 84); g.textAlign = 'left'; x += w + 10; });
       /* respiração, à direita das abas */
-      const rsp = respDe(K, P, ph); if (rsp) { g.font = `600 28px ${IN}`; const wr = g.measureText(rsp).width + 78, bx = W - X - wr; if (bx > x + 6) { g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2; rr(g, bx, py + 47, wr, 54, 27); g.stroke(); const pu = .5 + .5 * Math.sin(t * 3.2); g.fillStyle = COR.lime; g.beginPath(); g.arc(bx + 30, py + 74, 8 + 5 * pu, 0, 7); g.fill(); g.fillStyle = '#fff'; g.fillText(rsp, bx + 56, py + 84); } }
-      /* quando a fase muda, o texto entra de novo */
-      const inicioFase = (() => { let a = t; const dt = 1 / FPS; while (a - dt >= seg.t0 && api.tl.at(seg.m0 + (a - dt - seg.t0)).ph === ph) a -= dt; return a; })(), ef = eout(clamp((t - inicioFase) / .35));
-      const temT = F.tiles.length > 0, ff = ajFase(g, P[ph], temT);
+      const rsp = respDe(K, P, pt); if (rsp) { g.font = `600 28px ${IN}`; const wr = g.measureText(rsp).width + 78, bx = W - X - wr; if (bx > x + 6) { g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2; rr(g, bx, py + 47, wr, 54, 27); g.stroke(); const pu = .5 + .5 * Math.sin(t * 3.2); g.fillStyle = COR.lime; g.beginPath(); g.arc(bx + 30, py + 74, 8 + 5 * pu, 0, 7); g.fill(); g.fillStyle = '#fff'; g.fillText(rsp, bx + 56, py + 84); } }
+      /* quando a fase muda, o texto entra de novo; pausas curtas (menos de 1 s) não trocam o texto, para dar tempo de ler */
+      const ef = eout(clamp((M - FT.ini) / .35));
+      const temT = F.tiles.length > 0, ff = ajFase(g, P[pt], temT);
       g.globalAlpha = sub * ef; g.translate(0, (1 - ef) * 20);
-      g.fillStyle = '#fff'; g.font = `700 ${ff.fn}px ${SG}`; g.fillText(P[ph].n, X - 2, py + 182);
+      g.fillStyle = '#fff'; g.font = `700 ${ff.fn}px ${SG}`; g.fillText(P[pt].n, X - 2, py + 182);
       textoRico(g, ff.L, X, py + 182 + ff.lh + 12, ff.lh, ff.fR, ff.fB, COR.d1, '#fff', 9);
       g.translate(0, -(1 - ef) * 20); g.globalAlpha = sub;
       /* ângulos em tempo real */
@@ -188,4 +209,11 @@ function criarQuadro(api, K, cv, tema) {
   }
   return { desenhar, R };
 }
-window.Estudio = { criarQuadro, roteiro, conferir, respLista, W, H, FPS };
+/* fase cujo texto está na tela: a do trecho atual, ou a do último trecho longo quando o atual é uma pausa curta */
+/* (só pausas: um movimento rápido continua trocando o texto junto com o corpo) */
+function faseTexto(api, M) { const S = api.tl.segs, a = api.tl.at(M); let j = S.indexOf(a.seg); if (j < 0) return { ph: a.ph, ini: M - 9 }; while (j > 0 && S[j].s1 == null && S[j].d < 1) j--; return { ph: S[j].ph, ini: S[j].t0 }; }
+/* instante da capa: dentro da execução, com a fase estável (texto e ângulos inteiros na tela) */
+function capaT(api, R) { const s = R.S.find(x => x.tipo === 'exec'); if (!s) return 1; const ph = tt => faseTexto(api, s.m0 + tt).ph, d = 1 / FPS;
+  for (let tt = Math.min(2.5, s.d * .3); tt < s.d - 1; tt += d) { let ok = true; for (let k = -.6; k <= .3 && ok; k += d) if (tt + k < 0 || ph(tt + k) !== ph(tt)) ok = false; if (ok) return s.t0 + tt; }
+  return s.t0 + Math.min(4, s.d * .35); }
+window.Estudio = { criarQuadro, roteiro, conferir, respLista, capaT, W, H, FPS };

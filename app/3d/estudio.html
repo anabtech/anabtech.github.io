@@ -33,17 +33,19 @@ import './viewer-pro.js';
 const q = new URLSearchParams(location.search), st = document.getElementById('st'), cv = document.getElementById('cv');
 const LOTE = q.get('lote') === '1';
 /* ---------- lote: todos os exercícios, codificados aqui mesmo (WebCodecs) ---------- */
+const ceder = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }); /* não sofre o freio que o setTimeout leva em aba de fundo */
 async function gravar(slug, pasta, log) {
   const K = window.CONTEUDO[slug], api = await window.__studio(slug, { ss: +(q.get('ss') || 2), shadow: +(q.get('sombra') || 4096) });
-  const Q = window.Estudio.criarQuadro(api, K, cv, q.get('tema') || 'claro'), N = Q.R.frames, fps = 30, br = +(q.get('br') || 4500) * 1000;
+  const Q = window.Estudio.criarQuadro(api, K, cv, q.get('tema') || 'claro'), N = Q.R.frames, fps = 30, br = +(q.get('br') || 6000) * 1000;
   let cfg = null; for (const codec of ['avc1.640032', 'avc1.64002A', 'avc1.4D0032', 'avc1.42E032']) { const c = { codec, width: 1080, height: 1920, bitrate: br, framerate: fps, latencyMode: 'quality', avc: { format: 'avc' } }; try { const r = await VideoEncoder.isConfigSupported(c); if (r.supported) { cfg = c; break; } } catch (e) {} }
   if (!cfg) throw new Error('Este navegador não codifica H.264. Use o Chrome ou o Edge.');
   const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: 1080, height: 1920, frameRate: fps }, fastStart: 'in-memory' });
   let erro = null; const enc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { erro = e; } }); enc.configure(cfg);
-  for (let i = 0; i < N; i++) { if (erro) throw erro; Q.desenhar(i / fps); const vf = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) }); enc.encode(vf, { keyFrame: i % 60 === 0 }); vf.close();
-    while (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 2)); if (i % 15 === 0) { document.getElementById('prog').textContent = `${slug}: quadro ${i + 1} de ${N}`; await new Promise(r => setTimeout(r, 0)); } }
-  await enc.flush(); enc.close(); muxer.finalize(); const mp4 = new Blob([muxer.target.buffer], { type: 'video/mp4' });
-  const ex = Q.R.S.find(s => s.tipo === 'exec'); Q.desenhar(ex ? ex.t0 + Math.min(4, ex.d * .35) : 1); const capa = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9));
+  try { for (let i = 0; i < N; i++) { if (erro) throw erro; if (i % 30 === 0 && api.perdido()) throw new Error('a placa de vídeo reiniciou no meio do vídeo'); Q.desenhar(i / fps); const vf = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) }); enc.encode(vf, { keyFrame: i % 60 === 0 }); vf.close();
+    while (enc.encodeQueueSize > 6) await ceder(); if (i % 15 === 0) { document.getElementById('prog').textContent = `${slug}: quadro ${i + 1} de ${N}`; await ceder(); } }
+  await enc.flush(); if (erro) throw erro; if (api.perdido()) throw new Error('a placa de vídeo reiniciou no meio do vídeo'); enc.close(); muxer.finalize(); } catch (e) { try { enc.close(); } catch (x) {} api.dispose(); throw e; }
+  const mp4 = new Blob([muxer.target.buffer], { type: 'video/mp4' });
+  Q.desenhar(window.Estudio.capaT(api, Q.R)); const capa = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9));
   api.dispose();
   for (const [nome, blob] of [[slug + '.mp4', mp4], [slug + '.jpg', capa]]) { if (pasta) { const fh = await pasta.getFileHandle(nome, { create: true }), w = await fh.createWritable(); await w.write(blob); await w.close(); } else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); await new Promise(r => setTimeout(r, 600)); } }
   log(`${slug}: ${(mp4.size / 1048576).toFixed(1)} MB, ${(N / fps).toFixed(0)} s`);
@@ -55,10 +57,10 @@ if (LOTE) { document.body.classList.add('lote'); st.remove();
     try { if (window.showDirectoryPicker) pasta = await window.showDirectoryPicker({ mode: 'readwrite', id: 'anabtech-videos' }); } catch (e) { bt.disabled = false; return; }
     await Promise.all(['700 40px "Space Grotesk"', '500 40px "Space Grotesk"', '500 40px Inter', '600 40px Inter', '700 40px Inter'].map(f => document.fonts.load(f)));
     let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) {}
-    const L = todos.filter(s => window.__EX[s]); let feitos = 0, t0 = performance.now();
-    for (const slug of L) { try { let ja = false; if (pasta) { try { await pasta.getFileHandle(slug + '.mp4'); ja = true; } catch (e) {} } if (ja) log(slug + ': já estava pronto'); else await gravar(slug, pasta, log); } catch (e) { log(`${slug}: ERRO ${e && e.message || e}`); }
+    const L = todos.filter(s => window.__EX[s]); let feitos = 0, falhas = 0, novos = 0, t0 = performance.now();
+    for (const slug of L) { try { let ja = false; if (pasta) { try { await pasta.getFileHandle(slug + '.mp4'); ja = true; } catch (e) {} } if (ja) log(slug + ': já estava pronto'); else { for (let vez = 1; ; vez++) { try { await gravar(slug, pasta, log); break; } catch (e) { if (vez >= 3) throw e; log(`${slug}: tentando de novo (${e && e.message || e})`); await new Promise(r => setTimeout(r, 3000)); } } } } catch (e) { falhas++; log(`${slug}: ERRO ${e && e.message || e}`); }
       feitos++; document.querySelector('#barra i').style.width = (feitos / L.length * 100) + '%'; const dt = (performance.now() - t0) / 1000; document.getElementById('prog').textContent = `${feitos} de ${L.length} vídeos · ${Math.round(dt / 60)} min`; }
-    document.getElementById('prog').textContent = `Pronto: ${feitos} de ${L.length} vídeos. Pode fechar esta aba.`; if (wl) wl.release(); };
+    document.getElementById('prog').textContent = falhas ? `Terminou com ${falhas} vídeo(s) com erro. Clique no botão de novo e escolha a mesma pasta para refazer só os que faltam.` : `Pronto: ${L.length} vídeos na pasta. Pode fechar esta aba.`; if (falhas) bt.disabled = false; if (wl) wl.release(); };
 }
 window.__pronto = LOTE ? Promise.resolve({ lote: 1 }) : (async () => {
   await Promise.all(['700 40px "Space Grotesk"', '500 40px "Space Grotesk"', '500 40px Inter', '600 40px Inter', '700 40px Inter'].map(f => document.fonts.load(f)));
