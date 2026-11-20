@@ -15,6 +15,9 @@ Os exercícios foram coreografados para o corpo anterior (outras medidas de bra�
 invisível, e serve de referência (`?ref=0` desliga):
 
 - mãos que partem do próprio corpo (halter, barra livre, cabo): o punho novo sai do ombro novo na mesma direção e com a mesma proporção de extensão do braço de referência (`__GR.punho`);
+- mãos que seguem um aparelho que o próprio exercício conduz (barra do supino, puxador, barra do Smith): o braço repete a extensão de referência e o aparelho é levado junto,
+  pela mesma diferença, inclusive a ponta do cabo (modo `leva`, decidido uma vez por exercício em `contato2`: desloca a mão 3 cm e vê se alguma peça acompanha;
+  se nenhuma acompanha e há peça rígida junto da pegada, ela passa a ser levada). Peça que não dá para levar (alavanca de máquina, peso segurado com as duas mãos): a mão vai exatamente até ela (`exato`);
 - mãos que vão a um ponto fixo (barra presa, apoio, chão): o corpo é que se ajusta. Mão no chão desliza; corpo apoiado nos pés ou nos joelhos gira em torno do apoio;
   corpo pendurado se desloca inteiro, com as pernas; no resto, a pelve se afasta na direção do braço (`W.prototype.pose`, bloco "alcance");
 - pé na ponta: o tornozelo sobe e a pelve acompanha, para o joelho não dobrar a mais;
@@ -27,4 +30,5 @@ Tudo é resolvido dentro do quadro, sem depender do quadro anterior: é isso que
 Sobem a página local (`python3 -m http.server 8766` na raiz do site) e percorrem os 206 exercícios:
 `salto.py` (pulos de um quadro para o outro, a 30 qps; `comp.py` compara com a mesma medida no 3D antigo, `?v2=0&corpo=0`),
 `dif.py` (cotovelo e joelho contra a referência, quadro a quadro), `aud.py` (contato com estofados e piso), `cot.py` (extensão mínima e máxima),
+`pega.py` + `pegacomp.py` (distância real da pegada ao aparelho, contra o 3D antigo), `barra.py` (suavidade da pegada a 30 qps),
 `folha.py` (folhas de imagens para olhar) e `traco.py` (um exercício, quadro a quadro).
