@@ -176,31 +176,83 @@ const PROXY = [['Head', .095], ['HeadTop_End', .015], ['Neck', .06], ['Spine2', 
 const _pose = W.prototype.pose;
 W.prototype.pose = function (e) {
   if (!V2.on || this._fx || this._velho) return _pose.call(this, e);
+  /* trabalha sobre uma cópia: o exercício pode reaproveitar o mesmo objeto de pelve em todos os quadros */
+  if (e.pelvis) e = { ...e, pelvis: { ...e.pelvis, pos: e.pelvis.pos ? e.pelvis.pos.clone() : e.pelvis.pos } };
+  if (e.feet && e.feet.Left && e.feet.Right) e.feet = { Left: { ...e.feet.Left, ankle: e.feet.Left.ankle.clone() }, Right: { ...e.feet.Right, ankle: e.feet.Right.ankle.clone() } };
+  this._desl = null;
+  if (this._sonda && e.pelvis && e.pelvis.pos) e.pelvis.pos.add(this._sonda);
   const y0 = this.root.position.y, pen = () => { let m = 0; for (const [b, r] of PROXY) { if (!this.B[b]) continue; const d = r - (this.P(b).y + y0); if (d > m) m = d; } const rosto = this.P('Head').add(this.boneVec('Head', p(0, .07, .1))), dr = .035 - (rosto.y + y0); return Math.max(m, dr); };   /* inclui o rosto */
   const posa = () => { _pose.call(this, e); const b = window.__resp || 0; if (b) { const lat = this.boneVec('Spine2', p(1, 0, 0)), fr = this.boneVec('Spine2', p(0, 0, 1)); this.rotW(this.B.Spine2, Di(lat, -.014 * b)); this.rotW(this.B.LeftShoulder, Di(fr, .016 * b)); this.rotW(this.B.RightShoulder, Di(fr, -.016 * b)); this.root.updateMatrixWorld(true); } };
   this._fx = 1;
   try {
-    /* o esqueleto anterior (invisível) faz a mesma pose; onde o braço dele ficava estendido, o corpo novo se afasta do apoio das mãos o quanto precisa para estender igual */
-    let alvo = null; const g = this._fant;
-    if (g && e.pelvis && e.pelvis.pos) { _pose.call(g, e); alvo = {}; for (const h of ['Left', 'Right']) if (g.arms && g.arms[h]) alvo[h] = Math.min(.9995, g.arms[h].wrist.distanceTo(g.arms[h].sh) / (g.Lua + g.Lfa)); }
-    this._anc = null; posa();
-    /* mãos calculadas a partir do próprio corpo (mudam quando o corpo muda): ancoradas no punho */
-    if (g && typeof e.hands === 'function' && g.lastSpec && g.lastSpec.hands && this.lastSpec && this.lastSpec.hands) { const anc = {}; let algum = false; for (const h of ['Left', 'Right']) { const a = g.lastSpec.hands[h], b2 = this.lastSpec.hands[h]; if (a && b2 && !b2.anc && a.grip.distanceTo(b2._g0 || b2.grip) > .002) { anc[h] = true; algum = true; } } if (algum) { this._anc = anc; posa(); } }
-    if (alvo) for (let vez = 0; vez < 2; vez++) { const c = p(0, 0, 0); let n = 0; for (const h in alvo) { const A = this.arms && this.arms[h]; if (!A) continue; const v = A.sh.clone().sub(A.wrist), dd = v.length(), w = this._ativo ? 1 : Tn.smoothstep(alvo[h], .84, .95); c.addScaledVector(v.normalize(), (alvo[h] * (this.Lua + this.Lfa) - dd) * w); n++; }
-      if (!n) break; c.multiplyScalar(1 / n); if (c.length() < .004) break; if (c.length() > .1) c.setLength(.1); e.pelvis.pos = e.pelvis.pos.clone().add(c); posa(); }
-    let d = pen(); if (d < .012 || !e.pelvis || !e.pelvis.pos) return;
-    const pit0 = e.pelvis.pitch || 0;
-    if (d > .14) { let melhor = null; for (const sg of [-1, 1]) { let ok = false, lo = 0, hi = 0; for (let k = 1; k <= 12; k++) { e.pelvis.pitch = pit0 + sg * k * .1; posa(); if (pen() < .14) { ok = true; hi = k * .1; lo = hi - .1; break; } } if (ok && (!melhor || hi < melhor[1])) melhor = [sg, hi]; }
-      e.pelvis.pitch = melhor ? pit0 + melhor[0] * melhor[1] : pit0; posa(); d = pen(); }
-    for (let k = 0; k < 3 && d > .004; k++) { e.pelvis.pos = e.pelvis.pos.clone(); e.pelvis.pos.y += d; posa(); d = pen(); }
+    /* o esqueleto anterior (invisível) recebe primeiro a mesma pose: é a referência de quanto cada braço estende neste quadro */
+    const g = this._fant, fixo = this._ancFixo, alvo = {}; this._refOk = 0;
+    if (g && !this._semCorr && (fixo || window.__refSempre)) { _pose.call(g, e); this._refOk = 1; }
+    this._anc = fixo || null; posa(); if (this._semCorr) return;
+    /* pernas: quando o tornozelo teve de subir (ponta do pé apoiada no chão), a pelve acompanha, para o joelho não dobrar além do que o exercício pediu */
+    if (e.pelvis && e.pelvis.pos && e.feet && this.legs) { const L = [], Lp = (this.Lth + this.Lsh) * .9995; for (const h of ['Left', 'Right']) { const lg = this.legs[h], u = e.feet[h]; if (!lg || !u || lg.ank.distanceTo(u.ankle) < .002) continue; const dir = lg.hp.clone().sub(lg.ank), d1 = dir.length(); const d0 = Math.min(Lp, lg.hp.distanceTo(u.ankle)), er = (d0 - Math.min(Lp, d1)) * Tn.smoothstep(d0 / Lp, .8, .95); if (Math.abs(er) > .001) L.push([dir.normalize(), er]); }   /* perna bem dobrada não precisa: o ângulo quase não muda */
+      if (L.length) { const c = p(0, 0, 0); for (let k = 0; k < 4; k++) for (const [dir, er] of L) c.addScaledVector(dir, er - dir.dot(c)); if (c.length() > .1) c.setLength(.1); if (c.length() > .002) { e.pelvis.pos.add(c); posa(); } } }
+    /* tronco e cabeça acima do piso: primeiro acerta a inclinação, se o tronco afundaria muito; depois a pelve sobe o que faltar */
+    const piso = () => { let d = pen(); if (window.__semPiso || d < .012 || !e.pelvis || !e.pelvis.pos) return;
+      const pit0 = e.pelvis.pitch || 0;
+      if (d > .08) { const T = Math.max(.03, .08 - 1.5 * (d - .08)); let melhor = null;   /* quanto mais fundo, mais a inclinação resolve; a passagem é contínua (sem degrau de um quadro para o outro) */
+        for (const sg of [-1, 1]) { let lo = 0, hi = -1; for (let k = 1; k <= 24; k++) { e.pelvis.pitch = pit0 + sg * k * .05; posa(); if (pen() < T) { hi = k * .05; lo = hi - .05; break; } }
+          if (hi > 0) { for (let n = 0; n < 6; n++) { const m = (lo + hi) / 2; e.pelvis.pitch = pit0 + sg * m; posa(); if (pen() < T) hi = m; else lo = m; } if (!melhor || hi < melhor[1]) melhor = [sg, hi]; } }
+        e.pelvis.pitch = melhor ? pit0 + melhor[0] * melhor[1] : pit0; posa(); d = pen(); }
+      for (let k = 0; k < 3 && d > .004; k++) { e.pelvis.pos.y += d; posa(); d = pen(); } };
+    piso();
+    /* alcance: o braço novo deve repetir o da referência (mesma direção, mesma proporção de extensão).
+       Mãos que partem do próprio corpo (halter, barra livre, cabo) já saem assim do punho. Aqui entram as mãos que vão a um ponto fixo (barra presa, apoio, chão)
+       e as que o piso segurou: o corpo é que se ajusta. Mão no chão desliza no chão; corpo apoiado nos pés ou nos joelhos gira em torno do apoio (a linha do corpo não quebra);
+       corpo pendurado se desloca inteiro, com as pernas; no resto, a pelve se afasta na direção do braço. */
+    if (this._refOk && fixo && e.pelvis && e.pelvis.pos && this.arms && g.arms && g.legs && g.legs.Left && g.legs.Right) {
+      const Ln = this.Lua + this.Lfa, Lo = g.Lua + g.Lfa, ss = Tn.smoothstep, GL = g.legs, meio = (a, b) => a.clone().add(b).multiplyScalar(.5);
+      const plant = 1 - ss(Math.min(GL.Left.ank.y, GL.Right.ank.y) + y0, .14, .24), ajo = 1 - ss(Math.min(GL.Left.kn.y, GL.Right.kn.y) + y0, .10, .18);
+      const Lgo = g.Lth + g.Lsh, reta = Math.min(ss(GL.Left.hp.distanceTo(GL.Left.ank) / Lgo, .86, .95), ss(GL.Right.hp.distanceTo(GL.Right.ank) / Lgo, .86, .95));   /* pernas estendidas: o corpo é uma prancha sobre os pés */
+      let acima = 0, na = 0; for (const h of ['Left', 'Right']) if (g.arms[h]) { acima += ss(g.arms[h].wrist.y - g.arms[h].sh.y, 0, .15); na++; } if (na) acima /= na;
+      const livre = (1 - plant) * (1 - ajo) * Math.max(this._ativo ? 1 : 0, acima), lat = p(1, 0, 0).applyQuaternion(Di(p(0, 1, 0), e.pelvis.yaw || 0));
+      let somaD = 0, somaT = 0;
+      for (let vez = 0; vez < 3; vez++) { const E = p(0, 0, 0), S = p(0, 0, 0), ankC = meio(this.legs.Left.ank, this.legs.Right.ank), knC = meio(this.legs.Left.kn, this.legs.Right.kn); let n = 0, chao = 0, desl = false;
+        for (const h of ['Left', 'Right']) { const A = this.arms[h], G = g.arms[h]; if (!A || !G) continue; const ro = Math.min(.9995, G.wrist.distanceTo(G.sh) / Lo), w = this._ativo ? 1 : ss(ro, .84, .95); if (w <= 0) continue;
+          const v = A.sh.clone().sub(A.wrist), dd = v.length(); v.normalize();
+          if (fixo[h]) { const falta = ro * Ln - dd; if (falta < .004 || A.wrist.y + y0 > .04) continue; E.addScaledVector(v, falta * w); S.add(A.sh); n++; continue; }
+          const fl = 1 - ss((this.lastSpec.hands[h]._g0 || A.grip).y + y0, .06, .14), R = ro * Ln, aref = G.sh.clone().sub(G.wrist).normalize(), cheio = A.wrist.clone().addScaledVector(aref, R).sub(A.sh);
+          /* os ombros novos têm outra largura: o que sobra para os lados o corpo não resolve (uma mão pede um lado, a outra o oposto).
+             Mão no chão desliza cada uma para o seu lugar; mão em barra fica, e o corpo se afasta no plano do movimento até o braço estender o que deve */
+          const sag = cheio.clone().addScaledVector(lat, -lat.dot(cheio)), q = v.clone().addScaledVector(lat, -lat.dot(v)); if (q.lengthSq() > 1e-6) { q.normalize(); const r0 = A.sh.clone().add(sag).sub(A.wrist), bq = r0.dot(q); sag.addScaledVector(q, -bq + Math.sqrt(Math.max(0, bq * bq - r0.lengthSq() + R * R))); }
+          /* mão no chão com o braço estendido para a frente (e não a prumo): quem acerta o alcance é a mão, deslizando; o corpo não precisa descer */
+          const hf = Math.hypot(aref.x, aref.z), kp = ss(hf, .4, .8) * fl, alt = A.sh.y - A.wrist.y, mult = hf > 1e-4 ? Tn.lerp(R, Math.sqrt(Math.max(0, R * R - alt * alt)) / hf, kp) : R, cb = cheio.clone(); cb.y *= 1 - kp;
+          E.add(v.clone().multiplyScalar(R - dd).lerp(sag.lerp(cb, fl), Math.max(fl, livre)).multiplyScalar(w)); S.add(A.sh); n++; chao += fl;
+          const dz = p(A.wrist.x + aref.x * mult - A.sh.x, 0, A.wrist.z + aref.z * mult - A.sh.z).multiplyScalar(fl * (1 - livre) * w); if (dz.lengthSq() > 1e-8) { if (dz.length() > .12) dz.setLength(.12); this._desl = this._desl || { Left: p(0, 0, 0), Right: p(0, 0, 0) }; this._desl[h].sub(dz); if (dz.length() > .003) desl = true; } }
+        if (!n) break; E.multiplyScalar(1 / n); S.multiplyScalar(1 / n); chao /= n;
+        if (window.__dbg) window.__dbg.push({ vez, E: E.toArray().map(x => +x.toFixed(3)), chao, livre, plant, ajo, reta, somaD, pos: e.pelvis.pos.toArray().map(x => +x.toFixed(3)) });
+        const d = E.clone().sub(p(E.x, 0, E.z).multiplyScalar(chao * (1 - livre))); if (d.length() < .003 && !desl) break;
+        /* giro em torno do apoio de baixo: tornozelos (prancha, flexão, remada invertida) ou, ajoelhado, joelhos ou quadril: o que melhor leva o ombro na direção pedida */
+        let fr = 0, piv = null, tg = null; const dn = d.clone().normalize();
+        for (const c of ajo > .5 ? [knC, e.pelvis.pos.clone()] : [ankC]) { const t = lat.clone().cross(S.clone().sub(c)); if (t.lengthSq() < .01) continue; const al = Math.pow(dn.dot(t.clone().normalize()), 2); if (al > fr) { fr = al; piv = c; tg = t; } }
+        fr *= Math.max(plant * reta, ajo); fr = fr * fr * (3 - 2 * fr);
+        if (piv && fr > .02) { const th = Tn.clamp(fr * d.dot(tg) / tg.lengthSq(), -.3 - somaT, .3 - somaT); somaT += th; e.pelvis.pos.sub(piv).applyAxisAngle(lat, th).add(piv); e.pelvis.pitch = (e.pelvis.pitch || 0) + th; d.addScaledVector(tg, -th); }
+        const cabe = Math.max(0, .1 + .12 * livre - somaD); if (d.length() > cabe) d.setLength(cabe); somaD += d.length(); e.pelvis.pos.add(d); if (livre > 0 && e.feet) for (const h of ['Left', 'Right']) e.feet[h].ankle.addScaledVector(d, livre);
+        posa(); }
+    }
+    piso();
   } finally { this._fx = 0; }
 };
 /* punho: quando a mão vem do próprio braço (halter, cabo: o aparelho acompanha a mão), o punho fica onde o exercício pediu e o ponto de pegada é recalculado para a mão nova;
    quando a mão vai até um ponto fixo (barra presa, chão), o punho é que se ajusta à mão nova */
-window.__GR.punho = (rig, u, f, m, lado) => { const G = window.__GR; if (!V2.on || rig._velho) return u.grip.clone().sub(f.clone().multiplyScalar(u.gripReach ?? .075)).sub(m.clone().multiplyScalar(u.gripDepth ?? .022));
+window.__GR.punho = (rig, u, f, m, lado) => { const G = window.__GR; if (!V2.on || rig._velho) return (u._g0 || u.grip).clone().sub(f.clone().multiplyScalar(u.gripReach ?? .075)).sub(m.clone().multiplyScalar(u.gripDepth ?? .022));
   const R = G.alc(rig, u), D = G.prof(rig, u);
-  if (u.anc || (rig._anc && rig._anc[lado])) { u._g0 = u._g0 || u.grip.clone(); const w = u._g0.clone().sub(f.clone().multiplyScalar(u.gripReach ?? .075)).sub(m.clone().multiplyScalar(u.gripDepth ?? .022)); u.grip = w.clone().add(f.clone().multiplyScalar(R)).add(m.clone().multiplyScalar(D)); return w; }
-  return u.grip.clone().sub(f.clone().multiplyScalar(R)).sub(m.clone().multiplyScalar(D)); };
+  if (u.anc || (rig._anc && rig._anc[lado])) { u._g0 = u._g0 || u.grip.clone(); const w = u._g0.clone().sub(f.clone().multiplyScalar(u.gripReach ?? .075)).sub(m.clone().multiplyScalar(u.gripDepth ?? .022));
+    /* mesma direção a partir do ombro novo, mesma proporção de extensão do braço de referência: o cotovelo abre e fecha igual, qualquer que seja o comprimento do braço */
+    const g = rig._fant, A = rig._refOk && g && g.arms && g.arms[lado];
+    if (A) { const sh = rig.P(lado + 'Arm'), v = w.clone().sub(sh), d = v.length(), ro = Math.min(.9995, A.wrist.distanceTo(A.sh) / (g.Lua + g.Lfa)), peso = rig._ativo ? 1 : Tn.smoothstep(ro, .84, .95); if (d > 1e-4) w.copy(sh).addScaledVector(v, (d + (ro * (rig.Lua + rig.Lfa) - d) * peso) / d); }
+    G.piso(rig, u, f, w); u.grip = w.clone().add(f.clone().multiplyScalar(R)).add(m.clone().multiplyScalar(D)); return w; }
+  /* mão apoiada no chão: pode deslizar no chão para o braço ficar na direção certa */
+  if (rig._desl) { u._g0 = u._g0 || u.grip.clone(); const fl = 1 - Tn.smoothstep(u._g0.y + rig.root.position.y, .06, .14); u.grip = u._g0.clone().addScaledVector(rig._desl[lado], fl); }
+  return G.piso(rig, u, f, u.grip.clone().sub(f.clone().multiplyScalar(R)).sub(m.clone().multiplyScalar(D))); };
+/* mão apontando para baixo: o punho sobe o que for preciso para a ponta dos dedos não entrar no piso */
+window.__semPiso = new URLSearchParams(location.search).get('sempiso') === '1';
+window.__GR.piso = (rig, u, f, w) => { const lo = .014 - rig.root.position.y - Math.min(0, f.y) * ((u.curl ?? 1) > .6 ? .1 : .185); if (w.y < lo) w.y = lo; return w; };
 const _curl = W.prototype.curl;
 W.prototype.curl = function (lado, t, inf) {
   if (!V2.on || this._velho || !inf || t < .95) return _curl.call(this, lado, t);
@@ -222,9 +274,12 @@ W.prototype.curl = function (lado, t, inf) {
 function contato2(c, n, tl, sc) {
   if (!V2.on) return null;
   /* braços que trabalham (o cotovelo abre e fecha ao longo do exercício): o alcance é mantido igual ao de referência no movimento inteiro, e não só perto da extensão */
-  for (const r of c.rigs) r._ativo = false;
-  { const lim = c.rigs.map(() => [999, -999]); for (let k = 0; k < 16; k++) { const M = tl.dur * (k + .5) / 16; n.pose(c, tl.at(M), M); c.rigs.forEach((r, ri) => { const g = r._fant; if (!g || !g.arms) return; for (const h of ['Left', 'Right']) { const A = g.arms[h]; if (!A) continue; const a = A.el.clone().sub(A.sh).angleTo(A.wrist.clone().sub(A.el)) * 180 / Math.PI; lim[ri][0] = Math.min(lim[ri][0], a); lim[ri][1] = Math.max(lim[ri][1], a); } }); }
-    c.rigs.forEach((r, ri) => { r._ativo = lim[ri][1] - lim[ri][0] > 35; }); }
+  for (const r of c.rigs) { r._ativo = false; r._ancFixo = null; }
+  { const lim = c.rigs.map(() => [999, -999]), segue = c.rigs.map(() => ({ Left: 0, Right: 0 })), NP = 12, gp = r => { const o = {}; for (const h of ['Left', 'Right']) { const u = r.lastSpec && r.lastSpec.hands && r.lastSpec.hands[h]; if (u) o[h] = (u._g0 || u.grip).clone(); } return o; };
+    for (let k = 0; k < NP; k++) { const M = tl.dur * (k + .5) / NP; for (const r of c.rigs) { r._semCorr = 1; r._sonda = null; } n.pose(c, tl.at(M), M); const G0 = c.rigs.map(gp);
+      c.rigs.forEach((r, ri) => { const g = r._fant; if (!g || !r.lastSpec) return; _pose.call(g, r.lastSpec); if (!g.arms) return; for (const h of ['Left', 'Right']) { const A = g.arms[h]; if (!A) continue; const a = A.el.clone().sub(A.sh).angleTo(A.wrist.clone().sub(A.el)) * 180 / Math.PI; lim[ri][0] = Math.min(lim[ri][0], a); lim[ri][1] = Math.max(lim[ri][1], a); } });
+      for (const r of c.rigs) r._sonda = p(0, .03, .02); n.pose(c, tl.at(M), M); c.rigs.forEach((r, ri) => { const G1 = gp(r); for (const h of ['Left', 'Right']) if (G0[ri][h] && G1[h] && G0[ri][h].distanceTo(G1[h]) > .012) segue[ri][h]++; }); }
+    c.rigs.forEach((r, ri) => { r._semCorr = 0; r._sonda = null; r._ativo = lim[ri][1] - lim[ri][0] > 35; r._ancFixo = { Left: segue[ri].Left >= NP / 2, Right: segue[ri].Right >= NP / 2 }; }); }
   if (n.noSeparate) return null;
   const rigs = new Set(); for (const r of c.rigs) r.root.traverse(o => rigs.add(o));
   const malhas = []; for (const r of c.rigs) r.root.traverse(o => { if (o.isSkinnedMesh && o.visible) malhas.push(o); });

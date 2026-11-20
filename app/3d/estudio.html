@@ -59,7 +59,7 @@ if (LOTE) { document.body.classList.add('lote'); st.remove();
     let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) {}
     const L = todos.filter(s => window.__EX[s]); let feitos = 0, falhas = 0, novos = 0, t0 = performance.now();
     /* vídeos de uma versão anterior do 3D que estejam na pasta são refeitos; os da versão atual são aproveitados (dá para parar e continuar) */
-    const VERSAO = '3d-v3'; let refazer = false;
+    const VERSAO = '3d-v4'; let refazer = false;
     if (pasta) { try { const f = await (await pasta.getFileHandle('versao.txt')).getFile(); refazer = (await f.text()).trim() !== VERSAO; } catch (e) { refazer = true; }
       if (refazer) log('Os vídeos que já estavam na pasta são de uma versão anterior e serão refeitos.'); const w = await (await pasta.getFileHandle('versao.txt', { create: true })).createWritable(); await w.write(VERSAO); await w.close(); }
     for (const slug of L) { try { let ja = false; if (pasta && !refazer) { try { await pasta.getFileHandle(slug + '.mp4'); ja = true; } catch (e) {} } if (ja) log(slug + ': já estava pronto'); else { for (let vez = 1; ; vez++) { try { await gravar(slug, pasta, log); break; } catch (e) { if (vez >= 3) throw e; log(`${slug}: tentando de novo (${e && e.message || e})`); await new Promise(r => setTimeout(r, 3000)); } } } } catch (e) { falhas++; log(`${slug}: ERRO ${e && e.message || e}`); }
