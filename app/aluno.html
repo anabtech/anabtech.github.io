@@ -273,7 +273,7 @@ body.tmr-on .st{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 @media (max-width:420px){#app .lg{margin-left:15px}#app .lg-r input{padding:0 8px}}
 /* miniatura do exercício */
 .ex-th{flex:none;position:relative;width:56px;height:56px;border-radius:12px;overflow:hidden;border:0;padding:0;background:#0a0a0a;cursor:pointer;margin:-2px 0 0 4px;-webkit-tap-highlight-color:transparent}
-.ex-th img{width:100%;height:100%;object-fit:cover;object-position:50% 38%;display:block}
+.ex-th img{width:100%;height:100%;object-fit:cover;object-position:50% 24%;display:block}
 .ex-th i{position:absolute;right:4px;bottom:4px;width:20px;height:20px;border-radius:50%;background:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .ex-th i::after{content:'';position:absolute;left:8px;top:5.5px;border-style:solid;border-width:4.5px 0 4.5px 7px;border-color:transparent transparent transparent #0b0c0e}
 /* vídeo por cima da página */
@@ -547,7 +547,9 @@ function montar() {
   if (!SNAP || !SNAP.html) return telaPin();
   const doc = new DOMParser().parseFromString(SNAP.html, 'text/html');
   let st = $('pcss'); if (!st) { st = document.createElement('style'); st.id = 'pcss'; document.head.appendChild(st); }
-  st.textContent = [...doc.querySelectorAll('style')].map(x => x.textContent).join('\n') + `\n#tb-f:checked~main .pg-f{display:block}#tb-f:checked~.bar label[for=tb-f]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-n:checked~main .pg-n{display:block}#tb-n:checked~.bar label[for=tb-n]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-e:checked~main .pg-e{display:block}#tb-e:checked~.bar label[for=tb-e]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}`;
+  st.textContent = [...doc.querySelectorAll('style')].map(x => x.textContent).join('\n') + `\n.vlink{aspect-ratio:9/16!important}#tb-f:checked~main .pg-f{display:block}#tb-f:checked~.bar label[for=tb-f]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-n:checked~main .pg-n{display:block}#tb-n:checked~.bar label[for=tb-n]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}#tb-e:checked~main .pg-e{display:block}#tb-e:checked~.bar label[for=tb-e]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}`;
+  /* os vídeos mudaram de endereço (repositório próprio): treinos publicados antes continuam valendo */
+  doc.querySelectorAll('a.vlink, .vlink img, video').forEach(el => ['href', 'src', 'poster'].forEach(at => { const v = el.getAttribute(at); if (v && v.includes('anabtech.github.io/app/videos/')) el.setAttribute(at, v.replace('anabtech.github.io/app/videos/', 'anabtech.github.io/videos/')); }));
   doc.querySelectorAll('.vlink img').forEach(i => i.setAttribute('loading', 'lazy'));
   $('app').innerHTML = doc.body.innerHTML;
   const app = $('app');
