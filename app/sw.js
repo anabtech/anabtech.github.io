@@ -1,8 +1,8 @@
-// AnabTech 2.2.1 — service worker
+// AnabTech 2.2.2 — service worker
 // Página: busca a versão nova na rede primeiro e usa a cópia guardada sem internet.
 // Fontes, ícones e GIFs: usa a cópia guardada e atualiza em segundo plano.
 // Imagens de exercícios de fora e buscas no Open Food Facts não passam pelo cache.
-const CACHE_NAME = 'mgcoach-consultoria-v2-2-1';
+const CACHE_NAME = 'mgcoach-consultoria-v2-2-2';
 const ICONES = ['./apple-touch-icon.png', './icon-192.png', './icon-512.png', './favicon.png'];
 const DO_COACH = ['./', './index.html', './manifest.json'], DO_ALUNO = ['./aluno.html', './guia.html', './novidades.json'];
 // Quem instala decide o que guardar: a página do aluno não precisa baixar o app do treinador, e vice-versa.

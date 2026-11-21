@@ -402,7 +402,7 @@ html[data-layout="pc"] .tab-ct{position:static;margin-left:auto}
 .fb-t{margin-top:10px;font-size:14px;white-space:pre-wrap}
 .pga{margin-top:16px;border-left:4px solid var(--accent)}.pgc-l{display:flex;flex-direction:column;gap:10px}.pgc-i{background:var(--paper);border-radius:12px;padding:10px 12px}.pgc-i .row-sw{font-size:14px;margin-bottom:6px}.pgc-i input{width:100%;height:42px;border:1px solid var(--rule);border-radius:10px;padding:0 12px;background:#fff;font:inherit;font-size:14px;outline:none}.pgc-i input:focus{border-color:var(--data)}
 .pgc-h{margin-top:12px;font-size:13.5px}.pgc-h summary{cursor:pointer;font-weight:600;color:var(--data)}.pgc-h ol{margin:8px 0 0 18px;display:flex;flex-direction:column;gap:4px}
-.cobreg{display:flex;align-items:center;justify-content:space-between;gap:12px;border-left:4px solid var(--accent)}.cobreg>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cobreg{display:flex;align-items:center;justify-content:space-between;gap:12px;border-left:4px solid var(--accent)}.rl-cta{flex-wrap:wrap}.rl-cta>div:first-child{flex:1 1 260px}.rl-cta>div.opts{flex-direction:row;flex-wrap:nowrap;gap:6px}.cobreg>div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .fm-pv{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border-radius:12px;padding:10px;margin-bottom:10px;font-size:13px;color:var(--ink-2)}.fm-pv img{flex:none;width:72px;height:90px;object-fit:cover;border-radius:8px}.fm-pv b{display:block;color:var(--ink);font-size:13.5px}
 .rsp{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:6px}.rsp-t{width:100%;background:#eef6ff;border-left:3px solid var(--data);border-radius:6px;padding:6px 9px;font-size:13px;display:flex;flex-direction:column}.rsp-t div{font-size:12px;color:var(--ink-2)}.rsp-t b{color:var(--data)}.rsp-t span{white-space:pre-wrap}
 .rsp-b{display:flex;flex-wrap:wrap;gap:6px}.rsp-v{background:transparent;border:1px solid var(--rule);color:var(--ink-2)}.rsp-v.on{background:#ecfdf3;border-color:#86efac;color:#15803d;font-weight:600}
@@ -3601,7 +3601,7 @@ function histDe(a) {
 /* 1RM estimado por Epley (peso × (1 + reps/30)). Só usa séries de 1 a 12 repetições: acima disso a estimativa erra demais. */
 function e1rm(kg, reps) { kg = num(kg); reps = parseInt(reps, 10); if (!(kg > 0) || !(reps >= 1) || reps > 12) return null; return reps === 1 ? kg : kg * (1 + reps / 30); }
 const serieNum = z => !z.rot || /^\d+$/.test(String(z.rot));
-function evoDe(a) {
+function evoDe(a, todos) {
   const T = ((a.registros || {}).treinos || []).slice().sort((x, y) => x.data.localeCompare(y.data));
   const ex = {}, cardio = [], sess = [];
   for (const t of T) {
@@ -3624,8 +3624,8 @@ function evoDe(a) {
     (t.cardio || []).forEach(c => cardio.push([t.data, c.mod || '', c.eq || '', c.min || 0, c.fc || 0, c.pse || 0, c.km || 0, c.zona || 0]));
     if (t.pse != null || t.min) sess.push([t.data, t.min || 0, t.pse != null ? t.pse : -1, (t.cardio || []).reduce((s2, c) => s2 + (c.min || 0), 0)]);
   }
-  const ks = Object.keys(ex).sort((x, y) => ex[y].p.length - ex[x].p.length).slice(0, 40);
-  const out = {}; ks.forEach(k => { out[k] = { n: ex[k].n, p: ex[k].p.slice(-40), pr: ex[k].pr, u: ex[k].u }; });
+  const ks = Object.keys(ex).sort((x, y) => ex[y].p.length - ex[x].p.length).slice(0, todos ? 999 : 40);
+  const out = {}; ks.forEach(k => { out[k] = { n: ex[k].n, p: todos ? ex[k].p : ex[k].p.slice(-40), pr: ex[k].pr, u: ex[k].u }; });
   const tst = ((a.registros || {}).testes || []).slice(0, 40).map(t => [t.data, t.tipo, t.v]);
   const peso = ((a.registros || {}).feedbacks || []).filter(f => num(f.peso) > 0).map(f => [f.data, num(f.peso)]).sort((x, y) => x[0].localeCompare(y[0])).slice(-40);
   return { ex: out, cardio: cardio.slice(-150), sess: sess.slice(-120), tst, peso };
@@ -3737,7 +3737,7 @@ function sinaisDe0(a) {
   const plan = DIAS.filter(([k]) => ((a.treino.dias[k] || {}).ex || []).length).length, feitos7 = new Set(T.filter(t => t.data > isoMenosDias(hoje, 7)).map(t => t.data)).size;
   if (noApp && desde >= 7 && plan >= 3 && T.length && feitos7 > 0 && feitos7 <= plan - 2) S.push({ n: 1, t: `Treinou ${feitos7} de ${plan} dias na última semana`, s: 'Dias com treino salvo no app.' });
   /* dor relatada no último feedback */
-  { const f = F[0]; if (f && f.dores && difDias(f.data, hoje) <= 10 && !/^(n[ãa]o|nenhum|nada|sem)\b/i.test(f.dores.trim())) S.push({ n: 1, t: 'Relatou dor ou desconforto', s: `Feedback de ${dataBR(f.data)}: “${f.dores.slice(0, 90)}${f.dores.length > 90 ? '…' : ''}”` }); }
+  { const f = F[0]; if (f && f.dores && difDias(f.data, hoje) <= 10 && !/^(n[ãa]o|nenhum[ao]?|nada|sem)\b/i.test(f.dores.trim())) S.push({ n: 1, t: 'Relatou dor ou desconforto', s: `Feedback de ${dataBR(f.data)}: “${f.dores.slice(0, 90)}${f.dores.length > 90 ? '…' : ''}”` }); }
   /* exercícios: pode subir, estagnou, caiu (mesmas regras da tabela de evolução) */
   if (T.length) {
     const E = evoDe(a), h28 = isoMenosDias(hoje, 28), h42 = isoMenosDias(hoje, 42), sobe = [], plato = [], queda = [];
@@ -3769,33 +3769,374 @@ function sinaisHTML(a) {
   return `<div class="block sn"><div class="sn-h"><h3>Sinais de ${esc(primeiroNome(a.dados.nome) || 'aluno')}</h3><span class="sn-p s${X.nivel}">${rot}</span></div>
     ${X.itens.length ? `<ul class="sn-l">${X.itens.map(s => `<li class="s${s.n < 0 ? 'u' : s.n}"><div><b>${esc(s.t)}</b><span>${esc(s.s)}</span></div></li>`).join('')}</ul>` : '<p class="note" style="margin-top:6px">Registros, feedback, dieta e cargas dentro do esperado.</p>'}</div>`;
 }
-/* ---------- relatório dos últimos 30 dias, pronto para mandar ao aluno ---------- */
-function relMesTexto(a) {
-  const R = a.registros || {}, hoje = todayISO(), d30 = isoMenosDias(hoje, 30), E = evoDe(a), dias = new Set(); let vol = 0; const PR = [];
-  Object.values(E.ex).forEach(v => { const D = v.p.filter(q => q[0] > d30), A = v.p.filter(q => q[0] <= d30); D.forEach(q => { dias.add(q[0]); vol += q[4] || 0; });
-    const comE = D.filter(q => q[1] > 0); if (!comE.length) return; const bj = comE.reduce((m, q) => q[1] > m[1] ? q : m, comE[0]), prim = v.p.filter(q => q[1] > 0)[0];
-    const base = A.length ? Math.max(...A.map(q => q[1])) : (prim || [0, 0])[1]; if (base > 0 && bj[1] >= base + 0.5 && bj !== prim) PR.push({ n: v.n, e: bj[1], d: bj[1] - base }); });
-  const cd = E.cardio.filter(x => x[0] > d30); cd.forEach(x => dias.add(x[0])); const cmin = cd.reduce((s, x) => s + (x[3] || 0), 0);
-  PR.sort((x, y) => y.d / y.e - x.d / x.e);
-  const F = (R.feedbacks || []).filter(f => f.data > d30), P = (E.peso || []), pj = P.filter(x => x[0] > d30), pa = P.filter(x => x[0] <= d30), p0 = pa.length ? pa[pa.length - 1] : pj[0], p1 = pj[pj.length - 1];
-  const med = k => { const V = F.map(f => num(f[k])).filter(v => v > 0); return V.length ? fmt(V.reduce((s, v) => s + v, 0) / V.length) : ''; };
-  const Dd = Object.entries(R.dieta || {}).filter(([d, x]) => d > d30 && x && x.total), dpc = Dd.length ? Math.round(Dd.reduce((s, [, x]) => s + x.feitas.length / x.total, 0) / Dd.length * 100) : null;
-  const L = [`*Relatório dos últimos 30 dias · ${primeiroNome(a.dados.nome)}*`, `${dataBR(isoMenosDias(hoje, 29))} a ${dataBR(hoje)}`, ''];
-  L.push(`🏋️ *Treino:* ${dias.size} ${dias.size === 1 ? 'treino registrado' : 'treinos registrados'} (média de ${fmt(dias.size / 30 * 7)} por semana)${vol ? `, ${Math.round(vol).toLocaleString('pt-BR')} kg levantados` : ''}`);
-  if (PR.length) L.push(`🏆 *Recordes:* ${PR.slice(0, 4).map(x => `${x.n} (${fmt(x.e)} kg de força estimada, +${fmt(x.d)} kg)`).join('; ')}`);
-  if (cmin) L.push(`❤️ *Cardio:* ${Math.round(cmin)} min`);
-  if (dpc != null) L.push(`🥗 *Dieta:* ${Dd.length} ${Dd.length === 1 ? 'dia marcado' : 'dias marcados'} no app, com ${dpc}% das refeições feitas`);
-  if (p0 && p1 && p0 !== p1) { const d = p1[1] - p0[1]; L.push(`⚖️ *Peso:* ${fmt(p0[1])} → ${fmt(p1[1])} kg (${d > 0 ? '+' : d < 0 ? '−' : ''}${fmt(Math.abs(d))} kg)`); } else if (p1) L.push(`⚖️ *Peso:* ${fmt(p1[1])} kg`);
-  if (med('sono') || med('energia')) L.push(`😴 *Feedbacks:* ${[med('sono') ? 'sono ' + med('sono') + ' de 5' : '', med('energia') ? 'energia ' + med('energia') + ' de 5' : ''].filter(Boolean).join(', ')} (média de ${F.length} ${F.length === 1 ? 'feedback' : 'feedbacks'})`);
-  L.push('', '*Próximo passo:* ');
-  return { txt: L.join('\n'), vazio: !dias.size && !F.length && !Dd.length };
+/* ---------- relatório do aluno: análise de 7, 15 ou 30 dias, comparada com o período anterior ----------
+   Tudo sai dos registros que o aluno faz na página dele: treinos (cargas, séries, cardio, duração, esforço),
+   refeições marcadas (com calorias e macros), água, feedbacks (peso, sono, energia, fome, dores), fotos e testes. */
+const REL_N = [7, 15, 30];
+const relJan = (N, volta) => { const fim = isoMenosDias(todayISO(), N * volta); return { ini: isoMenosDias(fim, N - 1), fim, dias: [...Array(N)].map((_, i) => isoMenosDias(fim, N - 1 - i)) }; };
+const relSemK = d => ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'][dObj(d).getDay()];
+const relSemR = d => ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][dObj(d).getDay()];
+const relMil = n => isFinite(n) ? Math.round(n).toLocaleString('pt-BR') : '–';
+const relMed = L => L.length ? L.reduce((s, x) => s + x, 0) / L.length : null;
+const relTesteNome = { repouso: 'FC de repouso', fala: 'Teste da fala', c6: 'Caminhada de 6 min', rockport: 'Teste de Rockport', cooper: 'Teste de Cooper' };
+function relTipoDia(a, d) { const D = a.dieta; return D.ciclo.ativa ? (D.ciclo.dias[relSemK(d)] || 'alto') : 'unico'; }
+function relRefsPlano(a, d) { try { return planoDe(a, relTipoDia(a, d)).refeicoes.filter(r => r.ops.some(o => o.itens.length)).map(r => r.nome || 'Refeição'); } catch (e) { return []; } }
+function relMetaDia(a, d, x) { if (x && x.alvo) return x.alvo; const M = metasDieta(a, relTipoDia(a, d)); return M.ok ? [M.kcal, M.p, M.c, M.g].map(Math.round) : null; }
+/* o que o plano pede por semana: dias de musculação, séries por músculo e cardio */
+function relPlano(a) {
+  const dias = DIAS.filter(([k]) => (a.treino.dias[k].ex || []).length), C = DIAS.flatMap(([k]) => a.treino.dias[k].cardio || []);
+  const ex = []; DIAS.forEach(([k]) => (a.treino.dias[k].ex || []).forEach(x => ex.push({ id: x.exId, alt: x.alt && x.alt.exId, n: x.n, dia: a.treino.dias[k].nome || DIAS.find(z => z[0] === k)[2] })));
+  return { dias: dias.length, ex, series: volumeSemanal(a.treino), cardioN: C.length, cardioMin: C.reduce((s, c) => s + (num(c.min) || (ehInterv(c) ? 20 : 30)), 0) };
 }
-ACT.relMes = () => { const a = cur(); if (!a) return; const r = relMesTexto(a);
-  openSheet({ title: 'Relatório dos últimos 30 dias', tall: true,
-    body: `<p class="note" style="margin-bottom:10px">${r.vazio ? 'Este aluno ainda não tem registros nos últimos 30 dias.' : 'Montado com os registros do app. Complete o próximo passo e revise antes de mandar.'}</p><textarea id="relTxt" style="width:100%;min-height:320px;font-size:15px;line-height:1.5;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-field);padding:12px 13px;color:var(--ink)">${esc(r.txt)}</textarea>`,
-    foot: `<button class="btn btn-line" type="button" data-act="relCopiar">Copiar</button><a class="btn btn-ink" id="relWa" target="_blank" rel="noopener" href="${esc(waLink(a, r.txt))}">Abrir no WhatsApp</a>`,
-    onMount: sh => { const t = sh.querySelector('#relTxt'), w = sh.querySelector('#relWa'); t.addEventListener('input', () => { w.href = waLink(a, t.value); }); } }); };
-ACT.relCopiar = async () => { const t = document.getElementById('relTxt'); if (t && await copiarTexto(t.value)) toast('Relatório copiado'); };
+/* números de uma janela de dias */
+function relBloco(a, J) {
+  const R = a.registros || {}, em = d => d >= J.ini && d <= J.fim, hoje = todayISO();
+  const tem = t => (t.exs || []).some(x => (x.sets || []).some(z => num(z.kg) > 0 || parseInt(z.reps, 10) > 0)) || (t.cardio || []).length;
+  const T = (R.treinos || []).filter(t => em(t.data) && tem(t)).sort((x, y) => x.data.localeCompare(y.data) || String(x.em).localeCompare(String(y.em)));
+  const mus = {}, cardio = [];
+  const sess = T.map(t => { let ton = 0, ser = 0, nex = 0;
+    (t.exs || []).forEach(x => { let s1 = 0; (x.sets || []).forEach(z => { const kg = num(z.kg) || 0, r = parseInt(z.reps, 10) || 0; if (r > 0) { ton += kg * r; s1 += pesoSerie(z); } }); if (!s1) return; nex++; ser += s1;
+      const [pm, sm] = muscDoEx(a, x.exId); pm.forEach(m => mus[m] = (mus[m] || 0) + s1); sm.forEach(m => mus[m] = (mus[m] || 0) + s1 * 0.5); });
+    (t.cardio || []).forEach(c => cardio.push({ d: t.data, mod: c.mod, eq: c.eq, min: num(c.min) || 0, km: num(c.km) || 0, fc: num(c.fc) || 0, pse: num(c.pse) || 0 }));
+    const sig = (a.treino.dias[t.dia] || {}).sigla || '';
+    return { d: t.data, n: t.nomeDia || 'Treino', sig, min: num(t.min) || 0, pse: t.pse != null && t.pse !== '' ? num(t.pse) : null, nex, ser, ton, cmin: (t.cardio || []).reduce((s, c) => s + (num(c.min) || 0), 0) }; });
+  const musc = sess.filter(s => s.nex), diasMus = new Set(musc.map(s => s.d)), diasCar = new Set(cardio.map(c => c.d));
+  /* dieta e água, dia a dia */
+  const Dd = R.dieta || {}, porRef = {}, notas = [];
+  const dia = J.dias.map(d => { const x = Dd[d], D = x ? dietaDia(a, x) : null, todas = D && D.todas.length ? D.todas : relRefsPlano(a, d);
+    const feitas = D ? D.det.length : 0, troca = D ? D.det.filter(r => r.troca).length : 0, al = relMetaDia(a, d, x);
+    todas.forEach(n => { porRef[n] = porRef[n] || { f: 0, t: 0, tc: 0 }; porRef[n].t++; });
+    if (D) D.det.forEach(r => { if (porRef[r.n]) { porRef[r.n].f++; if (r.troca) porRef[r.n].tc++; } });
+    if (x && x.nota) notas.push([d, x.nota]);
+    const fut = d > hoje;
+    return { d, fut, reg: !!(D && D.det.length), prev: todas.length, feitas, troca, m: D && D.soma, al, ag: (x && x.agua) || 0, tr: diasMus.has(d), sig: musc.filter(s => s.d === d).map(s => s.sig).filter(Boolean).join('+'), cmin: cardio.filter(c => c.d === d).reduce((s, c) => s + c.min, 0) }; });
+  const comM = dia.filter(z => z.m), macro = i => relMed(comM.map(z => z.m[i])), meta = i => relMed(comM.filter(z => z.al).map(z => z.al[i]));
+  const naMeta = i => comM.filter(z => z.al && z.m[i] >= z.al[i] * 0.9 && (i === 1 || z.m[i] <= z.al[i] * 1.1)).length;
+  /* corpo e bem-estar */
+  const F = (R.feedbacks || []).filter(f => em(f.data)).sort((x, y) => x.data.localeCompare(y.data));
+  const fmed = k => relMed(F.map(f => num(f[k])).filter(v => v > 0));
+  const testes = (R.testes || []).filter(t => em(t.data)), fotos = [...new Set((R.fotos || []).filter(f => em(f.data)).map(f => f.data))];
+  const regDias = new Set([...sess.map(s => s.d), ...dia.filter(z => z.reg || z.ag).map(z => z.d), ...F.map(f => f.data)]);
+  return { J, sess, musc, diasMus: diasMus.size, diasCar: diasCar.size, mus, cardio,
+    ton: musc.reduce((s, x) => s + x.ton, 0), ser: musc.reduce((s, x) => s + x.ser, 0), durMed: relMed(musc.filter(s => s.min).map(s => s.min)), pseMed: relMed(musc.filter(s => s.pse != null).map(s => s.pse)),
+    cMin: cardio.reduce((s, c) => s + c.min, 0), cKm: cardio.reduce((s, c) => s + c.km, 0), cFc: relMed(cardio.filter(c => c.fc).map(c => c.fc)), cPse: relMed(cardio.filter(c => c.pse).map(c => c.pse)),
+    dia, porRef, notas, diasDieta: dia.filter(z => z.reg).length, prev: dia.filter(z => !z.fut).reduce((s, z) => s + z.prev, 0), prevReg: dia.filter(z => z.reg).reduce((s, z) => s + z.prev, 0),
+    feitas: dia.reduce((s, z) => s + z.feitas, 0), trocas: dia.reduce((s, z) => s + z.troca, 0), nMac: comM.length, macro: [0, 1, 2, 3].map(macro), meta: [0, 1, 2, 3].map(meta), naMeta: [0, 1, 2, 3].map(naMeta),
+    agDias: dia.filter(z => z.ag > 0).length, agMed: relMed(dia.filter(z => z.ag > 0).map(z => z.ag)),
+    F, sono: fmed('sono'), energia: fmed('energia'), fome: fmed('fome'), dores: F.filter(f => f.dores && !/^(n[ãa]o|nenhum[ao]?|nada|sem)\b/i.test(f.dores.trim())), coment: F.filter(f => f.comentario),
+    testes, fotos, regDias: regDias.size };
+}
+/* peso: feedbacks e avaliações */
+function relPesos(a) {
+  const L = [...((a.registros || {}).feedbacks || []).filter(f => num(f.peso) > 0).map(f => [f.data, num(f.peso), 'fb']), ...(a.avaliacoes || []).filter(v => num(v.peso) > 0 && dOk(v.data)).map(v => [v.data, num(v.peso), 'av', num(v.bf)])];
+  const m = new Map(); L.sort((x, y) => x[0].localeCompare(y[0])).forEach(p => { const o = m.get(p[0]); if (!o || p[2] === 'av') m.set(p[0], p); });
+  return [...m.values()];
+}
+/* evolução das cargas, exercício por exercício */
+function relCargas(a, J, Q) {
+  const E = evoDe(a, true).ex, ordem = new Map(); relPlano(a).ex.forEach((x, i) => { if (!ordem.has(x.id)) ordem.set(x.id, i); if (x.alt && !ordem.has(x.alt)) ordem.set(x.alt, i + 0.5); });
+  const out = [];
+  Object.entries(E).forEach(([k, v]) => { const pJ = v.p.filter(q => q[0] >= J.ini && q[0] <= J.fim); if (!pJ.length) return;
+    const pA = v.p.filter(q => q[0] < J.ini), pQ = pA.filter(q => q[0] >= Q.ini), usa1 = pJ.some(q => q[1] > 0), val = q => usa1 ? q[1] : q[2];
+    const bj = pJ.reduce((m, q) => val(q) > val(m) ? q : m, pJ[0]), best = val(bj);
+    const ref = pQ.length ? Math.max(...pQ.map(val)) : pA.length ? val(pA[pA.length - 1]) : null, hist = pA.length ? Math.max(...pA.map(val)) : null;
+    const dp = ref ? (best / ref - 1) * 100 : null;
+    const st = !pA.length ? 'novo' : hist && best > hist * 1.005 ? 'rec' : dp != null && dp >= 2 ? 'sobe' : dp != null && dp <= -5 ? 'cai' : 'man';
+    const prs = !pA.length ? [] : Object.entries(v.pr || {}).filter(([, z]) => z[1] >= J.ini && z[1] <= J.fim).map(([r, z]) => [+r, z[0]]).sort((x, y) => y[1] - x[1]);
+    out.push({ k, n: v.n, o: ordem.has(k) ? ordem.get(k) : 999, s: pJ.length, ant: pA[pA.length - 1] || null, ini: pJ[0], fim: pJ[pJ.length - 1], best, bj, usa1, ref, dp, st, prs,
+      vol: pJ.reduce((s, q) => s + (q[4] || 0), 0), spk: [...pA.slice(-4), ...pJ].map(val) }); });
+  return out.sort((x, y) => x.o - y.o || y.s - x.s);
+}
+function relDados(a, N) {
+  const J = relJan(N, 0), Q = relJan(N, 1), A = relBloco(a, J), B = relBloco(a, Q), P = relPlano(a), f = N / 7;
+  const M = metasDieta(a, 'unico'), get = M.ok && isFinite(M.get) ? M.get : null, agM = aguaMeta(a), pesos = relPesos(a);
+  const pJ = pesos.filter(p => p[0] >= J.ini && p[0] <= J.fim), pAnt = pesos.filter(p => p[0] < J.ini);
+  const ex = relCargas(a, J, Q), passou = new Set(); (A.sess.length ? ((a.registros || {}).treinos || []).filter(t => t.data >= J.ini && t.data <= J.fim) : []).forEach(t => (t.exs || []).forEach(x => { if ((x.sets || []).some(z => z.reps)) passou.add(x.exId); }));
+  const pulados = N >= 7 && A.diasMus ? P.ex.filter(x => !passou.has(x.id) && !(x.alt && passou.has(x.alt))) : [];
+  const espT = Math.max(1, Math.round(P.dias * f)), espC = P.cardioMin * f;
+  /* aderência: treinos feitos, refeições feitas, dias com a água na meta, cardio feito (se houver) */
+  const ader = [['Treinos', P.dias ? Math.min(1, A.diasMus / espT) : null, `${A.diasMus} de ${espT} dias`],
+    ['Refeições', A.prev ? A.feitas / A.prev : null, `${A.feitas} de ${A.prev}`],
+    ['Água', agM ? A.dia.filter(z => !z.fut && z.ag >= agM).length / N : null, agM ? `${A.dia.filter(z => z.ag >= agM).length} de ${N} dias na meta` : ''],
+    ['Cardio', espC ? Math.min(1, A.cMin / espC) : null, espC ? `${relMil(A.cMin)} de ${relMil(espC)} min` : '']].filter(x => x[1] != null);
+  const geral = ader.length ? relMed(ader.map(x => x[1])) : null;
+  return { a, N, J, Q, A, B, P, M, get, agM, pesos, pJ, pAnt, ex, pulados, espT, espC, ader, geral, S: mesoStatus(a.treino.meso), peso0: num(a.dados.peso) };
+}
+
+/* ----- textos automáticos: o que foi bem e o que pede atenção ----- */
+function relLeitura(X) {
+  const { A, B, N, P, espT, espC, agM, ex, pulados, get } = X, bom = [], atn = [];
+  const pc = v => Math.round(v * 100) + '%';
+  if (P.dias) { const r = A.diasMus / espT; if (r >= 0.9) bom.push(`Treinou ${A.diasMus} de ${espT} dias previstos.`); else if (A.diasMus === 0) atn.push(`Nenhum treino de musculação registrado no período (${espT} previstos).`); else if (r < 0.7) atn.push(`Treinou ${A.diasMus} de ${espT} dias previstos (${pc(r)}).`); }
+  const rec = ex.filter(e => e.st === 'rec'), sobe = ex.filter(e => e.st === 'sobe'), cai = ex.filter(e => e.st === 'cai');
+  const nomes = L => L.slice(0, 3).map(e => e.n).join(', ') + (L.length > 3 ? ` e mais ${L.length - 3}` : '');
+  if (rec.length) bom.push(`${plur(rec.length, 'recorde', 'recordes')} de força: ${nomes(rec)}.`);
+  if (sobe.length) bom.push(`Força subindo em ${plur(sobe.length, 'exercício')}: ${nomes(sobe)}.`);
+  if (cai.length) atn.push(`Força caiu mais de 5% em ${plur(cai.length, 'exercício')}: ${nomes(cai)}. Vale olhar sono, dieta e dor.`);
+  if (pulados.length >= 2) atn.push(`${plur(pulados.length, 'exercício do plano ficou', 'exercícios do plano ficaram')} sem registro: ${pulados.slice(0, 3).map(x => x.n).join(', ')}${pulados.length > 3 ? '…' : ''}.`);
+  if (B.ton && A.ton) { const d = (A.ton / B.ton - 1) * 100; if (d >= 10) bom.push(`Tonelagem ${Math.round(d)}% maior que nos ${N} dias anteriores.`); else if (d <= -20) atn.push(`Tonelagem ${Math.round(-d)}% menor que nos ${N} dias anteriores.`); }
+  if (espC) { const r = A.cMin / espC; if (r >= 0.9) bom.push(`Cardio em dia: ${relMil(A.cMin)} de ${relMil(espC)} min previstos.`); else if (r < 0.6) atn.push(`Cardio abaixo do previsto: ${relMil(A.cMin)} de ${relMil(espC)} min.`); }
+  if (A.prev) { const r = A.feitas / A.prev; if (r >= 0.85) bom.push(`Fez ${pc(r)} das refeições do plano.`); else if (r < 0.6) atn.push(`Fez ${pc(r)} das refeições do plano (${A.feitas} de ${A.prev}).`);
+    if (A.diasDieta < N * 0.6 && A.diasDieta < N) atn.push(`Marcou a dieta em ${A.diasDieta} de ${N} dias: o resto do período fica sem dado.`); }
+  const pr = Object.entries(A.porRef).filter(([, c]) => c.t >= 3 && c.f / c.t < 0.6).sort((x, y) => x[1].f / x[1].t - y[1].f / y[1].t)[0];
+  if (pr) atn.push(`${pr[0]} é a refeição mais pulada: feita em ${pr[1].f} de ${pr[1].t} dias.`);
+  if (A.nMac && A.meta[1]) { const r = A.macro[1] / A.meta[1]; if (r >= 0.9) bom.push(`Proteína na meta: ${fk(A.macro[1])} g por dia (meta ${fk(A.meta[1])} g).`); else atn.push(`Proteína abaixo da meta: ${fk(A.macro[1])} g por dia, ${pc(r)} dos ${fk(A.meta[1])} g.`); }
+  if (A.nMac && get && A.meta[0]) { const bal = A.macro[0] - get, plan = A.meta[0] - get;
+    if (plan <= -100 && bal >= 0) atn.push(`Objetivo de déficit, mas comeu acima do gasto estimado (+${relMil(bal)} kcal por dia).`);
+    else if (plan >= 100 && bal <= 0) atn.push(`Objetivo de superávit, mas comeu abaixo do gasto estimado (${relMil(bal)} kcal por dia).`);
+    else if (Math.abs(A.macro[0] / A.meta[0] - 1) <= 0.1) bom.push(`Calorias perto da meta: ${relMil(A.macro[0])} kcal por dia.`); }
+  if (agM && A.agDias) { const ok = A.dia.filter(z => z.ag >= agM).length; if (ok >= N * 0.7) bom.push(`Água na meta em ${ok} de ${N} dias.`); else atn.push(`Água na meta em só ${ok} de ${N} dias (média de ${fmt(A.agMed / 1000, 1)} L, meta ${fmt(agM / 1000, 1)} L).`); }
+  else if (agM && !A.agDias && A.regDias) atn.push('Não registrou a água em nenhum dia.');
+  if (A.sono != null && A.sono <= 2.5) atn.push(`Sono baixo nos feedbacks: ${fmt(A.sono, 1)} de 5.`);
+  if (A.energia != null && A.energia <= 2.5) atn.push(`Energia baixa nos feedbacks: ${fmt(A.energia, 1)} de 5.`);
+  if (A.dores.length) atn.push(`Relatou dor ou desconforto em ${plur(A.dores.length, 'feedback')}.`);
+  if (!A.F.length && N >= 7 && A.regDias) atn.push('Não mandou feedback no período.');
+  if (!A.regDias) atn.push('Nenhum registro no período.');
+  return { bom, atn };
+}
+
+/* ----- gráficos em SVG, sem biblioteca ----- */
+function relBarras(L, o = {}) {   /* L: [{r: rótulo, v: valor, m: meta, c: classe, t: texto em cima}] */
+  const W = 640, H = o.h || 130, n = L.length, gap = n > 20 ? 3 : n > 10 ? 5 : 8, bw = (W - gap * (n - 1)) / n, top = 18;
+  const mx = Math.max(1, ...L.map(z => Math.max(z.v || 0, z.m || 0))) * 1.06, y = v => top + H - (v / mx) * H;
+  const lab = (z, i) => (n <= 15 || i % 5 === 0 || i === n - 1) ? `<text x="${(i * (bw + gap) + bw / 2).toFixed(1)}" y="${top + H + 17}" text-anchor="middle" class="rl-tx">${esc(z.r)}</text>` : '';
+  return `<svg class="rl-svg" viewBox="0 0 ${W} ${top + H + 22}" role="img" aria-label="${esc(o.lab || '')}">
+    <line x1="0" x2="${W}" y1="${top + H}" y2="${top + H}" class="rl-ax"/>
+    ${L.map((z, i) => { const x = i * (bw + gap), v = z.v || 0; return `${v ? `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(top + H - y(v)).toFixed(1)}" rx="${Math.min(4, bw / 4).toFixed(1)}" class="${z.c || ''}"><title>${esc(z.tt || '')}</title></rect>` : `<rect x="${x.toFixed(1)}" y="${top + H - 3}" width="${bw.toFixed(1)}" height="3" class="vz"/>`}
+      ${z.m ? `<line x1="${(x - 1).toFixed(1)}" x2="${(x + bw + 1).toFixed(1)}" y1="${y(z.m).toFixed(1)}" y2="${y(z.m).toFixed(1)}" class="rl-mt"/>` : ''}
+      ${z.t && n <= 15 ? `<text x="${(x + bw / 2).toFixed(1)}" y="${(y(Math.max(v, z.m || 0)) - 5).toFixed(1)}" text-anchor="middle" class="rl-tv">${esc(z.t)}</text>` : ''}${lab(z, i)}`; }).join('')}</svg>`;
+}
+function relLinha(P, J, o = {}) {   /* P: [[data, valor]] ; eixo x = dias da janela */
+  if (P.length < 2) return '';
+  const W = 640, H = o.h || 120, top = 20, ix = d => Math.max(0, difDias(J.ini, d)), n = Math.max(1, J.dias.length - 1), V = P.map(p => p[1]);
+  const mn = Math.min(...V), mx = Math.max(...V), r = Math.max(mx - mn, 0.6), lo = mn - r * 0.25, hi = mx + r * 0.25;
+  const X = d => 14 + ix(d) / n * (W - 28), Y = v => top + H - (v - lo) / (hi - lo) * H;
+  const pts = P.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`);
+  return `<svg class="rl-svg" viewBox="0 0 ${W} ${top + H + 22}" role="img" aria-label="${esc(o.lab || '')}">${o.faixa ? `<rect x="${X(o.faixa.ini).toFixed(1)}" y="${top - 6}" width="${(W - 14 - X(o.faixa.ini)).toFixed(1)}" height="${H + 6}" class="rl-fx"/>` : ''}<line x1="0" x2="${W}" y1="${top + H}" y2="${top + H}" class="rl-ax"/>
+    <polyline points="${pts.join(' ')}" class="rl-ln"/>${P.map((p, i) => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="5" class="rl-pt"/>${i === 0 || i === P.length - 1 || P.length <= 6 ? `<text x="${X(p[0]).toFixed(1)}" y="${(Y(p[1]) - 10).toFixed(1)}" text-anchor="middle" class="rl-tv">${fmt(p[1], 1)}</text>` : ''}`).join('')}
+    <text x="14" y="${top + H + 17}" class="rl-tx">${dataCurta(J.ini)}</text><text x="${W - 14}" y="${top + H + 17}" text-anchor="end" class="rl-tx">${dataCurta(J.fim)}</text></svg>`;
+}
+const relCl = p => p == null ? '' : p >= 0.9 && p <= 1.1 ? 'ok' : p >= 0.75 && p <= 1.25 ? 'md' : 'bx';
+/* variação contra o período anterior: bom = 1 (subir é bom), -1 (cair é bom), 0 (neutro) */
+function relVar(v, w, o = {}) {
+  if (v == null || w == null || !isFinite(v) || !isFinite(w)) return '';
+  const d = v - w; if (Math.abs(d) < (o.min || 1e-9)) return `<small class="rl-v neu">igual ao período anterior</small>`;
+  const txt = o.pct && w ? `${d > 0 ? '+' : '−'}${Math.round(Math.abs(d / w) * 100)}%` : `${d > 0 ? '+' : '−'}${o.f ? o.f(Math.abs(d)) : fmt(Math.abs(d), 1)}${o.un || ''}`;
+  const cls = !o.bom ? 'neu' : (d > 0) === (o.bom > 0) ? 'up' : 'dn';
+  return `<small class="rl-v ${cls}">${d > 0 ? '▲' : '▼'} ${txt} vs. ${o.N} dias antes</small>`;
+}
+
+/* ----- o relatório em si ----- */
+function relHTML(a, N) {
+  const X = relDados(a, N), { A, B, J, P, M, get, agM, ex, S } = X, nome = a.dados.nome || 'Aluno', L = relLeitura(X), pc = v => Math.round(v * 100) + '%';
+  const vN = { N };
+  const kpi = (rot, val, sub, cls = '') => `<div class="rl-k ${cls}"><span>${rot}</span><b>${val}</b>${sub || ''}</div>`;
+  const pesoT = (() => { const fim = X.pJ[X.pJ.length - 1], ini = X.pAnt.length ? X.pAnt[X.pAnt.length - 1] : X.pJ[0]; if (!fim) return null; return { ini, fim, d: ini && ini !== fim ? fim[1] - ini[1] : null }; })();
+  /* cabeçalho */
+  const head = `<header class="rl-h"><div class="rl-h1"><span class="rl-lb">Relatório de ${N} dias</span><h1>${esc(nome)}</h1>
+      <p>${dataBR(J.ini)} a ${dataBR(J.fim)} · comparado com ${dataBR(X.Q.ini)} a ${dataBR(X.Q.fim)}</p>
+      <p class="rl-h-m">${[a.dados.objetivo, a.dados.nivel, X.peso0 ? fmt(X.peso0, 1) + ' kg no cadastro' : '', S && !S.fim && !S.antes ? `${S.fase[1]} · semana ${S.w} de ${S.sem}` : ''].filter(Boolean).map(esc).join(' · ')}</p></div>
+    ${X.geral != null ? `<div class="rl-g"><span>Aderência geral</span><b>${pc(X.geral)}</b><div class="rl-gl">${X.ader.map(([r, v, s]) => `<div><span>${r}</span><i><em style="width:${Math.round(v * 100)}%" class="${v >= 0.85 ? 'ok' : v >= 0.6 ? 'md' : 'bx'}"></em></i><b>${pc(v)}</b><small>${esc(s)}</small></div>`).join('')}</div></div>` : ''}</header>`;
+  /* resumo em números */
+  const resumo = `<section class="rl-s"><h2>Resumo</h2><div class="rl-kg">
+    ${kpi('Treinos de musculação', `${A.diasMus}${P.dias ? `<i> de ${X.espT}</i>` : ''}`, relVar(A.diasMus, B.diasMus, { ...vN, bom: 1, f: v => fmt(v, 0) }))}
+    ${kpi('Tonelagem', A.ton ? fmt(A.ton / 1000, 1) + '<i> t</i>' : '–', relVar(A.ton, B.ton || null, { ...vN, bom: 1, pct: 1 }))}
+    ${kpi('Cardio', A.cMin ? relMil(A.cMin) + '<i> min</i>' : '–', (X.espC ? `<small>previsto ${relMil(X.espC)} min</small>` : '') + relVar(A.cMin, B.cMin, { ...vN, bom: 1, un: ' min', f: relMil }))}
+    ${kpi('Refeições feitas', A.prev ? `${pc(A.feitas / A.prev)}` : '–', A.prev ? `<small>${A.feitas} de ${A.prev} do plano</small>${relVar(A.feitas / A.prev * 100, B.prev ? B.feitas / B.prev * 100 : null, { ...vN, bom: 1, un: ' p.p.', f: v => fmt(v, 0) })}` : '')}
+    ${kpi('Calorias por dia', A.nMac ? relMil(A.macro[0]) + '<i> kcal</i>' : '–', A.nMac && A.meta[0] ? `<small>meta ${relMil(A.meta[0])} · ${pc(A.macro[0] / A.meta[0])}</small>` : '', A.nMac && A.meta[0] ? relCl(A.macro[0] / A.meta[0]) : '')}
+    ${kpi('Proteína por dia', A.nMac ? fk(A.macro[1]) + '<i> g</i>' : '–', A.nMac ? `<small>${A.meta[1] ? `meta ${fk(A.meta[1])} g · ` : ''}${X.peso0 ? fmt(A.macro[1] / X.peso0, 1) + ' g/kg' : ''}</small>` : '', A.nMac && A.meta[1] ? (A.macro[1] >= A.meta[1] * 0.9 ? 'ok' : A.macro[1] >= A.meta[1] * 0.75 ? 'md' : 'bx') : '')}
+    ${kpi('Água por dia', A.agDias ? fmt(A.agMed / 1000, 1) + '<i> L</i>' : '–', A.agDias ? `<small>${agM ? `meta ${fmt(agM / 1000, 1)} L · ` : ''}${plur(A.agDias, 'dia registrado', 'dias registrados')}</small>` : '', A.agDias && agM ? relCl(Math.min(1, A.agMed / agM)) : '')}
+    ${kpi('Peso', pesoT ? fmt(pesoT.fim[1], 1) + '<i> kg</i>' : '–', pesoT ? `<small>${pesoT.d != null ? `${pesoT.d > 0 ? '+' : pesoT.d < 0 ? '−' : ''}${fmt(Math.abs(pesoT.d), 1)} kg desde ${dataCurta(pesoT.ini[0])}` : 'primeiro registro'}</small>` : '')}
+    ${kpi('Sono · energia', A.sono != null || A.energia != null ? `${A.sono != null ? fmt(A.sono, 1) : '–'}<i> · </i>${A.energia != null ? fmt(A.energia, 1) : '–'}<i> de 5</i>` : '–', `<small>${A.F.length ? `média de ${plur(A.F.length, 'feedback')}` : 'sem feedback no período'}</small>`)}
+    </div></section>`;
+  /* leitura */
+  const leitura = L.bom.length || L.atn.length ? `<section class="rl-s rl-le">
+    ${L.bom.length ? `<div class="rl-lb2 ok"><h3>O que foi bem</h3><ul>${L.bom.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+    ${L.atn.length ? `<div class="rl-lb2 at"><h3>Pede atenção</h3><ul>${L.atn.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}</section>` : '';
+  /* mapa do período */
+  const cel = (c, t, tt) => `<i class="${c}" title="${esc(tt)}">${t || ''}</i>`;
+  const linhaMapa = (rot, f) => `<span class="rl-mr">${rot}</span>${A.dia.map(f).join('')}`;
+  const mapa = `<section class="rl-s"><h2>Mapa do período</h2><div class="rl-map${N > 15 ? ' n30' : ''}" style="grid-template-columns:${N > 15 ? 62 : 76}px repeat(${N},minmax(0,1fr))">
+    <span></span>${A.dia.map((z, i) => `<b class="rl-md${relSemK(z.d) === 'seg' ? ' sg' : ''}">${N <= 15 || relSemK(z.d) === 'seg' || i === 0 ? dObj(z.d).getDate() : ''}</b>`).join('')}
+    ${linhaMapa('Treino', z => cel(z.tr ? 'ok' : z.fut ? 'fu' : 'vz', N <= 15 && z.sig ? esc(z.sig.slice(0, 4)) : '', `${dataBR(z.d)}: ${z.tr ? 'treinou' : 'sem treino'}`))}
+    ${X.espC || A.cMin ? linhaMapa('Cardio', z => cel(z.cmin ? 'ok' : z.fut ? 'fu' : 'vz', N <= 15 && z.cmin ? fk(z.cmin) : '', `${dataBR(z.d)}: ${z.cmin ? fk(z.cmin) + ' min' : 'sem cardio'}`)) : ''}
+    ${A.prev ? linhaMapa('Refeições', z => { const p = z.prev ? z.feitas / z.prev : null; return cel(!z.reg ? (z.fut ? 'fu' : 'vz') : p >= 0.99 ? 'ok' : p >= 0.6 ? 'md' : 'bx', N <= 15 && z.reg ? `${z.feitas}/${z.prev}` : '', `${dataBR(z.d)}: ${z.reg ? z.feitas + ' de ' + z.prev + ' refeições' : 'sem registro'}`); }) : ''}
+    ${A.nMac ? linhaMapa('Proteína', z => { const p = z.m && z.al ? z.m[1] / z.al[1] : null; return cel(!z.m ? (z.fut ? 'fu' : 'vz') : p >= 0.9 ? 'ok' : p >= 0.75 ? 'md' : 'bx', '', `${dataBR(z.d)}: ${z.m ? fk(z.m[1]) + ' g' : 'sem registro'}`); }) : ''}
+    ${agM ? linhaMapa('Água', z => cel(!z.ag ? (z.fut ? 'fu' : 'vz') : z.ag >= agM ? 'ok' : z.ag >= agM * 0.7 ? 'md' : 'bx', '', `${dataBR(z.d)}: ${z.ag ? fmt(z.ag / 1000, 1) + ' L' : 'sem registro'}`)) : ''}
+    </div><p class="rl-n"><i class="ok"></i> feito ou na meta <i class="md"></i> parcial <i class="bx"></i> abaixo <i class="vz"></i> sem registro</p></section>`;
+  /* treino */
+  const stTag = { rec: ['Recorde', 'rec'], sobe: ['Subiu', 'up'], cai: ['Caiu', 'dn'], man: ['Manteve', 'neu'], novo: ['Novo', 'neu'] };
+  const serie = q => q ? `${q[2] ? fmt(q[2], 1) + ' kg' : '—'} × ${q[3] || '—'}` : '—';
+  const exLin = ex.map(e => `<tr><td><b>${esc(e.n)}</b><small>${plur(e.s, 'sessão', 'sessões')}${e.prs.length ? ` · recorde: ${e.prs.slice(0, 2).map(([r, kg]) => `${fmt(kg, 1)} kg × ${r}`).join(', ')}` : ''}</small></td>
+      <td data-l="Antes">${serie(e.ant)}${e.ant ? `<small>${dataCurta(e.ant[0])}</small>` : '<small>primeira vez</small>'}</td><td data-l="No período">${serie(e.fim)}${e.s > 1 ? `<small>começou com ${serie(e.ini)}</small>` : `<small>${dataCurta(e.fim[0])}</small>`}</td>
+      <td data-l="${e.usa1 ? '1RM est.' : 'Maior carga'}">${fmt(e.best, 1)} kg${e.dp != null ? `<small class="${e.dp >= 2 ? 'up' : e.dp <= -5 ? 'dn' : ''}">${e.dp >= 0 ? '+' : '−'}${fmt(Math.abs(e.dp), 1)}%</small>` : ''}</td>
+      <td class="rl-sp">${sparkSVG(e.spk, 78, 24)}</td><td><span class="rl-tg ${stTag[e.st][1]}">${stTag[e.st][0]}</span></td></tr>`).join('');
+  /* volume de séries por grupo muscular: feitas no período, por semana, previsto pelo plano e contra o período anterior */
+  const sem7 = Object.fromEntries(P.series), mks = [...new Set([...P.series.map(x => x[0]), ...Object.keys(A.mus), ...Object.keys(B.mus)])].filter(m => (sem7[m] || 0) >= 0.5 || (A.mus[m] || 0) >= 0.5).sort((x, y) => (sem7[y] || 0) - (sem7[x] || 0) || (A.mus[y] || 0) - (A.mus[x] || 0));
+  const totF = Object.values(A.mus).reduce((s, v) => s + v, 0), totP = P.series.reduce((s, x) => s + x[1], 0), porSem = v => v * 7 / N;
+  const volH = mks.length && (A.musc.length || totP) ? `<h3>Volume de séries por grupo muscular</h3><p class="rl-n2">Séries válidas registradas pelo aluno (músculo secundário conta meia série). “Por semana” é a média do período; o traço na barra é o previsto pelo plano.</p>
+    <div class="rl-vol"><div class="rl-vh"><span>Grupo</span><span></span><span>No período</span><span>Por semana</span></div>
+    ${mks.map(m => { const f = A.mus[m] || 0, al = (sem7[m] || 0) * N / 7, p = al ? f / al : null, mx = Math.max(f, al) || 1, db = porSem(f) - porSem(B.mus[m] || 0);
+      return `<div><span>${esc(MUSC[m] || m)}<small>${sem7[m] ? `plano: ${fmt(sem7[m], 1)} por sem.` : 'fora do plano'}</small></span><i>${f ? `<em class="${p == null ? 'neu' : p >= 0.9 ? 'ok' : p >= 0.7 ? 'md' : 'bx'}" style="width:${Math.min(100, f / mx * 100)}%"></em>` : ''}${al ? `<u style="left:${Math.min(100, al / mx * 100)}%"></u>` : ''}</i>
+        <b>${fmt(f, 1)}${al ? `<small> de ${fmt(al, 0)}</small>` : ''}</b><b>${fmt(porSem(f), 1)}${B.musc.length && Math.abs(db) >= 0.5 ? `<small class="${db > 0 ? 'up' : 'dn'}">${db > 0 ? '▲ +' : '▼ −'}${fmt(Math.abs(db), 1)}</small>` : ''}</b></div>`; }).join('')}
+    <div class="rl-vt"><span>Total</span><i></i><b>${fmt(totF, 1)}${totP ? `<small> de ${fmt(totP * N / 7, 0)}</small>` : ''}</b><b>${fmt(porSem(totF), 1)}${B.musc.length ? `<small class="${totF >= Object.values(B.mus).reduce((s, v) => s + v, 0) ? 'up' : 'dn'}">${relVar(totF, Object.values(B.mus).reduce((s, v) => s + v, 0), { N, pct: 1 }).replace(/<[^>]+>/g, '').replace(/ vs\..*/, '')}</small>` : ''}</b></div></div>
+    ${B.musc.length ? `<p class="rl-n" style="margin-top:6px">▲▼ séries por semana contra os ${N} dias anteriores.</p>` : ''}` : '';
+  const treino = A.musc.length || P.dias ? `<section class="rl-s"><h2>Treino</h2>
+    <div class="rl-kg sm">${kpi('Dias treinados', `${A.diasMus}${P.dias ? `<i> de ${X.espT}</i>` : ''}`, '')}${kpi('Séries válidas', A.ser ? fmt(A.ser, 0) : '–', relVar(A.ser, B.ser || null, { ...vN, bom: 1, pct: 1 }))}${kpi('Duração média', A.durMed ? fk(A.durMed) + '<i> min</i>' : '–', '')}${kpi('Esforço médio', A.pseMed != null ? fmt(A.pseMed, 1) + '<i> /10</i>' : '–', relVar(A.pseMed, B.pseMed, { ...vN, min: 0.05 }))}</div>
+    ${A.musc.length ? `<h3>Sessões</h3><div class="rl-tb"><table class="rl-cmp"><thead><tr><th>Data</th><th>Treino</th><th>Duração</th><th>Esforço</th><th>Séries</th><th>Tonelagem</th></tr></thead><tbody>
+      ${A.musc.map(s => `<tr><td>${dataCurta(s.d)} <small>${relSemR(s.d)}</small></td><td>${esc(s.n)}<small>${plur(s.nex, 'exercício')}</small></td><td>${s.min ? fk(s.min) + ' min' : '—'}</td><td>${s.pse != null ? fmt(s.pse, 0) + '/10' : '—'}</td><td>${fmt(s.ser, 1)}</td><td>${fmt(s.ton / 1000, 1)} t</td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${ex.length ? `<h3>Evolução das cargas</h3><p class="rl-n2">Melhor série de cada sessão. “Antes”: a última sessão anterior ao período. “No período”: a última sessão, e com qual carga começou. 1RM estimado pela melhor série de até 12 repetições (Epley); a variação compara com o melhor dos ${N} dias anteriores.</p>
+      <div class="rl-tb"><table class="rl-ex"><thead><tr><th>Exercício</th><th>Antes</th><th>No período</th><th>1RM est.</th><th>Tendência</th><th></th></tr></thead><tbody>${exLin}</tbody></table></div>` : ''}
+    ${X.pulados.length ? `<p class="rl-n2" style="margin-top:10px"><b>Do plano, sem registro no período:</b> ${X.pulados.map(x => esc(x.n)).join(' · ')}</p>` : ''}
+    ${volH}
+    ${!A.musc.length ? '<p class="rl-vz">Nenhum treino de musculação registrado no período.</p>' : ''}</section>` : '';
+  /* cardio */
+  const porMod = {}; A.cardio.forEach(c => { const k = c.mod + '|' + c.eq; const o = porMod[k] = porMod[k] || { mod: c.mod, eq: c.eq, n: 0, min: 0, km: 0, fc: [], pse: [] }; o.n++; o.min += c.min; o.km += c.km; if (c.fc) o.fc.push(c.fc); if (c.pse) o.pse.push(c.pse); });
+  const cardio = A.cardio.length || X.espC ? `<section class="rl-s"><h2>Cardio</h2>
+    <div class="rl-kg sm">${kpi('Sessões', A.cardio.length, X.P.cardioN ? `<small>previstas ${fmt(X.P.cardioN * N / 7, 0)}</small>` : '')}${kpi('Minutos', A.cMin ? relMil(A.cMin) : '–', (X.espC ? `<small>previsto ${relMil(X.espC)} · ${relMil(A.cMin / N * 7)} por semana</small>` : `<small>${relMil(A.cMin / N * 7)} por semana</small>`) + relVar(A.cMin, B.cMin, { ...vN, bom: 1, un: ' min', f: relMil }), X.espC ? relCl(Math.min(1, A.cMin / X.espC)) : '')}${kpi('Distância', A.cKm ? fmt(A.cKm, 1) + '<i> km</i>' : '–', '')}${kpi('FC média', A.cFc ? fk(A.cFc) + '<i> bpm</i>' : '–', A.cPse ? `<small>esforço médio ${fmt(A.cPse, 1)}/10</small>` : '')}</div>
+    ${Object.keys(porMod).length ? `<div class="rl-tb"><table class="rl-cmp"><thead><tr><th>Atividade</th><th>Sessões</th><th>Minutos</th><th>Km</th><th>FC média</th></tr></thead><tbody>${Object.values(porMod).sort((x, y) => y.min - x.min).map(o => `<tr><td style="white-space:normal">${esc(modNome(o.mod))}<small>${[o.eq ? esc(eqNome(o.eq)) : '', o.pse.length ? 'esforço ' + fmt(relMed(o.pse), 1) + '/10' : ''].filter(Boolean).join(' · ')}</small></td><td>${o.n}</td><td>${relMil(o.min)}</td><td>${o.km ? fmt(o.km, 1) : '—'}</td><td>${o.fc.length ? fk(relMed(o.fc)) + ' bpm' : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="rl-vz">Nenhum cardio registrado no período.</p>'}</section>` : '';
+  /* dieta */
+  let ver = '', vc = '';
+  if (A.nMac && get && A.meta[0]) { const bal = A.macro[0] - get, plan = A.meta[0] - get, txt = `${bal < 0 ? 'Déficit' : 'Superávit'} médio de <b>${relMil(Math.abs(bal))} kcal por dia</b> em relação ao gasto estimado (${relMil(get)} kcal). Somando os ${plur(A.nMac, 'dia')} com registro, cerca de ${relMil(Math.abs(bal) * A.nMac)} kcal de ${bal < 0 ? 'déficit' : 'superávit'}.`;
+    if (plan <= -100) { vc = bal <= plan * 0.5 && bal < 0 ? 'ok' : bal < 0 ? 'md' : 'bx'; ver = (vc === 'ok' ? 'Ficou em déficit, como planejado. ' : vc === 'md' ? `Ficou em déficit, mas menor que o planejado (${relMil(-plan)} kcal). ` : 'Não ficou em déficit. ') + txt; }
+    else if (plan >= 100) { vc = bal >= plan * 0.5 && bal > 0 ? 'ok' : bal > 0 ? 'md' : 'bx'; ver = (vc === 'ok' ? 'Ficou em superávit, como planejado. ' : vc === 'md' ? `Ficou em superávit, mas menor que o planejado (+${relMil(plan)} kcal). ` : 'Não ficou em superávit: comeu abaixo do gasto. ') + txt; }
+    else { vc = Math.abs(bal) <= 200 ? 'ok' : 'md'; ver = (vc === 'ok' ? 'Ficou perto da manutenção. ' : 'Fora da manutenção. ') + txt; } }
+  const macK = [['Calorias', 0, ' kcal', relMil], ['Proteína', 1, ' g', fk], ['Carboidrato', 2, ' g', fk], ['Gordura', 3, ' g', fk]].map(([r, i, u, f]) => { const v = A.macro[i], m = A.meta[i], p = v != null && m ? v / m : null;
+    return kpi(`${r} por dia`, v != null ? f(v) + `<i>${u}</i>` : '–', m ? `<small>meta ${f(m)}${u} · ${p != null ? pc(p) : ''}</small><small>na meta em ${A.naMeta[i]} de ${A.nMac} dias</small>` : '', p == null ? '' : i === 1 ? (p >= 0.9 ? 'ok' : p >= 0.75 ? 'md' : 'bx') : relCl(p)); }).join('');
+  const refL = Object.entries(A.porRef).sort((x, y) => x[1].f / x[1].t - y[1].f / y[1].t);
+  const dieta = A.prev || A.diasDieta ? `<section class="rl-s"><h2>Dieta</h2>
+    ${ver ? `<p class="rl-ver ${vc}">${ver}</p>` : ''}
+    <div class="rl-kg sm">${kpi('Dias com registro', `${A.diasDieta}<i> de ${N}</i>`, relVar(A.diasDieta, B.diasDieta, { ...vN, bom: 1, f: v => fmt(v, 0) }))}${kpi('Refeições feitas', A.prev ? pc(A.feitas / A.prev) : '–', `<small>${A.feitas} de ${A.prev} no período${A.prevReg ? ` · ${pc(A.feitas / A.prevReg)} nos dias registrados` : ''}</small>`)}${kpi('Trocas', A.trocas, '<small>refeições trocadas por outra coisa</small>')}${kpi('Proteína por kg', A.nMac && X.peso0 ? fmt(A.macro[1] / X.peso0, 1) + '<i> g/kg</i>' : '–', A.meta[1] && X.peso0 ? `<small>meta ${fmt(A.meta[1] / X.peso0, 1)} g/kg</small>` : '')}</div>
+    ${A.nMac ? `<h3>Calorias e macros (média dos ${plur(A.nMac, 'dia')} com registro)</h3><div class="rl-kg sm">${macK}</div>
+      <h3>Calorias, dia a dia</h3>${relBarras(A.dia.map(z => { const p = z.m && z.al ? z.m[0] / z.al[0] : null; return { r: N <= 15 ? relSemR(z.d) : dObj(z.d).getDate(), v: z.m ? z.m[0] : 0, m: z.al ? z.al[0] : 0, c: relCl(p) || 'neu', t: z.m ? relMil(z.m[0]) : '', tt: `${dataBR(z.d)}: ${z.m ? relMil(z.m[0]) + ' kcal' : 'sem registro'}` }; }), { lab: 'Calorias por dia' })}
+      <h3>Proteína, dia a dia</h3>${relBarras(A.dia.map(z => { const p = z.m && z.al ? z.m[1] / z.al[1] : null; return { r: N <= 15 ? relSemR(z.d) : dObj(z.d).getDate(), v: z.m ? z.m[1] : 0, m: z.al ? z.al[1] : 0, c: p == null ? 'neu' : p >= 0.9 ? 'ok' : p >= 0.75 ? 'md' : 'bx', t: z.m ? fk(z.m[1]) : '', tt: `${dataBR(z.d)}: ${z.m ? fk(z.m[1]) + ' g' : 'sem registro'}` }; }), { lab: 'Proteína por dia', h: 100 })}
+      <p class="rl-n"><span class="rl-lg"></span> meta do dia · as médias usam só os dias com registro, e refeição não marcada conta como não comida</p>` : ''}
+    ${refL.length ? `<h3>Refeição por refeição</h3><div class="rl-mu">${refL.map(([n, c]) => { const p = c.t ? c.f / c.t : 0; return `<div><span>${esc(n)}</span><i><em class="${p >= 0.85 ? 'ok' : p >= 0.6 ? 'md' : 'bx'}" style="width:${Math.round(p * 100)}%"></em></i><b>${c.f}<small> / ${c.t}${c.tc ? ` · ${c.tc} troca${c.tc > 1 ? 's' : ''}` : ''}</small></b></div>`; }).join('')}</div>` : ''}
+    ${A.notas.length ? `<h3>Observações do aluno</h3><ul class="rl-nt">${A.notas.slice(-6).map(([d, t]) => `<li><b>${dataCurta(d)}</b> ${esc(t)}</li>`).join('')}</ul>` : ''}</section>` : '';
+  /* água */
+  const agua = agM || A.agDias ? `<section class="rl-s"><h2>Hidratação</h2>
+    <div class="rl-kg sm">${kpi('Média por dia', A.agDias ? fmt(A.agMed / 1000, 1) + '<i> L</i>' : '–', (agM ? `<small>meta ${fmt(agM / 1000, 1)} L (35 ml por kg)</small>` : '') + relVar(A.agMed, B.agMed, { ...vN, bom: 1, un: ' L', f: v => fmt(v / 1000, 1), min: 50 }), A.agDias && agM ? relCl(Math.min(1, A.agMed / agM)) : '')}${kpi('Dias na meta', agM ? `${A.dia.filter(z => z.ag >= agM).length}<i> de ${N}</i>` : '–', '')}${kpi('Dias registrados', `${A.agDias}<i> de ${N}</i>`, '')}</div>
+    ${A.agDias ? relBarras(A.dia.map(z => ({ r: N <= 15 ? relSemR(z.d) : dObj(z.d).getDate(), v: z.ag / 1000, m: agM / 1000, c: !agM ? 'neu' : z.ag >= agM ? 'ok' : z.ag >= agM * 0.7 ? 'md' : 'bx', t: z.ag ? fmt(z.ag / 1000, 1) : '', tt: `${dataBR(z.d)}: ${z.ag ? fmt(z.ag / 1000, 1) + ' L' : 'sem registro'}` })), { lab: 'Água por dia', h: 100 }) : '<p class="rl-vz">Nenhum registro de água no período.</p>'}</section>` : '';
+  /* corpo e bem-estar */
+  const Jp = N >= 56 ? J : relJan(56, 0), pesoP = X.pesos.filter(p => p[0] >= Jp.ini && p[0] <= Jp.fim).map(p => [p[0], p[1]]);
+  const avJ = (a.avaliacoes || []).filter(v => dOk(v.data) && v.data >= J.ini && v.data <= J.fim);
+  const corpo = pesoT || A.F.length || avJ.length ? `<section class="rl-s"><h2>Corpo e bem-estar</h2>
+    <div class="rl-kg sm">${kpi('Peso', pesoT ? fmt(pesoT.fim[1], 1) + '<i> kg</i>' : '–', pesoT && pesoT.d != null ? `<small>${pesoT.d > 0 ? '+' : pesoT.d < 0 ? '−' : ''}${fmt(Math.abs(pesoT.d), 1)} kg desde ${dataBR(pesoT.ini[0])}</small>` : '')}${kpi('Sono', A.sono != null ? fmt(A.sono, 1) + '<i> /5</i>' : '–', relVar(A.sono, B.sono, { ...vN, bom: 1, min: 0.05 }), A.sono != null ? (A.sono >= 3.5 ? 'ok' : A.sono >= 2.6 ? 'md' : 'bx') : '')}${kpi('Energia', A.energia != null ? fmt(A.energia, 1) + '<i> /5</i>' : '–', relVar(A.energia, B.energia, { ...vN, bom: 1, min: 0.05 }), A.energia != null ? (A.energia >= 3.5 ? 'ok' : A.energia >= 2.6 ? 'md' : 'bx') : '')}${kpi('Fome', A.fome != null ? fmt(A.fome, 1) + '<i> /5</i>' : '–', relVar(A.fome, B.fome, { ...vN, min: 0.05 }))}</div>
+    ${pesoP.length >= 2 ? `<h3>Peso${Jp !== J ? ', últimas 8 semanas' : ''}</h3>${relLinha(pesoP, Jp, { lab: 'Peso', faixa: Jp !== J ? J : null })}${Jp !== J ? '<p class="rl-n"><span class="rl-fx"></span> período do relatório</p>' : ''}` : ''}
+    ${avJ.length ? `<h3>Avaliação física</h3><div class="rl-tb"><table><thead><tr><th>Data</th><th>Peso</th><th>% gordura</th><th>Massa magra</th><th>Cintura</th></tr></thead><tbody>${avJ.map(v => `<tr><td>${dataBR(v.data)}</td><td>${v.peso ? fmt(num(v.peso), 1) + ' kg' : '—'}</td><td>${v.bf ? fmt(num(v.bf), 1) + '%' : '—'}</td><td>${v.mm ? fmt(num(v.mm), 1) + ' kg' : '—'}</td><td>${v.circ && v.circ.cintura ? fmt(num(v.circ.cintura), 1) + ' cm' : '—'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${A.dores.length ? `<h3>Dores e desconfortos</h3><ul class="rl-nt">${A.dores.map(f => `<li><b>${dataCurta(f.data)}</b> ${esc(f.dores)}</li>`).join('')}</ul>` : ''}
+    ${A.coment.length ? `<h3>Comentários nos feedbacks</h3><ul class="rl-nt">${A.coment.slice(-4).map(f => `<li><b>${dataCurta(f.data)}</b> ${esc(f.comentario)}</li>`).join('')}</ul>` : ''}
+    ${A.fotos.length || A.testes.length ? `<p class="rl-n2" style="margin-top:10px">${A.fotos.length ? `<b>Fotos de progresso:</b> ${A.fotos.map(dataCurta).join(', ')}. ` : ''}${A.testes.length ? `<b>Testes:</b> ${A.testes.map(t => `${relTesteNome[t.tipo] || 'Teste'} em ${dataCurta(t.data)} (${testeResumo(t)})`).join('; ')}.` : ''}</p>` : ''}</section>` : '';
+  /* dia a dia */
+  const diaDia = `<section class="rl-s rl-dd"><h2>Dia a dia</h2><div class="rl-tb"><table class="rl-cmp"><thead><tr><th>Dia</th><th>Treino</th><th>Cardio</th><th>Refeições</th><th>kcal</th><th>Proteína</th><th>Água</th></tr></thead><tbody>
+    ${A.dia.slice().reverse().filter(z => !z.fut).map(z => `<tr${z.tr || z.reg || z.ag || z.cmin ? '' : ' class="vz"'}><td>${dataCurta(z.d)} <small>${relSemR(z.d)}</small></td><td>${z.tr ? esc(A.musc.filter(s => s.d === z.d).map(s => s.sig || s.n).join(' + ')) : '—'}</td><td>${z.cmin ? fk(z.cmin) + ' min' : '—'}</td>
+      <td>${z.reg ? `${z.feitas}/${z.prev}` : '—'}</td><td>${z.m ? relMil(z.m[0]) : '—'}</td><td>${z.m ? fk(z.m[1]) + ' g' : '—'}</td><td>${z.ag ? fmt(z.ag / 1000, 1) + ' L' : '—'}</td></tr>`).join('')}</tbody></table></div></section>`;
+  const agora = new Date();
+  const pe = `<footer class="rl-pe">Gerado em ${dataBR(todayISO())} às ${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')} · AnabTech · com os registros que ${esc(primeiroNome(nome))} fez no app. Dias sem registro aparecem como “sem registro”, não como zero.</footer>`;
+  return { html: `<div class="rl">${head}${resumo}${leitura}${mapa}${treino}${cardio}${dieta}${agua}${corpo}${diaDia}${pe}</div>`, X, vazio: !A.regDias };
+}
+const REL_CSS = `
+.rl{--rl-ok:var(--up);--rl-md:#c98a00;--rl-bx:var(--down);color:var(--ink);font-size:14px;line-height:1.5}
+.rl h2{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+.rl h3{font-size:14px;font-weight:650;margin:16px 0 6px;letter-spacing:-.01em}
+.rl-h{background:var(--ink);color:#fff;border-radius:16px;padding:18px 18px 16px;display:grid;gap:16px}
+.rl-lb{display:inline-block;background:var(--accent);color:var(--on-accent);font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;margin-bottom:8px}
+.rl-h h1{font-family:'Space Grotesk',var(--font-sans);font-size:26px;line-height:1.1;letter-spacing:-.03em;margin:0 0 4px}
+.rl-h p{font-size:12.5px;color:rgba(255,255,255,.7);margin:0}.rl-h p.rl-h-m{margin-top:2px;color:rgba(255,255,255,.55)}
+.rl-g{border-top:1px solid rgba(255,255,255,.14);padding-top:14px}.rl-g>span{display:block;font-size:12px;color:rgba(255,255,255,.6)}.rl-g>b{font-size:34px;letter-spacing:-.03em;line-height:1.1;color:var(--accent)}
+.rl-gl{display:grid;gap:7px;margin-top:10px}.rl-gl>div{display:grid;grid-template-columns:78px 1fr 40px;align-items:center;gap:8px;font-size:12.5px}.rl-gl span{color:rgba(255,255,255,.75)}.rl-gl i{height:7px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden}.rl-gl em{display:block;height:100%;border-radius:4px}
+.rl-gl em.ok{background:var(--accent)}.rl-gl em.md{background:#f2c14e}.rl-gl em.bx{background:#ff8a6b}.rl-gl b{text-align:right}.rl-gl small{grid-column:2/4;margin-top:-5px;font-size:11px;color:rgba(255,255,255,.5)}
+.rl-s{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:16px 16px 14px;margin-top:10px}
+.rl-kg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rl-k{background:var(--paper);border-radius:11px;padding:10px 11px;border-left:3px solid transparent;min-width:0}
+.rl-k.ok{border-left-color:var(--rl-ok)}.rl-k.md{border-left-color:var(--rl-md)}.rl-k.bx{border-left-color:var(--rl-bx)}
+.rl-k>span{display:block;font-size:11.5px;color:var(--ink-2);line-height:1.3}.rl-k>b{display:block;font-size:20px;letter-spacing:-.02em;line-height:1.25;margin-top:2px}.rl-k>b i{font-style:normal;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.rl-k small{display:block;font-size:11px;color:var(--ink-3);line-height:1.35;margin-top:1px}.rl-v.up{color:var(--up)}.rl-v.dn{color:var(--down)}.rl-v.neu{color:var(--ink-2)}
+.rl-le{display:grid;gap:10px;background:none;border:0;padding:0}.rl-lb2{border-radius:14px;padding:13px 15px;border:1px solid var(--rule)}.rl-lb2.ok{background:var(--up-soft);border-color:transparent}.rl-lb2.at{background:#fff6e0;border-color:transparent}
+.rl-lb2 h3{margin:0 0 4px;font-size:13.5px}.rl-lb2 ul{margin:0;padding-left:18px}.rl-lb2 li{font-size:13px;margin:3px 0}
+.rl-map{display:grid;gap:3px;align-items:center}.rl-map i{display:flex;align-items:center;justify-content:center;aspect-ratio:1;max-height:30px;border-radius:4px;font-style:normal;font-size:9.5px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap}
+.rl-map i.ok{background:var(--rl-ok)}.rl-map i.md{background:var(--rl-md)}.rl-map i.bx{background:var(--rl-bx)}.rl-map i.vz{background:var(--rule-soft)}.rl-map i.fu{background:none;border:1px dashed var(--rule)}
+.rl-mr{font-size:11.5px;color:var(--ink-2)}.rl-md{font-size:10px;font-weight:500;color:var(--ink-3);text-align:center}.rl-md.sg{color:var(--ink)}
+.rl-n{font-size:11.5px;color:var(--ink-3);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}.rl-n i{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:2px}
+.rl-n i.ok{background:var(--rl-ok)}.rl-n i.md{background:var(--rl-md)}.rl-n i.bx{background:var(--rl-bx)}.rl-n i.vz{background:var(--rule-soft)}.rl-lg{display:inline-block;width:14px;height:0;border-top:2px solid var(--ink);vertical-align:3px;margin-right:2px}
+.rl-n2{font-size:12px;color:var(--ink-2);line-height:1.45;margin:0 0 8px}.rl-vz{font-size:13px;color:var(--ink-3);margin:6px 0 0}
+.rl-tb{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}.rl table{width:100%;border-collapse:collapse;font-size:12.5px}.rl th{font-weight:600;color:var(--ink-2);text-align:left;font-size:11.5px;padding:6px 4px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.rl td{padding:7px 4px;border-bottom:1px solid var(--rule-soft);vertical-align:top;white-space:nowrap}.rl td small{display:block;font-size:11px;color:var(--ink-3)}.rl td small.up{color:var(--up);font-weight:600}.rl td small.dn{color:var(--down);font-weight:600}
+.rl .rl-ex td:first-child{white-space:normal;min-width:150px}.rl .rl-ex td b{font-weight:600}.rl td.rl-sp{color:var(--data)}.rl tr.vz td{color:var(--ink-3)}
+.rl-tg{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px}.rl-tg.rec{background:var(--accent);color:var(--on-accent)}.rl-tg.up{background:var(--up-soft);color:var(--up)}.rl-tg.dn{background:var(--down-soft);color:var(--down)}.rl-tg.neu{background:var(--paper);color:var(--ink-2)}
+.rl-mu{display:grid;gap:6px}@media print{.rl-vol>div,.rl-vol em,.rl-vol u,.rl-vol i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}.rl-mu>div{display:grid;grid-template-columns:minmax(90px,38%) 1fr auto;gap:8px;align-items:center;font-size:12.5px}.rl-mu span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rl-mu i{height:8px;background:var(--data-track);border-radius:4px;overflow:hidden}.rl-mu em{display:block;height:100%;border-radius:4px}
+.rl-mu em.ok{background:var(--rl-ok)}.rl-mu em.md{background:var(--rl-md)}.rl-mu em.bx{background:var(--rl-bx)}.rl-mu em.neu{background:var(--data)}.rl-mu b{font-weight:600;min-width:58px;text-align:right}.rl-mu b small{font-weight:400;color:var(--ink-3)}
+.rl-vol{display:grid;gap:0}.rl-vol>div{display:grid;grid-template-columns:minmax(96px,32%) 1fr 70px 62px;gap:8px;align-items:center;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--rule-soft)}
+.rl-vol>div>span{min-width:0;overflow:hidden;text-overflow:ellipsis}.rl-vol>div>span small{display:block;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-vol i{position:relative;height:9px;background:var(--data-track);border-radius:5px}.rl-vol em{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.rl-vol em.ok{background:var(--rl-ok)}.rl-vol em.md{background:var(--rl-md)}.rl-vol em.bx{background:var(--rl-bx)}.rl-vol em.neu{background:var(--data)}
+.rl-vol u{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}.rl-vol b{font-weight:600;text-align:right;white-space:nowrap}.rl-vol b small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}.rl-vol b small.up{color:var(--up)}.rl-vol b small.dn{color:var(--down)}
+.rl-vol .rl-vh{font-size:10.5px;color:var(--ink-3);padding:0 0 4px;border-bottom:1px solid var(--rule)}.rl-vol .rl-vh span:nth-child(n+3){text-align:right}.rl-vol .rl-vt{border-bottom:0;font-weight:600}.rl-vol .rl-vt i{background:none}
+.rl-ver{font-size:13px;border-radius:10px;padding:10px 12px;margin:0 0 10px;background:var(--paper)}.rl-ver.ok{background:var(--up-soft)}.rl-ver.md{background:#fff6e0}.rl-ver.bx{background:var(--down-soft)}
+.rl-svg{display:block;width:100%;max-width:640px;height:auto;margin-top:4px}.rl-svg .rl-fx{fill:var(--accent-soft,#eefad0)}.rl-n .rl-fx{display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--accent-soft,#eefad0);vertical-align:-1px;margin-right:2px}.rl-svg rect.ok{fill:var(--rl-ok)}.rl-svg rect.md{fill:var(--rl-md)}.rl-svg rect.bx{fill:var(--rl-bx)}.rl-svg rect.neu{fill:var(--data)}.rl-svg rect.vz{fill:var(--rule)}
+.rl-svg .rl-ax{stroke:var(--rule);stroke-width:1.5}.rl-svg .rl-mt{stroke:var(--ink);stroke-width:2.5}.rl-svg .rl-tx{font-size:16px;fill:var(--ink-3)}.rl-svg .rl-tv{font-size:15px;fill:var(--ink-2);font-weight:600}
+.rl-svg .rl-ln{fill:none;stroke:var(--data);stroke-width:3;stroke-linejoin:round}.rl-svg .rl-pt{fill:var(--card);stroke:var(--data);stroke-width:3}
+.rl-nt{margin:0;padding-left:18px}.rl-nt li{font-size:13px;margin:4px 0}.rl-nt b{font-weight:600;margin-right:4px}
+.rl-pe{font-size:11.5px;color:var(--ink-3);text-align:center;margin:14px 8px 6px}
+@media screen and (max-width:619px){.rl table.rl-cmp{font-size:12px}.rl .rl-cmp td,.rl .rl-cmp th{padding-left:3px;padding-right:3px}
+  .rl .rl-ex thead{display:none}.rl .rl-ex tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;column-gap:8px;row-gap:6px;padding:10px 0;border-bottom:1px solid var(--rule-soft)}
+  .rl .rl-ex td{border:0;padding:0;white-space:normal;min-width:0}.rl .rl-ex td:nth-child(1){grid-column:1/4}.rl .rl-ex td:nth-child(6){grid-column:4;grid-row:1;text-align:right}.rl .rl-ex td:nth-child(5){grid-column:4;grid-row:2;align-self:end}
+  .rl .rl-ex td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;color:var(--ink-3);line-height:1.3}
+  .rl-map{gap:2px}.rl-map i{border-radius:3px}}
+@media (min-width:620px){.rl-h{grid-template-columns:1.1fr 1fr;align-items:center}.rl-g{border-top:0;padding-top:0;border-left:1px solid rgba(255,255,255,.14);padding-left:18px}.rl-kg{grid-template-columns:repeat(3,minmax(0,1fr))}.rl-kg.sm{grid-template-columns:repeat(4,minmax(0,1fr))}.rl-le{grid-template-columns:1fr 1fr}}
+@media print{.rl{font-size:12px}.rl-svg{max-width:100%}.rl-h,.rl-map i,.rl-k,.rl-gl em,.rl-tg,.rl-lb,.rl-lb2,.rl-ver,.rl-mu em,.rl-n i,.rl-svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rl-le,.rl-h,.rl-kg,.rl-k,.rl-map,.rl-svg,.rl-lb2,.rl-ver,.rl tr,.rl-vol>div,.rl-mu>div{break-inside:avoid}.rl h2,.rl h3{break-after:avoid}.rl-s{break-inside:auto}.rl-s{border-color:#ddd}.rl-tb{overflow:visible}.rl-h{grid-template-columns:1.1fr 1fr}.rl-kg{grid-template-columns:repeat(3,1fr)}.rl-kg.sm{grid-template-columns:repeat(4,1fr)}.rl-le{grid-template-columns:1fr 1fr}}
+`;
+function relCssLigar() { if (document.getElementById('rlCss')) return; const s = document.createElement('style'); s.id = 'rlCss'; s.textContent = REL_CSS + `
+#relPrint{display:none}.rl-per{display:flex;gap:6px;position:sticky;top:-14px;z-index:2;background:var(--card);padding:6px 0 8px;margin:-6px 0 -4px}.rl-per .opt{flex:1;justify-content:center}
+.sh-f.rl-f{flex-wrap:wrap}.sh-f.rl-f .btn{flex:1 1 30%}
+@media print{html.rl-imp body>*:not(#relPrint){display:none!important}html.rl-imp body::before{display:none}html.rl-imp body{background:#fff}html.rl-imp #relPrint{display:block;padding:0}@page{size:A4;margin:12mm}}`; document.head.appendChild(s); }
+/* texto curto do relatório, pronto para mandar ao aluno */
+function relTexto(a, N) {
+  const X = relDados(a, N), { A, B, J, ex } = X, rec = ex.filter(e => e.st === 'rec' || e.prs.length), L = [`*Relatório dos últimos ${N} dias · ${primeiroNome(a.dados.nome)}*`, `${dataBR(J.ini)} a ${dataBR(J.fim)}`, ''];
+  L.push(`🏋️ *Treino:* ${plur(A.diasMus, 'dia treinado', 'dias treinados')}${X.P.dias ? ` de ${X.espT} previstos` : ''}${A.ton ? `, ${relMil(A.ton)} kg levantados` : ''}${B.ton && A.ton ? ` (${A.ton >= B.ton ? '+' : '−'}${Math.round(Math.abs(A.ton / B.ton - 1) * 100)}% vs. os ${N} dias anteriores)` : ''}`);
+  { const v = Object.values(A.mus).reduce((s, x) => s + x, 0); if (v) L.push(`💪 *Volume:* ${fmt(v, 0)} séries válidas (${fmt(v * 7 / N, 0)} por semana)`); }
+  if (rec.length) L.push(`🏆 *Recordes:* ${rec.slice(0, 4).map(e => e.prs.length ? `${e.n} (${fmt(e.prs[0][1], 1)} kg × ${e.prs[0][0]})` : `${e.n} (${fmt(e.best, 1)} kg de força estimada)`).join('; ')}`);
+  if (A.cMin) L.push(`❤️ *Cardio:* ${relMil(A.cMin)} min em ${plur(A.cardio.length, 'sessão', 'sessões')}`);
+  if (A.prev && A.diasDieta) L.push(`🥗 *Dieta:* ${Math.round(A.feitas / A.prev * 100)}% das refeições feitas${A.nMac ? ` · média de ${relMil(A.macro[0])} kcal e ${fk(A.macro[1])} g de proteína por dia` : ''}`);
+  if (A.agDias) L.push(`💧 *Água:* ${fmt(A.agMed / 1000, 1)} L por dia${X.agM ? ` (meta ${fmt(X.agM / 1000, 1)} L)` : ''}`);
+  const pf = X.pJ[X.pJ.length - 1], pi = X.pAnt.length ? X.pAnt[X.pAnt.length - 1] : X.pJ[0];
+  if (pf && pi && pf !== pi) { const d = pf[1] - pi[1]; L.push(`⚖️ *Peso:* ${fmt(pi[1], 1)} → ${fmt(pf[1], 1)} kg (${d > 0 ? '+' : d < 0 ? '−' : ''}${fmt(Math.abs(d), 1)} kg)`); } else if (pf) L.push(`⚖️ *Peso:* ${fmt(pf[1], 1)} kg`);
+  if (A.sono != null || A.energia != null) L.push(`😴 *Feedbacks:* ${[A.sono != null ? 'sono ' + fmt(A.sono, 1) + ' de 5' : '', A.energia != null ? 'energia ' + fmt(A.energia, 1) + ' de 5' : ''].filter(Boolean).join(', ')}`);
+  L.push('', '*Próximo passo:* ');
+  return { txt: L.join('\n'), vazio: !A.regDias };
+}
+/* ----- telas ----- */
+function relAbrir(N) {
+  const a = cur(); if (!a) return; relCssLigar(); UI.relN = N;
+  const corpo = () => { const r = relHTML(a, UI.relN); return `<div class="rl-per" role="group" aria-label="Período">${REL_N.map(n => `<button class="opt${n === UI.relN ? ' on' : ''}" type="button" data-act="relPer" data-n="${n}">${n} dias</button>`).join('')}</div>${r.vazio ? `<div class="aviso">Nenhum registro de ${esc(primeiroNome(a.dados.nome) || 'aluno')} nos últimos ${UI.relN} dias. O relatório mostra só o que está previsto no plano.</div>` : ''}${r.html}`; };
+  UI._relCorpo = corpo;
+  openSheet({ title: 'Relatório do aluno', tall: true, body: corpo(),
+    foot: `<button class="btn btn-ink" type="button" data-act="relPdf">Salvar PDF</button><button class="btn btn-line" type="button" data-act="relArq">Enviar arquivo</button><button class="btn btn-line" type="button" data-act="relMsg">Resumo para o aluno</button>`,
+    onMount: sh => { const f = sh.querySelector('.sh-f'); if (f) f.classList.add('rl-f'); } });
+}
+ACT.rel = el => relAbrir(+el.dataset.n || 7);
+ACT.relPer = el => { UI.relN = +el.dataset.n; const b = $('shB'); if (!b || !UI._relCorpo) return; b.innerHTML = UI._relCorpo(); b.scrollTop = 0; };
+ACT.relPdf = () => { const a = cur(); if (!a) return; relCssLigar(); let box = $('relPrint'); if (box) box.remove();
+  box = document.createElement('div'); box.id = 'relPrint'; box.innerHTML = relHTML(a, UI.relN || 7).html; document.body.appendChild(box); document.documentElement.classList.add('rl-imp');
+  const tit = document.title; document.title = `Relatório ${UI.relN || 7} dias - ${a.dados.nome || 'aluno'} - ${todayISO()}`;
+  const fim = () => { document.documentElement.classList.remove('rl-imp'); document.title = tit; const b = $('relPrint'); if (b) b.remove(); window.removeEventListener('afterprint', fim); };
+  window.addEventListener('afterprint', fim); setTimeout(() => { try { window.print(); } catch (e) { fim(); toast('Use “Enviar arquivo” para salvar o relatório'); } }, 60); };
+function relArquivo(a, N) {
+  const r = relHTML(a, N);
+  const tok = `:root{--paper:#f2f3ef;--card:#fff;--rule:#dfe2da;--rule-soft:#ecede8;--ink:#0b0c0e;--ink-2:#5d626a;--ink-3:#90959c;--accent:#c8ff3d;--on-accent:#0b0c0e;--data:#1668a8;--data-track:#d8e5f1;--up:#157a4a;--up-soft:#e5f2ea;--down:#b8381f;--down-soft:#fbebe6;--font-sans:'Inter',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);font-family:var(--font-sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}.wrap{max-width:820px;margin:0 auto;padding:16px}@media print{body{background:#fff}.wrap{padding:0}@page{size:A4;margin:12mm}}`;
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório de ${N} dias · ${esc(a.dados.nome || 'aluno')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"><style>${tok}${REL_CSS}</style></head><body><div class="wrap">${r.html}</div></body></html>`;
+}
+ACT.relArq = async () => { const a = cur(); if (!a) return; const N = UI.relN || 7, nome = `relatorio-${N}-dias-${(primeiroNome(a.dados.nome) || 'aluno').toLowerCase().normalize('NFD').replace(/[^\w]/g, '')}-${todayISO()}.html`;
+  if (await compartilharArquivo(nome, relArquivo(a, N), 'text/html', `Relatório de ${N} dias`)) toast('Relatório pronto'); };
+ACT.relMsg = () => { const a = cur(); if (!a) return; const r = relTexto(a, UI.relN || 7); swapSheet(() => relMsgSheet(a, r, UI.relN || 7)); };
+function relMsgSheet(a, r, N) {
+  openSheet({ title: `Resumo de ${N} dias para o aluno`, tall: true,
+    body: `<p class="note" style="margin-bottom:10px">${r.vazio ? `Este aluno não tem registros nos últimos ${N} dias.` : 'Montado com os registros do app. Complete o próximo passo e revise antes de mandar.'}</p><textarea id="relTxt" style="width:100%;min-height:320px;font-size:15px;line-height:1.5;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-field);padding:12px 13px;color:var(--ink)">${esc(r.txt)}</textarea>`,
+    foot: `<button class="btn btn-line" type="button" data-act="relTxtCopiar">Copiar</button><a class="btn btn-ink" id="relWa" target="_blank" rel="noopener" href="${esc(waLink(a, r.txt))}">Abrir no WhatsApp</a>`,
+    onMount: sh => { const t = sh.querySelector('#relTxt'), w = sh.querySelector('#relWa'); t.addEventListener('input', () => { w.href = waLink(a, t.value); }); } });
+}
+ACT.relTxtCopiar = async () => { const t = document.getElementById('relTxt'); if (t && await copiarTexto(t.value)) toast('Resumo copiado'); };
+ACT.relMes = () => relAbrir(30);
 function paneRegistros(p, a) {
   const R = a.registros || {}, T = R.treinos || [], F = R.feedbacks || [], Dd = R.dieta || {};
   const hoje = new Date(); const dias = [...Array(14)].map((_, i) => { const d = new Date(hoje); d.setDate(d.getDate() - 13 + i); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); });
@@ -3808,7 +4149,7 @@ function paneRegistros(p, a) {
   p.innerHTML = `${sinaisHTML(a)}${blocoPortal(a)}
     ${a.portal && a.portal.ativo ? `<div class="block cobreg"><div><b>Cobrar registros</b><span class="note">${(() => { const u = ultRegistro(a); return u ? 'Último registro em ' + dataBR(u) + (difDias(u, todayISO()) >= 4 ? ' · há ' + difDias(u, todayISO()) + ' dias' : '') : 'Ainda não registrou nada pelo app'; })()}</span></div><button class="btn btn-ink btn-sm" type="button" data-act="finMsg" data-id="${esc(a.id)}" data-t="registro">Cobrar registros</button></div>` : ''}
     ${F.length || T.length || Object.keys(Dd).length || (R.fotos || []).length || (R.testes || []).length ? '' : `<div class="empty"><b>Nenhum registro ainda</b>Quando o aluno anotar cargas, marcar refeições, mandar feedback ou fotos na página dele, aparece aqui.</div>`}
-    ${F.length || T.length || Object.keys(Dd).length ? `<div class="block cobreg"><div><b>Relatório dos últimos 30 dias</b><span class="note">Treinos, recordes, dieta e peso em um texto pronto para mandar.</span></div><button class="btn btn-ink btn-sm" type="button" data-act="relMes">Gerar</button></div>` : ''}
+    ${F.length || T.length || Object.keys(Dd).length ? `<div class="block cobreg rl-cta"><div><b>Relatório do aluno</b><span class="note">Cargas, treinos, cardio, refeições, calorias e macros, água, peso e feedbacks, comparados com o período anterior. Sai em PDF.</span></div><div class="opts">${REL_N.map(n => `<button class="btn btn-${n === 7 ? 'ink' : 'line'} btn-sm" type="button" data-act="rel" data-n="${n}">${n} dias</button>`).join('')}</div></div>` : ''}
     ${fotosHTML(a)}${fbH ? `<h2 class="sub-t">Feedbacks</h2>${fbH}` : ''}${dietaH ? `<h2 class="sub-t">Dieta</h2>${dietaH}` : ''}
     ${T.length || (R.testes || []).length ? evoCoachHTML(a) : ''}
     ${trH ? `<h2 class="sub-t">Treinos registrados</h2><div class="tr-grid">${trH}</div>${T.length > 8 && !UI.regMais ? `<div class="btns"><button class="btn btn-line" type="button" data-act="regMais">Ver todos os ${T.length} treinos</button></div>` : ''}` : ''}`;
