@@ -2845,7 +2845,9 @@ async function iniciar() {
   if (UI.alunoId && !ALUNOS.some(a => a.id === UI.alunoId)) UI.alunoId = null;
   if (CFG.iniciado && !IN_CLAUDE) { UI.tab = 'hoje'; UI.alunoId = null; UI.modeloId = null; }
   render();
+  if (/^#revisao/.test(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} UI.tab = 'hoje'; UI.alunoId = null; render(); setTimeout(abrirRevisao, 300); }
 }
+window.addEventListener('hashchange', () => { if (/^#revisao/.test(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} UI.tab = 'hoje'; UI.alunoId = null; render(); abrirRevisao(); } });
 
 
 let _ocultoEm = 0;
@@ -3663,7 +3665,8 @@ function montarPortal(a) {
     fc: (() => { const c = cfgFC(a), i = idadeDe(a.dados); return { idade: isFinite(i) ? i : null, sexo: a.dados.sexo || '', peso: num(a.dados.peso) || null, altura: num(a.dados.altura) || null, met: c.metodo || 'tanaka', fcMax: num(c.fcMax) || null, rep: num(c.fcRep) || null, l1: num(c.l1) || null, l2: num(c.l2) || null, testes: c.testes || [], max: fcMaxDe(a) }; })(),
     meso: a.treino.meso ? { ...a.treino.meso } : null, mesoHist: (a.mesoHist || []).slice(0, 8), usarRIR: !!a.treino.usarRIR,
     musc: (() => { const M = {}; DIAS.forEach(([k]) => a.treino.dias[k].ex.forEach(x => [...(x.pm || []), ...(x.sm || []), ...((x.alt || {}).pm || []), ...((x.alt || {}).sm || [])].forEach(m => { M[m] = MUSC[m] || m; }))); return M; })(),
-    evo: evoDe(a) };
+    evo: evoDe(a),
+    rel: a.relAluno && a.relAluno.html ? { n: a.relAluno.n, ini: a.relAluno.ini, fim: a.relAluno.fim, em: a.relAluno.em, html: a.relAluno.html, css: REL_CSS } : null };
 }
 async function publicarPortal(a) {
   const path = `portal/${a.portal.t}.json`, obj = montarPortal(a);
@@ -3863,6 +3866,31 @@ function relDados(a, N) {
   return { a, N, J, Q, A, B, P, M, get, agM, pesos, pJ, pAnt, ex, pulados, espT, espC, ader, geral, S: mesoStatus(a.treino.meso), peso0: num(a.dados.peso) };
 }
 
+/* ----- conferência da semana: a partir de sexta, todos os alunos ativos, até abrir o relatório de cada um ----- */
+const revSexta = () => { const h = todayISO(); return isoMenosDias(h, (dObj(h).getDay() + 2) % 7); };   /* sexta mais recente (hoje, se for sexta) */
+function revCfg() { const s = revSexta(); if (!CFG.revRel || CFG.revRel.sem !== s) CFG.revRel = { sem: s, vistos: {} }; return CFG.revRel; }
+function revLista() { const R = revCfg(); return ALUNOS.filter(a => !a.exemplo && finStatus(a) !== 'inativo').sort((x, y) => String(x.dados.nome).localeCompare(String(y.dados.nome), 'pt-BR')).map(a => ({ a, visto: R.vistos[a.id] || 0 })); }
+function revMarcar(a) { if (!a || a.exemplo || a._modelo) return; const R = revCfg(); if (R.vistos[a.id]) return; R.vistos[a.id] = Date.now(); saveCfg(); try { hojeBadge(); } catch (e) {} }
+function abrirRevisao() {
+  const L = revLista(), f = L.filter(x => x.visto).length, sx = revCfg().sem;
+  const ni = a => { let n = 0; try { n = sinaisDe(a).nivel; } catch (e) {} return n; }, u = a => ultRegistro(a);
+  openSheet({ title: 'Conferir os relatórios da semana', tall: true,
+    body: `<div class="hj-pr" style="margin:0"><div class="hj-n"><b>${f === L.length ? 'Todos conferidos' : plur(L.length - f, 'aluno falta', 'alunos faltam')}</b><span>${f} de ${L.length} · semana desde ${dataBR(sx)}</span></div><div class="hj-bar"><i style="width:${L.length ? Math.round(f / L.length * 100) : 100}%"></i></div></div>
+      <p class="note">Abra o relatório de 7 dias de cada aluno. Ao abrir, ele fica marcado como conferido. A lista recomeça toda sexta.</p>
+      <div class="tds">${L.map(({ a, visto }) => { const n = ni(a), ul = u(a); return `<div class="td${visto ? ' ok' : ''}" style="border-left-color:${['var(--up)', '#c98a00', 'var(--down)'][n] || 'var(--up)'}"><span class="td-c" aria-hidden="true"></span><button class="td-m" type="button" data-act="revAbrir" data-id="${esc(a.id)}"><span class="td-t">${esc(a.dados.nome || 'Aluno')}</span><span class="td-s">${visto ? 'Conferido ' + dataBR(new Date(visto - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10)) : ['Tudo em dia', 'Pede atenção', 'Risco de parar'][n] || ''}${ul ? ' · último registro ' + dataBR(ul) : ' · sem registros'}</span></button><button class="btn btn-${visto ? 'line' : 'ink'} btn-sm" type="button" data-act="revAbrir" data-id="${esc(a.id)}">${visto ? 'Ver de novo' : 'Abrir'}</button></div>`; }).join('') || '<div class="empty">Nenhum aluno ativo.</div>'}</div>
+      <div class="block"><div class="row-sw"><div><h3 style="margin:0">Aviso no celular</h3><span class="note">Um lembrete toda sexta, às 9h, na agenda do celular. O link do lembrete abre esta lista.</span></div><button class="btn btn-line btn-sm" type="button" data-act="revAgenda">Pôr na agenda</button></div></div>` });
+}
+ACT.revVer = () => { UI.relRev = false; swapSheet(abrirRevisao); };
+ACT.revAbrir = el => { const a = ALUNOS.find(x => x.id === el.dataset.id); if (!a) return; UI.relRev = true;
+  swapSheet(() => { UI.tab = 'alunos'; UI.alunoId = a.id; UI.modeloId = null; UI.sec = 'registros'; saveUI(); render(); relAbrir(7); }); };
+ACT.revAgenda = async () => {
+  const sx = revSexta(), d0 = (dObj(sx) < dObj(todayISO()) ? isoMenosDias(sx, -7) : sx).replace(/-/g, ''), stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AnabTech//Consultoria//PT-BR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:anabtech-conferir-relatorios@anabtech', `DTSTAMP:${stamp}`, `DTSTART:${d0}T090000`, 'DURATION:PT30M', 'RRULE:FREQ=WEEKLY;BYDAY=FR',
+    `SUMMARY:${icsEsc('Conferir os relatórios dos alunos (AnabTech)')}`, `DESCRIPTION:${icsEsc('Abra o app: a lista com todos os alunos ativos está em Hoje > Conferir os relatórios da semana.')}`, 'URL:https://anabtech.github.io/app/#revisao', 'TRANSP:TRANSPARENT',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsEsc('Conferir os relatórios dos alunos')}`, 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].map(icsFold).join('\r\n') + '\r\n';
+  if (await compartilharArquivo('conferir-relatorios-sexta.ics', ics, 'text/calendar', 'Lembrete toda sexta')) toast('Abra o arquivo para pôr na agenda');
+};
+
 /* ----- textos automáticos: o que foi bem e o que pede atenção ----- */
 function relLeitura(X) {
   const { A, B, N, P, espT, espC, agM, ex, pulados, get } = X, bom = [], atn = [];
@@ -4036,7 +4064,8 @@ function relHTML(a, N) {
   return { html: `<div class="rl">${head}${resumo}${leitura}${mapa}${treino}${cardio}${dieta}${agua}${corpo}${diaDia}${pe}</div>`, X, vazio: !A.regDias };
 }
 const REL_CSS = `
-.rl{--rl-ok:var(--up);--rl-md:#c98a00;--rl-bx:var(--down);color:var(--ink);font-size:14px;line-height:1.5}
+.rl{--paper:#f2f3ef;--card:#fff;--rule:#dfe2da;--rule-soft:#ecede8;--ink:#0b0c0e;--ink-2:#5d626a;--ink-3:#90959c;--accent:#c8ff3d;--on-accent:#0b0c0e;--accent-soft:#eefad0;--data:#1668a8;--data-track:#d8e5f1;--up:#157a4a;--up-soft:#e5f2ea;--down:#b8381f;--down-soft:#fbebe6;--font-sans:'Inter',system-ui,-apple-system,sans-serif;font-family:var(--font-sans);font-variant-numeric:tabular-nums;
+  --rl-ok:var(--up);--rl-md:#c98a00;--rl-bx:var(--down);color:var(--ink);font-size:14px;line-height:1.5}
 .rl h2{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
 .rl h3{font-size:14px;font-weight:650;margin:16px 0 6px;letter-spacing:-.01em}
 .rl-h{background:var(--ink);color:#fff;border-radius:16px;padding:18px 18px 16px;display:grid;gap:16px}
@@ -4106,11 +4135,11 @@ function relTexto(a, N) {
 }
 /* ----- telas ----- */
 function relAbrir(N) {
-  const a = cur(); if (!a) return; relCssLigar(); UI.relN = N;
+  const a = cur(); if (!a) return; relCssLigar(); UI.relN = N; revMarcar(a);
   const corpo = () => { const r = relHTML(a, UI.relN); return `<div class="rl-per" role="group" aria-label="Período">${REL_N.map(n => `<button class="opt${n === UI.relN ? ' on' : ''}" type="button" data-act="relPer" data-n="${n}">${n} dias</button>`).join('')}</div>${r.vazio ? `<div class="aviso">Nenhum registro de ${esc(primeiroNome(a.dados.nome) || 'aluno')} nos últimos ${UI.relN} dias. O relatório mostra só o que está previsto no plano.</div>` : ''}${r.html}`; };
   UI._relCorpo = corpo;
   openSheet({ title: 'Relatório do aluno', tall: true, body: corpo(),
-    foot: `<button class="btn btn-ink" type="button" data-act="relPdf">Salvar PDF</button><button class="btn btn-line" type="button" data-act="relArq">Enviar arquivo</button><button class="btn btn-line" type="button" data-act="relMsg">Resumo para o aluno</button>`,
+    foot: `<button class="btn btn-ink" type="button" data-act="relAluno">Mandar para o aluno</button><button class="btn btn-line" type="button" data-act="relPdf">Salvar PDF</button><button class="btn btn-line" type="button" data-act="relArq">Enviar arquivo</button>${UI.relRev ? (() => { const p = revLista().find(x => !x.visto && x.a.id !== a.id); return p ? `<button class="btn btn-line" type="button" data-act="revAbrir" data-id="${esc(p.a.id)}">Próximo: ${esc(pnA(p.a))} →</button>` : `<button class="btn btn-line" type="button" data-act="revVer">Todos conferidos ✓</button>`; })() : ''}`,
     onMount: sh => { const f = sh.querySelector('.sh-f'); if (f) f.classList.add('rl-f'); } });
 }
 ACT.rel = el => relAbrir(+el.dataset.n || 7);
@@ -4128,12 +4157,31 @@ function relArquivo(a, N) {
 }
 ACT.relArq = async () => { const a = cur(); if (!a) return; const N = UI.relN || 7, nome = `relatorio-${N}-dias-${(primeiroNome(a.dados.nome) || 'aluno').toLowerCase().normalize('NFD').replace(/[^\w]/g, '')}-${todayISO()}.html`;
   if (await compartilharArquivo(nome, relArquivo(a, N), 'text/html', `Relatório de ${N} dias`)) toast('Relatório pronto'); };
-ACT.relMsg = () => { const a = cur(); if (!a) return; const r = relTexto(a, UI.relN || 7); swapSheet(() => relMsgSheet(a, r, UI.relN || 7)); };
-function relMsgSheet(a, r, N) {
-  openSheet({ title: `Resumo de ${N} dias para o aluno`, tall: true,
-    body: `<p class="note" style="margin-bottom:10px">${r.vazio ? `Este aluno não tem registros nos últimos ${N} dias.` : 'Montado com os registros do app. Complete o próximo passo e revise antes de mandar.'}</p><textarea id="relTxt" style="width:100%;min-height:320px;font-size:15px;line-height:1.5;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-field);padding:12px 13px;color:var(--ink)">${esc(r.txt)}</textarea>`,
-    foot: `<button class="btn btn-line" type="button" data-act="relTxtCopiar">Copiar</button><a class="btn btn-ink" id="relWa" target="_blank" rel="noopener" href="${esc(waLink(a, r.txt))}">Abrir no WhatsApp</a>`,
-    onMount: sh => { const t = sh.querySelector('#relTxt'), w = sh.querySelector('#relWa'); t.addEventListener('input', () => { w.href = waLink(a, t.value); }); } });
+/* mandar para o aluno: o relatório completo vai para a página dele no app, e a mensagem com o resumo e o link abre no WhatsApp dele */
+function relMsgAluno(a, N, link) {
+  const L = relTexto(a, N).txt.split('\n'), X = relJan(N, 0), corpo = L.slice(3, -2).join('\n').trim();
+  return `Fala, ${primeiroNome(a.dados.nome) || 'tudo bem'}! 📊 Fechei o seu relatório dos últimos ${N} dias (${dataBR(X.ini)} a ${dataBR(X.fim)}).\n\n${corpo}${link ? `\n\n👉 *Relatório completo*, com gráficos, as cargas exercício por exercício e o dia a dia:\n${link}` : ''}\n\n*Próximo passo:* `;
+}
+ACT.relAluno = async el => {
+  const a = cur(); if (!a) return; const N = UI.relN || 7, comPag = !!(a.portal && a.portal.ativo && syncAtivo() && !IN_CLAUDE && !a.exemplo);
+  let link = '';
+  if (comPag) { el.disabled = true; el.textContent = 'Preparando…';
+    const r = relHTML(a, N); a.relAluno = { n: N, ini: r.X.J.ini, fim: r.X.J.fim, em: Date.now(), html: r.html }; touch(a);
+    try { await flush(); await publicarPortal(a); link = linkPortal(a) + '&rel=1'; }
+    catch (e) { el.disabled = false; el.textContent = 'Mandar para o aluno'; return toast('Não deu para colocar o relatório na página do aluno agora. Confira a internet e tente de novo.'); } }
+  const txt = relMsgAluno(a, N, link), vazio = relTexto(a, N).vazio;
+  swapSheet(() => relMsgSheet(a, { txt, vazio }, N, { link, comPag }));
+};
+ACT.relMsg = el => ACT.relAluno(el);
+function relMsgSheet(a, r, N, o = {}) {
+  const tel = digitos(a.dados.tel).length >= 10;
+  const av = [!o.comPag ? (a.portal && a.portal.ativo ? 'A página do aluno só atualiza com a sincronização ligada (aba Backup). Por enquanto, o relatório completo vai como arquivo: toque em Enviar arquivo e escolha o WhatsApp.' : 'Este aluno ainda não tem a página no app: o relatório completo vai como arquivo. Toque em Enviar arquivo e escolha o WhatsApp.') : `O relatório completo já está na página de ${esc(primeiroNome(a.dados.nome) || 'aluno')} no app: o link da mensagem abre direto nele.`,
+    !tel ? 'Sem WhatsApp na ficha do aluno: o WhatsApp vai abrir para você escolher o contato. Cadastre o número na Ficha para ir direto.' : '', r.vazio ? `Sem registros nos últimos ${N} dias.` : ''].filter(Boolean);
+  openSheet({ title: `Mandar o relatório de ${N} dias`, tall: true,
+    body: `${av.map(t => `<div class="aviso" style="margin:0 0 8px">${t}</div>`).join('')}<p class="note" style="margin-bottom:8px">Mensagem pronta com o resumo${o.link ? ' e o link' : ''}. Complete o próximo passo e revise antes de mandar.</p><textarea id="relTxt" style="width:100%;min-height:300px;font-size:15px;line-height:1.5;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-field);padding:12px 13px;color:var(--ink)">${esc(r.txt)}</textarea>`,
+    foot: `<button class="btn btn-line" type="button" data-act="relTxtCopiar">Copiar</button>${o.comPag ? '' : `<button class="btn btn-line" type="button" data-act="relArq">Enviar arquivo</button>`}<a class="btn btn-ink" id="relWa" target="_blank" rel="noopener" href="${esc(waLink(a, r.txt))}">Abrir no WhatsApp${tel ? ` de ${esc(primeiroNome(a.dados.nome))}` : ''}</a>`,
+    onMount: sh => { const t = sh.querySelector('#relTxt'), w = sh.querySelector('#relWa'); t.addEventListener('input', () => { w.href = waLink(a, t.value); });
+      w.addEventListener('click', () => { if (a.relAluno) { a.relAluno.enviadoEm = Date.now(); touch(a); } }); } });
 }
 ACT.relTxtCopiar = async () => { const t = document.getElementById('relTxt'); if (t && await copiarTexto(t.value)) toast('Resumo copiado'); };
 ACT.relMes = () => relAbrir(30);
@@ -5238,6 +5286,7 @@ function pendencias() {
   at.forEach(a => { const o = obsPendentes(a); if (o.length) L.push({ k: 'obs:' + a.id + ':' + o.join(',').length + ':' + o.length, tipo: 'reg', ord: 3, t: `Responder ${o.length === 1 ? 'a observação' : o.length + ' observações'} de ${pnA(a)}`, s: obsInfo(a, o[0]).onde + ': “' + obsInfo(a, o[0]).obs.slice(0, 70) + (obsInfo(a, o[0]).obs.length > 70 ? '…' : '') + '”', ir: () => irAluno(a, 'registros'), feito: () => marcarVistas(a, o) }); });
   at.forEach(a => { if (!ativo(a)) return; let x; try { x = sinaisDe(a); } catch (e) { return; } if (x.nivel < 2) return; const M = x.itens.filter(s => s.n >= 1);
     L.push({ k: 'risco:' + a.id + ':' + semana, tipo: 'cob', ord: 2, t: `${pnA(a)} pode estar largando`, s: M.slice(0, 2).map(s => s.t).join(' · '), ir: () => irAluno(a, 'registros') }); });
+  { const R = revLista(), falta = R.filter(x => !x.visto); if (R.length && falta.length) L.push({ k: 'rev:' + revCfg().sem, tipo: 'reg', ord: 1, t: 'Conferir os relatórios da semana', s: `${R.length - falta.length} de ${R.length} conferidos · falta${falta.length > 1 ? 'm' : ''} ${falta.map(x => pnA(x.a)).slice(0, 5).join(', ')}${falta.length > 5 ? '…' : ''}`, ir: () => { UI.relRev = false; abrirRevisao(); }, bt: 'Conferir' }); }
   if (fbAtras.length) L.push({ k: 'fb:' + semana, tipo: 'fb', ord: 8, t: `Cobrar o feedback de ${plur(fbAtras.length, 'aluno')}`, s: 'Sem feedback há mais de 7 dias: ' + fbAtras.map(pnA).slice(0, 5).join(', ') + (fbAtras.length > 5 ? '…' : ''), ir: () => cobrarFeedbacks(fbAtras) });
   return L.filter(p => { const d = CFG.dispensas[p.k]; return !d || (p.dia && d < hoje); }).sort((x, y) => x.ord - y.ord);
 }

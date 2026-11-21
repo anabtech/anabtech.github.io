@@ -399,7 +399,14 @@ body.em-foco #tb-t:checked~main :is(#dreg,#mgAv,#lembAv,#nvAv,.bv,.ola,.week,.aj
 /* troca de aba */
 #app main>.pg{animation:pgIn .2s ease-out}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){#app main>.pg,.lg-r.ok .lg-ok,.vov{animation:none}}
+.relc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--ink);color:#fff;border:0;border-radius:16px;padding:14px 16px;margin:0 0 14px;font:inherit;cursor:pointer}
+.relc-i{flex:none;font-size:24px}.relc-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.relc-t b{font-size:16px}.relc-t span{font-size:13px;color:rgba(255,255,255,.7)}.relc-go{flex:none;font-size:26px;color:var(--accent)}
+.relc:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.relov{position:fixed;inset:0;z-index:96;background:var(--paper);overflow-y:auto;-webkit-overflow-scrolling:touch;animation:vovA .18s ease-out}
+.relov-b{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;background:var(--paper);border-bottom:1px solid var(--rule);padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 10px}
+.relov-b b{font-size:15px}.relov-x{background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;color:var(--ink);cursor:pointer}
+.relov-c{max-width:760px;margin:0 auto;padding:14px 14px calc(env(safe-area-inset-bottom,0px) + 28px)}
+@media (prefers-reduced-motion:reduce){#app main>.pg,.lg-r.ok .lg-ok,.vov,.relov{animation:none}}
 @media print{#app .sess>.head{background:none;color:inherit}#app .sess>.head::before{display:none}#app .sess>.head h1,#app .sess>.head .stat .n{color:inherit}#app .bar{background:none}#app .bar .mark{color:inherit}}
 
 /* ===== 2.3 · relatório de 30 dias, peso, lembrete de teste e comparação de fotos ===== */
@@ -458,6 +465,8 @@ function aviso(t, ms = 2600) { const el = $('st'); el.textContent = t; el.classL
 /* ---------- link e código ---------- */
 /* ---------- veio do endereço antigo (mgcoach.github.io): traz o que estava guardado no celular ---------- */
 let MIGROU = false;
+let ABRIR_REL = /[#&]rel=1(?:&|$)/.test(location.hash);   /* link do relatório que o treinador mandou */
+if (ABRIR_REL) { const t0 = new URLSearchParams(location.hash.slice(1)).get('t'); try { history.replaceState(null, '', location.pathname + location.search + (t0 ? '#t=' + t0 : '')); } catch (e) {} }
 (function () {
   const m = location.hash.match(/[#&]mig=([^&]+)/); if (!m) return;
   try {
@@ -589,9 +598,27 @@ function montar() {
   cardsMG(); ligarBarraDia(); if (!LS.get('desde', '')) LS.set('desde', LS.get('feitos', []).length || Object.keys(LS.get('hist', {})).length ? isoMenos(30) : hojeISO()); mostrarLembrete();
   const abaSalva = LS.get('aba', ''); if (abaSalva && $(abaSalva)) $(abaSalva).checked = true;
   app.querySelectorAll('input.rd[name=tab]').forEach(x => x.addEventListener('change', () => { LS.set('aba', x.id); window.scrollTo(0, 0); }));
-  mostrarFila(); ligar3D(app); ligarVideos(app); montarNovidades(pn); montarEvolucao(pe); aplicarFC();
-  app.querySelector('#tb-e').addEventListener('change', () => montarEvolucao(pe));
+  mostrarFila(); ligar3D(app); ligarVideos(app); montarNovidades(pn); montarEvolucao(pe); montarRelatorio(pe); aplicarFC();
+  app.querySelector('#tb-e').addEventListener('change', () => { montarEvolucao(pe); montarRelatorio(pe); });
+  if (ABRIR_REL && SNAP.rel) { ABRIR_REL = false; const tb = $('tb-e'); if (tb) { tb.checked = true; LS.set('aba', 'tb-e'); montarEvolucao(pe); montarRelatorio(pe); } setTimeout(abrirRel, 150); }
 }
+
+/* ---------- relatório que o treinador mandou (7, 15 ou 30 dias) ---------- */
+function montarRelatorio(sec) {
+  const R = SNAP && SNAP.rel; if (!R || !R.html || !sec) return; const h = sec.querySelector('h2.sheet-t'); if (!h || sec.querySelector('.relc')) return;
+  h.insertAdjacentHTML('afterend', `<button type="button" class="relc" id="relc"><span class="relc-i" aria-hidden="true">📊</span><span class="relc-t"><b>Seu relatório de ${R.n} dias</b><span>${dataBR(R.ini)} a ${dataBR(R.fim)} · treinos, cargas, dieta e cardio</span></span><span class="relc-go" aria-hidden="true">›</span></button>`);
+  sec.querySelector('#relc').onclick = abrirRel;
+}
+function fecharRel(viaVoltar) { const o = $('relov'); if (!o) return; o.remove(); document.body.style.overflow = ''; if (!viaVoltar && history.state && history.state.rel) history.back(); }
+function abrirRel() {
+  const R = SNAP && SNAP.rel; if (!R || !R.html) return; if ($('relov')) fecharRel();
+  const o = document.createElement('div'); o.id = 'relov'; o.className = 'relov'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', `Relatório de ${R.n} dias`);
+  o.innerHTML = `<div class="relov-b"><button type="button" class="relov-x" aria-label="Fechar">‹ Voltar</button><b>Relatório de ${R.n} dias</b></div><div class="relov-c"><style>${R.css || ''}</style>${R.html}</div>`;
+  o.dataset.em = String(R.em || '');
+  document.body.appendChild(o); document.body.style.overflow = 'hidden'; o.querySelector('.relov-x').onclick = () => fecharRel();
+  try { history.pushState({ rel: 1 }, ''); } catch (e) {}
+}
+window.addEventListener('popstate', () => fecharRel(true));
 
 /* ---------- progressão de carga, cardio e evolução ---------- */
 const curtoN = n => { const t = String(n).split(/[,(]/)[0].trim(); return t.length > 26 ? t.slice(0, 24) + '…' : t; };
@@ -1778,7 +1805,7 @@ async function atualizarSnap() {
   if (!PIN || Date.now() - _ultBusca < 60000) return; _ultBusca = Date.now();
   try {
     const r = await buscar(PIN);
-    if (r.ok) { const mudou = !SNAP || r.dados.pubEm !== SNAP.pubEm; SNAP = r.dados; LS.set('snap', SNAP); if (mudou && !_fotoBusy && !Object.keys(FOTOS).length && !document.activeElement.matches('input,textarea')) { const y = scrollY; const aba = LS.get('aba', ''); montar(); if (aba && $(aba)) $(aba).checked = true; scrollTo(0, y); } }
+    if (r.ok) { const mudou = !SNAP || r.dados.pubEm !== SNAP.pubEm; SNAP = r.dados; LS.set('snap', SNAP); { const ov = $('relov'), R = SNAP.rel; if (ov && R && R.html && String(R.em || '') !== ov.dataset.em) { ov.dataset.em = String(R.em || ''); ov.querySelector('.relov-c').innerHTML = `<style>${R.css || ''}</style>${R.html}`; ov.querySelector('.relov-b b').textContent = `Relatório de ${R.n} dias`; } } if (mudou && !_fotoBusy && !Object.keys(FOTOS).length && !document.activeElement.matches('input,textarea')) { const y = scrollY; const aba = LS.get('aba', ''); montar(); if (aba && $(aba)) $(aba).checked = true; scrollTo(0, y); } }
     else if (r.erro === 'link') telaInativa();
     else if (r.erro === 'codigo') { LS.del('pin'); PIN = ''; telaPin('O código mudou. Peça o código novo ao seu coach.'); }
   } catch (e) {}
