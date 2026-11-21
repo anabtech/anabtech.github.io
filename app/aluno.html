@@ -669,7 +669,7 @@ function dadosEvo() {
   E.cardio.sort((a, b) => a[0].localeCompare(b[0]));
   return E;
 }
-const MODN = { leve: 'Contínuo leve', moderado: 'Contínuo moderado', hiit: 'HIIT', tiros: 'Tiros', caminhada: 'Caminhada' };
+const MODN = { leve: 'Contínuo leve', moderado: 'Contínuo moderado', hiit: 'HIIT', tiros: 'Tiros', caminhada: 'Caminhada', ativ: 'Outra atividade' };
 const EQN = { esteira: 'esteira', bike: 'bicicleta', escada: 'escada', eliptico: 'elíptico', remo: 'remo', rua: 'rua', natacao: 'natação', corda: 'corda', livre: 'ao ar livre', outro: 'outro' };
 const ZON = [[50, 60, 'Recuperação', '1–2'], [60, 70, 'Aeróbio leve', '3–4'], [70, 80, 'Moderado', '5–6'], [80, 90, 'Forte (limiar)', '7–8'], [90, 100, 'Máximo', '9–10']];
 /* mesmas contas do app do coach: limiares (teste da fala/laudo), reserva cardíaca (Karvonen) ou % da FC máxima */
@@ -1183,7 +1183,7 @@ function montarTreino(app) {
     const CD = TR[k].cardio || [];
     CD.forEach(c => { const art = sess.querySelector(`article.cardio[data-cid="${c.id}"]`); if (!art) return; const r = (rasc['c:' + c.id]) || {};
       const box = document.createElement('div'); box.className = 'lg cdlg'; box.dataset.k = k; box.dataset.cid = c.id;
-      box.innerHTML = `<div class="lg-h"><b>Anote o seu cardio</b></div><div class="cd-in"><label>Tempo (min)<input class="c-min" inputmode="decimal" value="${esc(r.min || '')}" placeholder="${esc(c.iv ? '' : c.min || '')}"></label><label>FC média (bpm)<input class="c-fc" inputmode="numeric" value="${esc(r.fc || '')}" placeholder="opcional"></label><label>Distância (km)<input class="c-km" inputmode="decimal" value="${esc(r.km || '')}" placeholder="opcional"></label></div>
+      box.innerHTML = `<div class="lg-h"><b>${c.mod === 'ativ' ? 'Anote a atividade' : 'Anote o seu cardio'}</b></div><div class="cd-in"><label>Tempo (min)<input class="c-min" inputmode="decimal" value="${esc(r.min || '')}" placeholder="${esc(c.iv ? '' : c.min || '')}"></label><label>FC média (bpm)<input class="c-fc" inputmode="numeric" value="${esc(r.fc || '')}" placeholder="opcional"></label><label>Distância (km)<input class="c-km" inputmode="decimal" value="${esc(r.km || '')}" placeholder="opcional"></label></div>
         <div class="cd-pse"><span>Esforço da sessão (0 = parado, 10 = máximo)</span><div class="pse">${[...Array(11)].map((_, i) => `<button type="button" data-p="${i}" class="${String(r.pse) === String(i) ? 'on' : ''}">${i}</button>`).join('')}</div></div>
         <textarea class="lg-nota" rows="1" placeholder="Anotação: velocidade, inclinação, como se sentiu…">${esc(r.nota || '')}</textarea>`;
       art.appendChild(box);
@@ -1223,7 +1223,7 @@ function minDesde(k) { const t = LS.get('ini.' + dataReg() + '.' + k, 0); if (!t
 function salvarTreino(k, fim) {
   const dados = lerSessao(k); const L = (SNAP.treino[k] || {}).ex || [];
   const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: (d.sets || []).map(z => { const c = Object.assign({}, z); delete c.ok; return c; }), nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; return o; }).filter(x => x.sets.length || x.nota);
-  const cardio = ((SNAP.treino[k] || {}).cardio || []).map(c => { const d = dados['c:' + c.id] || {}; return { id: c.id, mod: c.mod, eq: c.eq, zona: c.zona, min: d.min, fc: d.fc, km: d.km, pse: d.pse, nota: d.nota }; }).filter(c => c.min || c.fc || c.km || c.pse !== '' && c.pse != null || c.nota);
+  const cardio = ((SNAP.treino[k] || {}).cardio || []).map(c => { const d = dados['c:' + c.id] || {}; const o = { id: c.id, mod: c.mod, eq: c.eq, zona: c.zona, min: d.min, fc: d.fc, km: d.km, pse: d.pse, nota: d.nota }; if (c.mod === 'ativ') { o.an = c.an; o.met = c.met; } return o; }).filter(c => c.min || c.fc || c.km || c.pse !== '' && c.pse != null || c.nota);
   if (!exs.length && !cardio.length) { aviso(L.length ? 'Anote pelo menos uma série antes de salvar.' : 'Anote o tempo ou o esforço do cardio antes de salvar.'); return; }
   const data = dataReg(); const feitos = LS.get('feitos', []);
   const ant = feitos.find(t => t.data === data && t.dia === k) || (SNAP.treinosFeitos || []).find(t => t.data === data && t.dia === k);
@@ -1629,6 +1629,16 @@ function contaResumo(reg) {
   PR.sort((a, b) => b.d / b.e - a.d / a.e);
   return { nome: reg.nomeDia || 'Treino', data: reg.data, min: reg.min || 0, series, vol: Math.round(vol), dv: cmpA > 0 ? Math.round((cmpH / cmpA - 1) * 100) : null, PR, cardio: (reg.cardio || []).reduce((s2, c) => s2 + (numBR(c.min || 0) || 0), 0) };
 }
+/* gasto estimado do treino, além do repouso: musculação pelo tempo e pelo esforço da sessão; cardio pela zona; outras atividades pelo MET */
+function gastoTreino(reg, k) {
+  const peso = +((SNAP.fc || {}).peso) || 0; if (!(peso > 20)) return 0;
+  const plano = ((SNAP.treino || {})[k] || {}).cardio || [], Z = [3.0, 4.5, 6.5, 8.5, 10.5]; let kcal = 0, cmin = 0;
+  (reg.cardio || []).forEach(c => { const p = plano.find(x => x.id === c.id) || {}, min = numBR(c.min || 0) || +p.min || 0; if (!(min > 0)) return; cmin += min;
+    const met = c.mod === 'ativ' ? (+c.met || +p.met || 1) : p.iv ? ((+c.zona || 4) >= 4 ? 8.8 : 7.0) : Z[Math.max(1, Math.min(5, +c.zona || 2)) - 1];
+    kcal += Math.max(0, met - 1) * peso * min / 60; });
+  if ((reg.exs || []).length && reg.min > 0) { const p = +reg.pse, met = p >= 9 ? 6.0 : p >= 7 ? 5.0 : 3.5; kcal += (met - 1) * peso * Math.max(10, reg.min - cmin) / 60; }
+  return Math.round(kcal);
+}
 function abrirResumo(reg, k) {
   const R = contaResumo(reg), o = document.createElement('div'), sx = document.querySelector('.sess.s-' + k), pg = sx ? progDe(sx) : [0, 0], parcial = pg[1] > 0 && pg[0] < pg[1]; o.className = 'rs'; o.id = 'rs'; const ant = $('rs'); if (ant) ant.remove();
   const dia = DSEM[dowISO(R.data)] + ', ' + dataBR(R.data);
@@ -1637,6 +1647,7 @@ function abrirResumo(reg, k) {
     <p class="rs-k">Treino salvo</p><h2>${esc(R.nome)}</h2><p class="rs-d">${esc(dia)}</p>
     ${cel.length ? `<div class="rs-g" style="grid-template-columns:repeat(${cel.length},1fr)">${cel.map(c => `<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join('')}</div>` : ''}
     ${R.dv != null ? `<p class="rs-cmp">${R.dv > 1 ? `Você levantou <b>${R.dv}% a mais</b> que na última vez nos mesmos exercícios.` : R.dv < -1 && parcial ? `Treino parcial: <b>${pg[0]} de ${pg[1]}</b> séries marcadas. Se ainda vai fazer o resto, anote e salve de novo.` : R.dv < -1 ? `Volume <b>${-R.dv}% abaixo</b> da última vez. Acontece: sono, comida e cansaço mudam o dia.` : 'Mesmo volume da última vez. Constância é o que constrói.'}</p>` : '<p class="rs-cmp">Primeiro registro destes exercícios. No próximo treino você vê aqui a comparação e os seus recordes.</p>'}
+    ${(g => g > 0 ? `<p class="rs-cmp">Gasto estimado: <b>cerca de ${g} kcal</b> além do repouso.</p>` : '')(gastoTreino(reg, k))}
     ${R.PR.length ? `<div class="rs-pr">${R.PR.slice(0, 4).map(p => `<div><small>Recorde pessoal</small><b>${esc(p.n)}</b><span>${kgTxt(p.kg)} kg × ${p.r} · 1RM estimado ${fmtN(p.e, 1)} kg (+${fmtN(p.d, 1)})</span></div>`).join('')}</div>` : ''}
     <div class="rs-bt"><button type="button" class="rs-sh">Compartilhar treino</button><button type="button" class="rs-ok">Fechar</button><small>A imagem mostra só o treino e as cargas.</small></div></div>`;
   document.body.appendChild(o); document.body.style.overflow = 'hidden';
