@@ -227,6 +227,8 @@ button,input,textarea,select{font:inherit;color:inherit}
 .aq-i.fd{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(110,150,0,.4)}.aq-i.fd span{color:var(--accent-ink)}
 .aq-v{opacity:.55}.aq-t{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-top:8px}
 .aq-cur{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-top:8px}.aq-g{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-2)}.aq-g li{display:flex;gap:7px;align-items:baseline}.aq-g li i{font-style:normal;flex:none}
+i.dt{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none;margin-right:6px;vertical-align:1px}.aq-g li i.dt{margin:6px 1px 0 0;align-self:flex-start}i.dt.up{background:#5c9e1a}i.dt.md{background:#d6a21e}i.dt.dn{background:#cf4a36}
+.lg-fmt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:0 0 10px;padding:3px;border-radius:11px;background:var(--rule-soft)}.lg-fmt button{height:30px;padding:0 4px;border-radius:8px;border:0;background:transparent;font-family:inherit;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}.lg-fmt button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(11,12,14,.12)}
 .lg-dica{font-size:12.5px;line-height:1.45;color:var(--ink-2);background:var(--card);border-radius:10px;padding:8px 10px;margin:0 0 9px}
 article.cardio .cdlg{margin:12px 0 0}.cd-in{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.cd-in label{font-size:11.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px}.cd-in input{border:1px solid var(--rule);border-radius:9px;padding:8px;font-size:15px;background:var(--card);width:100%}
 .cd-pse{margin:9px 0 6px}.cd-pse span{font-size:11.5px;color:var(--ink-2)}.pse{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:4px}.pse button{border:1px solid var(--rule);background:var(--card);border-radius:7px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer}.pse button.on{background:#e0245e;border-color:#e0245e;color:#fff}
@@ -383,6 +385,15 @@ body.em-foco #tb-t:checked~main :is(#dreg,#mgAv,#lembAv,#nvAv,.bv,.ola,.week,.aj
 #app .sess>.head .foco{color:rgba(255,255,255,.66)}
 #app .sess>.head .stats{border-top-color:rgba(255,255,255,.14);gap:26px}
 #app .sess>.head .stat .n{color:#fff}#app .sess>.head .stat .l{color:rgba(255,255,255,.56)}
+/* cabeçalho do dia compacto: nome, foco, números numa linha e o botão de começar */
+#app .sess>.head{padding:16px 18px;border-radius:18px}
+#app .sess>.head h1{font-size:26px;line-height:1.1;margin:0}
+#app .sess>.head .foco{font-size:13.5px;margin-top:3px}
+#app .sess>.head .stats{margin-top:12px;padding-top:10px;gap:16px}
+#app .sess>.head .stat{display:flex;align-items:baseline;gap:5px}
+#app .sess>.head .stat .n{font-size:15px;line-height:1.2}
+#app .sess>.head .stat .l{font-size:12.5px;margin:0}
+#app .sess>.head .go{margin-top:12px}#app .sess>.head .go-bt{height:40px;font-size:14px;padding:0 16px 0 12px}
 #app .sess>.head .go-n{color:rgba(255,255,255,.66)}#app .sess>.head .go-b{background:rgba(255,255,255,.16)}#app .sess>.head .go-b i{background:var(--accent)}
 /* títulos e números */
 #app h1,#app .stat .n,#app .ex-name,.fbf+h1{font-family:var(--num)}
@@ -627,7 +638,7 @@ function montar() { iconePerfil();
 /* ---------- relatório que o treinador mandou (7, 15 ou 30 dias) ---------- */
 function montarRelatorio(sec) {
   const R = SNAP && SNAP.rel; if (!R || !R.html || !sec) return; const h = sec.querySelector('h2.sheet-t'); if (!h || sec.querySelector('.relc')) return;
-  h.insertAdjacentHTML('afterend', `<button type="button" class="relc" id="relc"><span class="relc-i" aria-hidden="true">📊</span><span class="relc-t"><b>Seu relatório de ${R.n} dias</b><span>${dataBR(R.ini)} a ${dataBR(R.fim)} · treinos, cargas, dieta e cardio</span></span><span class="relc-go" aria-hidden="true">›</span></button>`);
+  h.insertAdjacentHTML('afterend', `<button type="button" class="relc" id="relc"><span class="relc-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></span><span class="relc-t"><b>Seu relatório de ${R.n} dias</b><span>${dataBR(R.ini)} a ${dataBR(R.fim)} · treinos, cargas, dieta e cardio</span></span><span class="relc-go" aria-hidden="true">›</span></button>`);
   sec.querySelector('#relc').onclick = abrirRel;
 }
 function fecharRel(viaVoltar) { const o = $('relov'); if (!o) return; o.remove(); document.body.style.overflow = ''; if (!viaVoltar && history.state && history.state.rel) history.back(); }
@@ -654,9 +665,9 @@ function proxMeta(x, h) {
   const S = h.sets.filter(z => z.reps && serieNum(z)); if (!S.length) return null;
   const kg = Math.max(...S.map(z => numBR(z.kg) || 0)), R = S.map(z => parseInt(z.reps, 10) || 0), rir = h.rir;
   const topo = R.every(r => r >= F[1]), baixo = R.some(r => r < F[0]);
-  if (kg > 0 && (topo || (rir != null && rir >= 3 && !baixo))) return { t: 'sobe', kg, novo: proxKg(kg), txt: `💪 ${topo ? `Na última vez você fez <b>${F[1]} ou mais repetições em todas as séries</b>` : `Na última vez <b>sobraram ${rir}${rir >= 4 ? '+' : ''} repetições</b>`}. Hoje suba a carga: de ${kgTxt(kg)} para <b>~${kgTxt(proxKg(kg))} kg</b> (ou o próximo peso disponível) e busque de ${F[0]} a ${F[1]} repetições.` };
-  if (kg > 0 && baixo && rir === 0) return { t: 'segura', kg, txt: `🎯 Mantenha <b>${kgTxt(kg)} kg</b> e tente chegar a <b>${F[0]} repetições</b> em todas as séries. Se não sair em 2 treinos, baixe uns 5 a 10%.` };
-  return { t: 'reps', kg, txt: `🎯 Meta de hoje: ${kg ? `com ${kgTxt(kg)} kg, ` : ''}<b>1 repetição a mais</b> em pelo menos uma série. Quando chegar a ${F[1]} em todas, é hora de subir a carga.` };
+  if (kg > 0 && (topo || (rir != null && rir >= 3 && !baixo))) return { t: 'sobe', kg, novo: proxKg(kg), txt: `${topo ? `Na última vez você fez <b>${F[1]} ou mais repetições em todas as séries</b>` : `Na última vez <b>sobraram ${rir}${rir >= 4 ? '+' : ''} repetições</b>`}. Hoje suba a carga: de ${kgTxt(kg)} para <b>~${kgTxt(proxKg(kg))} kg</b> (ou o próximo peso disponível) e busque de ${F[0]} a ${F[1]} repetições.` };
+  if (kg > 0 && baixo && rir === 0) return { t: 'segura', kg, txt: `Mantenha <b>${kgTxt(kg)} kg</b> e tente chegar a <b>${F[0]} repetições</b> em todas as séries. Se não sair em 2 treinos, baixe uns 5 a 10%.` };
+  return { t: 'reps', kg, txt: `Meta de hoje: ${kg ? `com ${kgTxt(kg)} kg, ` : ''}<b>1 repetição a mais</b> em pelo menos uma série. Quando chegar a ${F[1]} em todas, é hora de subir a carga.` };
 }
 const dicaProgressao = (x, h) => { const m = proxMeta(x, h); return m ? m.txt : ''; };
 function e1rm(kg, r) { kg = numBR(kg); r = parseInt(r, 10); if (!(kg > 0) || !(r >= 1) || r > 12) return null; return r === 1 ? kg : kg * (1 + r / 30); }
@@ -967,7 +978,7 @@ async function montarNovidades(sec) {
   if (novas.length) {
     $('nvDot').hidden = false;
     const n = novas[0];
-    $('mgAv').insertAdjacentHTML('beforebegin', `<div class="mgc nvav" id="nvAv" role="status"><h3><i>✨</i>Novidade no app: ${esc(n.titulo)}</h3><p>${esc(n.resumo || '')}</p><div class="lb"><button type="button" id="nvVer">Ver novidade</button><button type="button" class="ln" id="nvOk">Depois</button></div></div>`);
+    $('mgAv').insertAdjacentHTML('beforebegin', `<div class="mgc nvav" id="nvAv" role="status"><h3>Novidade no app: ${esc(n.titulo)}</h3><p>${esc(n.resumo || '')}</p><div class="lb"><button type="button" id="nvVer">Ver novidade</button><button type="button" class="ln" id="nvOk">Depois</button></div></div>`);
     $('nvVer').onclick = () => { const r = $('tb-n'); r.checked = true; r.dispatchEvent(new Event('change')); window.scrollTo(0, 0); };
     $('nvOk').onclick = () => { const c = $('nvAv'); if (c) c.remove(); };
   }
@@ -990,9 +1001,9 @@ function cardPag() {
   const P = SNAP.pag; if (!P || !P.venc) return '';
   const d = diasAte(P.venc), inf = pgInformado();
   if (d > 7) return ''; /* semana da renovação */
-  if (inf) return `<div class="mgc pgok" role="status"><h3><i>✅</i>Pagamento informado</h3><p>Você avisou que pagou por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'}. Assim que a gente confirmar, o seu plano renova.</p></div>`;
+  if (inf) return `<div class="mgc pgok" role="status"><h3>Pagamento informado</h3><p>Você avisou que pagou por ${inf.forma === 'cartao' ? 'cartão' : 'Pix'}. Assim que a gente confirmar, o seu plano renova.</p></div>`;
   const t = d < 0 ? `Seu plano venceu em ${dataBR(P.venc)}` : d === 0 ? 'Seu plano vence hoje' : d === 1 ? 'Seu plano vence amanhã' : `Semana de renovação: seu plano vence em ${d} dias`;
-  return `<div class="mgc mpg" role="status"><h3><i>💳</i>${esc(t)}</h3><p>${d < 0 ? 'Faça o pagamento para retomar o acompanhamento' : `Faça o pagamento até ${dataBR(P.venc)} para seguir sem pausa no acompanhamento`}. É rápido: Pix ou cartão aqui mesmo no app.</p><div class="lb"><button type="button" id="mgPg">Pagar plano</button></div></div>`;
+  return `<div class="mgc mpg" role="status"><h3>${esc(t)}</h3><p>${d < 0 ? 'Faça o pagamento para retomar o acompanhamento' : `Faça o pagamento até ${dataBR(P.venc)} para seguir sem pausa no acompanhamento`}. É rápido: Pix ou cartão aqui mesmo no app.</p><div class="lb"><button type="button" id="mgPg">Pagar plano</button></div></div>`;
 }
 function irPagamento() { const tb = $('tb-f'); if (tb) { tb.checked = true; LS.set('aba', 'tb-f'); } const s = $('pagSec'); if (s) setTimeout(() => s.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }
 function blocoPag() {
@@ -1045,9 +1056,9 @@ function cardFb() {
 function cardsMG() {
   const box = $('mgAv'); if (!box) return;
   const lidas = LS.get('respLidas', []), novas = (SNAP.respostas || []).filter(r => !lidas.includes(r.id)).slice(0, 3), fb = cardFb();
-  box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3><i>📋</i>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
-    (() => { const V = SNAP.proprio ? [] : testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3><i>⏱️</i>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
-    novas.map(r => `<div class="mgc rs" role="status"><h3><i>💬</i>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
+  box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
+    (() => { const V = SNAP.proprio ? [] : testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
+    novas.map(r => `<div class="mgc rs" role="status"><h3>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
   { const d = $('fbDot'); if (d) d.hidden = !fb; }
   const bp = $('mgPg'); if (bp) bp.onclick = irPagamento;
   { const g = $('mgTs'), dp = $('mgTsD'); if (dp) dp.onclick = () => { LS.set('tstAdia', hojeISO()); cardsMG(); };
@@ -1139,12 +1150,12 @@ function blocoAq(x, h, r0) {
   const sug = alvoSugerido(x, h), val = r0.alvo != null && r0.alvo !== '' ? r0.alvo : sug ? kgTxt(sug.kg) : '';
   const sente = L.some(z => z.fd || (z.c != null && z.c >= 85)), hal = /dumbbell/.test(x.eq || ''), cheio = sente && !_aqGuia; if (cheio) _aqGuia = true;
   const sobe = hal ? 'tente o próximo halter na série válida' : 'tente 2,5 a 5 kg a mais na série válida';
-  return `<div class="lg-aq" data-eq="${esc(x.eq || '')}"><div class="aq-h"><b>🔥 Cargas para aquecer</b><label>Carga da série válida<input class="aq-alvo" inputmode="decimal" value="${esc(val)}"${r0.alvo ? ' data-mexeu="1"' : ''} placeholder="kg" aria-label="Carga da série válida em kg"> kg</label></div>
+  return `<div class="lg-aq" data-eq="${esc(x.eq || '')}"><div class="aq-h"><b>Cargas para aquecer</b><label>Carga da série válida<input class="aq-alvo" inputmode="decimal" value="${esc(val)}"${r0.alvo ? ' data-mexeu="1"' : ''} placeholder="kg" aria-label="Carga da série válida em kg"> kg</label></div>
     <span class="aq-src">${hal ? 'em cada halter · ' : ''}${r0.alvo ? 'você ajustou' : sug ? 'pela ' + sug.de : 'coloque a carga que pretende usar'}</span>
     <div class="aq-l">${L.map(z => `<div class="aq-i${z.fd ? ' fd' : ''}" data-c="${z.c == null ? '' : z.c}"><span>${esc(z.t)}${z.c != null ? ' · ' + z.c + '%' : ''}</span><b class="aq-kg">—</b><i>× ${esc(z.r || '—')}</i></div>`).join('')}</div>
     ${!sente ? '<p class="aq-t"><b>É só um ponto de partida.</b> Se o aquecimento ficou pesado ou leve demais, ajuste a carga da série válida.</p>'
-      : !cheio ? `<p class="aq-cur">Ponto de partida: nos feeders, sinta o peso. 🟢 leve, ${hal ? 'próximo halter' : '+2,5 a 5 kg'} · 🟡 mantém · 🔴 tira 5 a 10%.</p>`
-      : `<p class="aq-t"><b>É só um ponto de partida.</b> Use os feeders para sentir o peso e achar a sua carga de hoje:</p><ul class="aq-g"><li><i>🟢</i><span><b>Subiu leve e rápido</b>: ${sobe}.</span></li><li><i>🟡</i><span><b>Pesou na medida</b>: mantenha a carga.</span></li><li><i>🔴</i><span><b>Pesou demais ou a técnica caiu</b>: tire 5 a 10%.</span></li></ul>`}</div>`;
+      : !cheio ? `<p class="aq-cur">Ponto de partida: nos feeders, sinta o peso. <i class="dt up"></i>leve, ${hal ? 'próximo halter' : '+2,5 a 5 kg'} · <i class="dt md"></i>mantém · <i class="dt dn"></i>tira 5 a 10%.</p>`
+      : `<p class="aq-t"><b>É só um ponto de partida.</b> Use os feeders para sentir o peso e achar a sua carga de hoje:</p><ul class="aq-g"><li><i class="dt up"></i><span><b>Subiu leve e rápido</b>: ${sobe}.</span></li><li><i class="dt md"></i><span><b>Pesou na medida</b>: mantenha a carga.</span></li><li><i class="dt dn"></i><span><b>Pesou demais ou a técnica caiu</b>: tire 5 a 10%.</span></li></ul>`}</div>`;
 }
 function pintarAq(div) {
   const box = div.querySelector('.lg-aq'); if (!box) return;
@@ -1152,6 +1163,7 @@ function pintarAq(div) {
   box.querySelectorAll('.aq-i').forEach(it => { const c = it.dataset.c === '' ? null : +it.dataset.c, v = cargaAq(alvo, c, eq);
     it.querySelector('.aq-kg').textContent = v ? kgTxt(Math.round(v * 100) / 100) + ' kg' : c == null ? 'leve' : '—'; it.classList.toggle('aq-v', !v && c != null); });
 }
+const FMT_P = { reta2: ['2 séries', ['1', '2']], reta3: ['3 séries', ['1', '2', '3']], backoff: ['2 + backoff', ['1', '2', 'Backoff']], cluster: ['Cluster', ['Bloco 1', 'Bloco 2', 'Bloco 3', 'Bloco 4', 'Bloco 5', 'Bloco 6']] };
 function montarTreino(app) {
   const TR = SNAP.treino || {}; const MS = mesoStatus(SNAP.meso), rirAlvo = MS && !MS.del ? MS.rir : '';
   { const pt = app.querySelector('.pg-t'); if (pt) { pt.insertAdjacentHTML('beforeend', `<div class="atv-c" id="atvC"><b>Fez outra atividade?</b><span>Trilha, luta, dança, esporte, corrida fora do plano: registre aqui para a equipe contar no seu gasto do dia.</span><button type="button" class="bt" id="atvBt">Registrar outra atividade</button><div class="atv-f" id="atvF"></div></div>`); $('atvBt').onclick = abrirAtividade; pintarAtv(); } }
@@ -1163,7 +1175,11 @@ function montarTreino(app) {
     L.forEach((x, i) => {
       const art = arts[i]; if (!art) return;
       const r0 = rasc[x.uid] || {}; const usaAlt = !!(x.alt && r0.alt); const h = histDe(x, usaAlt);
-      const rot = Array.isArray(x.rot) && x.rot.length ? x.rot : null;
+      let rot = Array.isArray(x.rot) && x.rot.length ? x.rot : null;
+      /* perfil próprio: escolhe na hora 2 séries, 3 séries, 2 + backoff ou cluster (a escolha fica salva por exercício) */
+      const fmtPl = x.fmt === 'cluster' ? 'cluster' : x.fmt === 'backoff' ? 'backoff' : x.fmt === 'normal' && +x.series === 2 ? 'reta2' : x.fmt === 'normal' && +x.series === 3 ? 'reta3' : '';
+      let fmtEsc = SNAP.proprio ? (r0.fmt || LS.get('fmtEx.' + x.exId, '') || fmtPl) : '';
+      if (fmtEsc && FMT_P[fmtEsc] && fmtEsc !== fmtPl) rot = FMT_P[fmtEsc][1];
       const n = Math.max(rot ? rot.length : (x.series || 1), (r0.sets || []).length);
       const ultTxt = h ? `Última vez (${dataBR(h.data)}): ${h.sets.filter(z => z.kg || z.reps).map(z => `${z.kg ? kgTxt(z.kg) : '—'} kg × ${z.reps || '—'}`).join(' · ')}` : '';
       const dica = dicaProgressao(x, h);
@@ -1175,11 +1191,21 @@ function montarTreino(app) {
         const phR = sobe ? `${Fx[0]}–${Fx[1]}` : hs.reps ? hs.reps + ' reps' : x.rp ? x.rp + ' reps' : 'reps';
         return `<div class="lg-r${num ? '' : ' tec'}${s.ok ? ' ok' : ''}" data-rot="${esc(rt)}"><span class="lg-n">${esc(rt)}</span><input class="kg" inputmode="decimal" placeholder="${esc(uKg ? uKg + ' kg' : 'kg')}" data-u="${esc(uKg)}" value="${esc(s.kg || '')}" aria-label="Carga: ${esc(nome)}"><span class="x">×</span><input class="rp" inputmode="numeric" placeholder="${esc(phR)}" data-u="${esc(uRp)}" value="${esc(s.reps || '')}" aria-label="Repetições: ${esc(nome)}"><button type="button" class="lg-ok" aria-pressed="${s.ok ? 'true' : 'false'}" aria-label="Marcar ${esc(nome)} como feita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div>`; };
       const div = document.createElement('div'); div.className = 'lg'; div.dataset.k = k; div.dataset.uid = x.uid;
-      div.innerHTML = `${x.alt ? `<div class="lg-alt" role="group" aria-label="Qual exercício você fez"><span>Fiz:</span><button type="button" data-alt="0" class="${usaAlt ? '' : 'on'}">${esc(curtoN(x.n))}</button><button type="button" data-alt="1" class="${usaAlt ? 'on' : ''}">ou ${esc(curtoN(x.alt.n))}</button></div>` : ''}<div class="lg-h"><b>${rot && /^(Bloco|C\d)/.test(rot[0]) ? 'Anote cada bloco' : 'Anote suas séries'}</b>${ultTxt ? `<span class="lg-ult">${esc(ultTxt)}</span>` : ''}</div>${dica ? `<p class="lg-dica">${dica}</p>` : ''}${blocoAq(x, h, r0)}${i === 0 && LS.get('okUsos', 0) < 3 ? `<p class="lg-tip"><b>✓</b><span>Terminou a série? Toque no ✓: ele ${h ? 'repete a carga da última vez, ' : ''}marca a série e já começa a contar o descanso.</span></p>` : ''}<div class="lg-rows">${[...Array(n)].map((_, j) => lin(j)).join('')}</div>
+      div.innerHTML = `${x.alt ? `<div class="lg-alt" role="group" aria-label="Qual exercício você fez"><span>Fiz:</span><button type="button" data-alt="0" class="${usaAlt ? '' : 'on'}">${esc(curtoN(x.n))}</button><button type="button" data-alt="1" class="${usaAlt ? 'on' : ''}">ou ${esc(curtoN(x.alt.n))}</button></div>` : ''}<div class="lg-h"><b>${rot && /^(Bloco|C\d)/.test(rot[0]) ? 'Anote cada bloco' : 'Anote suas séries'}</b>${ultTxt ? `<span class="lg-ult">${esc(ultTxt)}</span>` : ''}</div>${SNAP.proprio ? `<div class="lg-fmt" role="group" aria-label="Formato do exercício">${Object.entries(FMT_P).map(([f, v]) => `<button type="button" data-f="${f}" class="${f === fmtEsc ? 'on' : ''}" aria-pressed="${f === fmtEsc}">${v[0]}</button>`).join('')}</div>` : ''}${dica ? `<p class="lg-dica">${dica}</p>` : ''}${blocoAq(x, h, r0)}${i === 0 && LS.get('okUsos', 0) < 3 ? `<p class="lg-tip"><b>✓</b><span>Terminou a série? Toque no ✓: ele ${h ? 'repete a carga da última vez, ' : ''}marca a série e já começa a contar o descanso.</span></p>` : ''}<div class="lg-rows">${[...Array(n)].map((_, j) => lin(j)).join('')}</div>
         <button class="lg-add" type="button">+ série</button>
         <div class="lg-rir"><span>Na última série, quantas repetições ainda dava para fazer?${x.rir ? ` <i>alvo: ${esc(x.rir)}</i>` : rirAlvo ? ` <i>alvo da semana: ${esc(rirAlvo)}</i>` : ''}</span><div>${[0, 1, 2, 3, 4].map(n => `<button type="button" data-r="${n}" class="${String(r0.rir) === String(n) ? 'on' : ''}">${n === 4 ? '4+' : n}</button>`).join('')}</div></div>
         <textarea class="lg-nota" rows="1" placeholder="Anotação: como foi, desconforto, ajuste…">${esc(r0.nota || '')}</textarea>`;
       const tb = art.querySelector('.ex-tb'); (tb || art.querySelector('.ex-top')).insertAdjacentElement('afterend', div);
+      if (fmtEsc) { div.dataset.fmt = fmtEsc; if (fmtEsc !== fmtPl) { const ef = art.querySelector('.ex-fmt span'); if (ef) ef.textContent = FMT_P[fmtEsc][0]; } }
+      div.querySelectorAll('.lg-fmt button').forEach(bt => bt.onclick = () => { const f = bt.dataset.f; if (f === div.dataset.fmt) return;
+        const rows = div.querySelector('.lg-rows'), atual = [...rows.querySelectorAll('.lg-r')].map(r => ({ kg: r.querySelector('.kg').value, rp: r.querySelector('.rp').value, ok: r.classList.contains('ok') }));
+        rot = FMT_P[f][1]; rows.innerHTML = rot.map((_, j) => lin(j)).join('');
+        [...rows.querySelectorAll('.lg-r')].forEach((r, j) => { const v = atual[j] || { kg: '', rp: '', ok: false }; r.querySelector('.kg').value = v.kg; r.querySelector('.rp').value = v.rp; r.classList.toggle('ok', v.ok); const ob = r.querySelector('.lg-ok'); if (ob) ob.setAttribute('aria-pressed', String(v.ok)); });
+        div.dataset.fmt = f; LS.set('fmtEx.' + x.exId, f);
+        div.querySelectorAll('.lg-fmt button').forEach(o => { o.classList.toggle('on', o === bt); o.setAttribute('aria-pressed', String(o === bt)); });
+        const lh = div.querySelector('.lg-h b'); if (lh) lh.textContent = f === 'cluster' ? 'Anote cada bloco' : 'Anote suas séries';
+        const ef = art.querySelector('.ex-fmt span'); if (ef) ef.textContent = FMT_P[f][0];
+        salvarRascunho(k); pintarProg(k); });
       div.querySelector('.lg-add').onclick = () => { const rows = div.querySelector('.lg-rows'); rows.insertAdjacentHTML('beforeend', lin(rows.children.length)); };
       pintarAq(div);
       div.addEventListener('click', ev => { const b = ev.target.closest('.lg-ok'); if (!b) return; const row = b.closest('.lg-r'), kg = row.querySelector('.kg'), rp = row.querySelector('.rp');
@@ -1225,7 +1251,7 @@ function lerSessao(k) {
   document.querySelectorAll(`.lg[data-k="${k}"]:not(.cdlg)`).forEach(div => {
     const sets = [...div.querySelectorAll('.lg-r')].map(r => { const o = { kg: r.querySelector('.kg').value.trim().replace(',', '.'), reps: r.querySelector('.rp').value.trim() }; if (r.classList.contains('ok')) o.ok = 1; if (r.dataset.rot && !/^\d+$/.test(r.dataset.rot)) o.rot = r.dataset.rot; return o; });
     while (sets.length && !sets[sets.length - 1].kg && !sets[sets.length - 1].reps) sets.pop();
-    out[div.dataset.uid] = { sets, nota: div.querySelector('.lg-nota').value.trim(), alt: div.dataset.alt === '1', rir: div.dataset.rir || '' };
+    out[div.dataset.uid] = { sets, nota: div.querySelector('.lg-nota').value.trim(), alt: div.dataset.alt === '1', rir: div.dataset.rir || '' }; if (div.dataset.fmt) out[div.dataset.uid].fmt = div.dataset.fmt;
     const al = div.querySelector('.aq-alvo'); if (al && al.dataset.mexeu) out[div.dataset.uid].alvo = al.value.trim();
   });
   const fm = document.querySelector(`.lg-fim[data-k="${k}"]`); if (fm) out._s = { pse: fm.dataset.pse || '', min: (fm.querySelector('.s-min') || {}).value || '' };
@@ -1238,7 +1264,7 @@ function marcarInicio(k) { const key = 'ini.' + dataReg() + '.' + k; if (!LS.get
 function minDesde(k) { const t = LS.get('ini.' + dataReg() + '.' + k, 0); if (!t) return 0; const m = Math.round((Date.now() - t) / 60000); return m >= 5 && m <= 240 ? m : 0; }
 function salvarTreino(k, fim) {
   const dados = lerSessao(k); const L = (SNAP.treino[k] || {}).ex || [];
-  const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: (d.sets || []).map(z => { const c = Object.assign({}, z); delete c.ok; return c; }), nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; return o; }).filter(x => x.sets.length || x.nota);
+  const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: (d.sets || []).map(z => { const c = Object.assign({}, z); delete c.ok; return c; }), nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; if (d.fmt) o.fmt = d.fmt; return o; }).filter(x => x.sets.length || x.nota);
   const cardio = ((SNAP.treino[k] || {}).cardio || []).map(c => { const d = dados['c:' + c.id] || {}; const o = { id: c.id, mod: c.mod, eq: c.eq, zona: c.zona, min: d.min, fc: d.fc, km: d.km, pse: d.pse, nota: d.nota }; if (c.mod === 'ativ') { o.an = c.an; o.met = c.met; } return o; }).filter(c => c.min || c.fc || c.km || c.pse !== '' && c.pse != null || c.nota);
   if (!exs.length && !cardio.length) { aviso(L.length ? 'Anote pelo menos uma série antes de salvar.' : 'Anote o tempo ou o esforço do cardio antes de salvar.'); return; }
   const data = dataReg(); const feitos = LS.get('feitos', []);
@@ -1437,7 +1463,7 @@ function resumoSemana() {
   const AG = L.filter(x => x.ag > 0), agM = AG.length ? AG.reduce((s, x) => s + x.ag, 0) / AG.length : 0, agOk = meta ? L.filter(x => x.ag >= meta).length : 0;
   const mx = Math.max(1, ...R.map(x => x.m[0]), ...R.map(x => x.al ? x.al[0] : 0));
   const pOk = R.filter(x => x.al && x.m[1] >= x.al[1] * 0.9).length;
-  return `<summary>📊 Sua semana na dieta <small style="font-weight:500;color:var(--ink-3)">${n} de 7 dias registrados</small></summary><div class="sem-b">
+  return `<summary>Sua semana na dieta <small style="font-weight:500;color:var(--ink-3)">${n} de 7 dias registrados</small></summary><div class="sem-b">
     ${n ? `<div class="sem-g">${card('Calorias por dia', 0, '')}${card('Proteína por dia', 1, ' g')}${card('Carboidrato por dia', 2, ' g')}${card('Gordura por dia', 3, ' g')}</div>
     <div class="sem-d" aria-label="Calorias de cada dia">${L.map(x => `<div title="${dataBR(x.d)}"><i class="${x.reg ? '' : 'vz'}" style="height:${x.reg ? Math.max(4, x.m[0] / mx * 100) : 4}%"></i><span>${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][dowISO(x.d)]}</span></div>`).join('')}</div>
     <p class="sem-n">Proteína na meta em <b>${pOk} de ${n}</b> dias. ${meta ? `Água: média de <b>${(Math.round(agM / 100) / 10).toString().replace('.', ',')} L</b>, meta batida em <b>${agOk} de 7</b> dias.` : ''}</p>` : '<p class="sem-n" style="margin-top:0">Marque as refeições e a água para ver aqui o resumo da sua semana.</p>'}
