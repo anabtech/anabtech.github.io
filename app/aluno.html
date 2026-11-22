@@ -122,6 +122,21 @@ button,input,textarea,select{font:inherit;color:inherit}
 .ov-f{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card,#fff);border-top:1px solid var(--rule)}
 .ov-f button{flex:1;min-height:46px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink)}
 .ov-f .pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.ov-f .pri:disabled{opacity:.45}
+.oc-ia{margin-top:10px;background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:12px}
+.oc-ia label[for]{display:block}.oc-ia label b{display:block;font-size:14.5px}.oc-ia label span{display:block;font-size:12.5px;color:var(--ink-3);margin-top:1px}
+.oc-ia textarea{width:100%;margin-top:8px;border:1px solid var(--rule);border-radius:10px;background:var(--paper,#f2f3ef);padding:9px 10px;font:inherit;font-size:16px;line-height:1.4;resize:vertical;min-height:62px;outline:none;color:var(--ink)}
+.oc-ia textarea:focus{border-color:var(--ink)}
+.oc-ia-a{display:flex;align-items:center;gap:8px;margin-top:8px}
+.oc-ia-f{flex:1;min-width:0;display:flex;align-items:center;gap:7px;height:40px;padding:0 12px;border:1px solid var(--rule);border-radius:10px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.oc-ia-f span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oc-ia-th{flex:1;position:relative;display:flex;align-items:center;gap:8px}.oc-ia-th img{width:40px;height:40px;object-fit:cover;border-radius:8px}.oc-ia-th button{width:28px;height:28px;border-radius:50%;border:1px solid var(--rule);background:var(--card,#fff);font-size:16px;line-height:1;color:var(--ink-2);cursor:pointer}
+.oc-ia-b{flex:none;height:40px;padding:0 18px;border-radius:10px;border:0;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer}.oc-ia-b:disabled{opacity:.6}
+.oc-ia-m{font-size:12.5px;line-height:1.45;color:var(--ink-2);margin-top:8px}
+.oc-ia-tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--ink-2);border:1px solid var(--rule);border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.oc-it .oc-aj{display:block;width:auto;height:auto;border:0;border-radius:0;background:none;padding:2px 0 0;font-family:inherit;font-size:12.5px;color:var(--ink-2);text-align:left;cursor:pointer}.oc-it .oc-aj u{color:var(--ink);margin-left:3px;text-underline-offset:2px}
+.oc-ou+.oc-busca{margin-top:6px}
+.oc-adj{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 10px;margin:-2px 0 2px}.oc-adj .oc-calc{grid-column:1/-1;margin:0}.oc-adj .oc-add{grid-column:1/-1}.oc-adj-u{font-size:13px;color:var(--ink-2)}
+.oc-ou{text-align:center;font-size:12px;color:var(--ink-3);margin:16px 0 0}
 .oc-plan{font-size:12.5px;color:var(--ink-2);background:var(--card,#fff);border:1px solid var(--rule);border-radius:10px;padding:8px 10px}
 .oc-gbt{display:flex;align-items:center;gap:8px;width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;font-weight:600;font-size:13.5px;cursor:pointer;text-align:left}
 .oc-its{display:flex;flex-direction:column;gap:6px;margin-top:12px}
@@ -1402,9 +1417,15 @@ function abrirParcial(t, j, art) {
   $('pcS').onclick = salvar;
   desenhar();
 }
+/* IA no "Comi outra coisa": o script do Google guarda a chave e diz se está ativo; a resposta fica 6 h no aparelho */
+function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em < 6 * 3600e3) return Promise.resolve(!!c.v);
+  return fetch(API + '?acao=versao', { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
+function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
 function abrirOutra(t, j) {
   const D = SNAP.dieta || {}, d = dataReg(), e0 = LS.get('dieta.' + d, { feitas: {} }), nome = ((D.refs || {})[t] || [])[j] || 'Refeição';
   let itens = JSON.parse(JSON.stringify((((e0.outra || {})[t] || {})[j] || {}).it || [])), sel = null, A = null, guia = false;
+  let iaOn = !!(LS.get('iaOk', null) || {}).v, iaTxt = '', iaImg = null, iaMsg = '', iaVai = false, iaEd = -1;
+  iaDisp().then(v => { if (v !== iaOn && $('ovOc')) { iaOn = v; if (!guia && !sel) desenhar(); } });
   const pl = planoRef(t, j), qd = d === hojeISO() ? 'hoje' : d === isoMenos(1) ? 'ontem' : dataBR(d);
   document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovOc" role="dialog" aria-modal="true" aria-labelledby="ocT"><div class="ov-c">
     <div class="ov-h"><div><small>${esc(nome)} · ${esc(qd)}</small><h3 id="ocT">O que você comeu?</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
@@ -1421,12 +1442,20 @@ function abrirOutra(t, j) {
     if (guia) { B.innerHTML = guiaPorcoes(); F.innerHTML = '<button type="button" class="pri" id="ocGv">Entendi, voltar</button>'; $('ocGv').onclick = () => { guia = false; desenhar(); }; B.scrollTop = 0; return; }
     B.innerHTML = `${pl ? `<p class="oc-plan">No plano, esta refeição tinha <b>${Math.round(pl[0])} kcal</b> · P ${Math.round(pl[1])} g · C ${Math.round(pl[2])} g · G ${Math.round(pl[3])} g. Coloque abaixo o que você comeu de verdade.</p>` : ''}
       <button class="oc-gbt" type="button" id="ocG"><span style="font-size:20px">✋</span><span>Não sabe a quantidade? <u>Veja como estimar com a mão e medidas caseiras</u></span></button>
-      ${itens.length ? `<div class="oc-its">${itens.map((x, i) => `<div class="oc-it"><div><b>${esc(x.n)}</b><span>${esc(fmtQ(x.q))} ${esc(plurUn(x.q, x.un))}${x.un !== 'gramas' ? ` · ${Math.round(x.g)} g` : ''}</span></div><em>${Math.round(x.m[0])} kcal</em><button type="button" data-del="${i}" aria-label="Tirar ${esc(x.n)}">✕</button></div>`).join('')}</div>${tot()}` : `<p class="oc-vazio">Busque e adicione cada alimento: pão, ovo, atum, arroz…</p>`}
+      ${iaOn ? `<div class="oc-ia"><label for="ocIaT"><b>Descreva o que comeu</b><span>A IA estima as quantidades e as calorias. Confira antes de salvar.</span></label>
+        <textarea id="ocIaT" rows="2" maxlength="600" placeholder="Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada">${esc(iaTxt)}</textarea>
+        <div class="oc-ia-a">${iaImg ? `<span class="oc-ia-th"><img src="${iaImg.url}" alt="Foto escolhida"><button type="button" id="ocIaX" aria-label="Tirar a foto">×</button></span>` : `<label class="oc-ia-f"><input type="file" accept="image/*" id="ocIaF" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto do prato ou do rótulo</span></label>`}
+        <button type="button" class="oc-ia-b" id="ocIaB"${iaVai ? ' disabled' : ''}>${iaVai ? 'Calculando…' : 'Calcular'}</button></div>${iaMsg ? `<p class="oc-ia-m">${esc(iaMsg)}</p>` : ''}</div>` : ''}
+      ${itens.length ? `<div class="oc-its">${itens.map((x, i) => `<div class="oc-it${x.ia ? ' ia' : ''}"><div><b>${esc(x.n)}${x.ia ? ' <small class="oc-ia-tag">IA</small>' : ''}</b>${x.ia ? `<button type="button" class="oc-aj" data-aj="${i}">${esc(fmtQ(x.q))} ${esc(plurUn(x.q, x.un))}${x.un !== 'gramas' ? ` · ${Math.round(x.g)} g` : ''} <u>ajustar</u></button>` : `<span>${esc(fmtQ(x.q))} ${esc(plurUn(x.q, x.un))}${x.un !== 'gramas' ? ` · ${Math.round(x.g)} g` : ''}</span>`}</div><em>${Math.round(x.m[0])} kcal</em><button type="button" data-del="${i}" aria-label="Tirar ${esc(x.n)}">✕</button></div>${iaEd === i ? ajusteHTML(x) : ''}`).join('')}</div>${tot()}` : iaOn ? '' : `<p class="oc-vazio">Busque e adicione cada alimento: pão, ovo, atum, arroz…</p>`}
+      ${iaOn ? '<p class="oc-ou">ou busque cada alimento</p>' : ''}
       <label class="oc-busca"><input id="ocQ" type="search" placeholder="${itens.length ? 'Adicionar mais um alimento' : 'Buscar alimento: pão, ovo, atum…'}" autocomplete="off" enterkeyhint="search" aria-label="Buscar alimento"></label>
       <div class="oc-res" id="ocR"></div><div id="ocE"></div>`;
     F.innerHTML = `${(((e0.outra || {})[t] || {})[j]) ? '<button type="button" id="ocV">Voltar ao plano</button>' : '<button type="button" id="ocC">Cancelar</button>'}<button type="button" class="pri" id="ocS"${itens.length ? '' : ' disabled'}>Salvar refeição</button>`;
     $('ocG').onclick = () => { guia = true; desenhar(); };
-    B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { itens.splice(+b.dataset.del, 1); desenhar(); });
+    B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { itens.splice(+b.dataset.del, 1); iaEd = -1; desenhar(); });
+    B.querySelectorAll('[data-aj]').forEach(b => b.onclick = () => { iaEd = iaEd === +b.dataset.aj ? -1 : +b.dataset.aj; desenhar(); });
+    ligarAjuste();
+    if (iaOn) ligarIA();
     const q = $('ocQ'), R = $('ocR');
     q.oninput = () => { sel = null; $('ocE').innerHTML = ''; if (!A) { R.innerHTML = '<p class="oc-vazio" style="margin:0">Carregando alimentos…</p>'; return; } const L = buscarAlim(A, q.value);
       R.innerHTML = q.value.trim().length < 2 ? '' : L.length ? L.map((a, i) => `<button type="button" data-i="${i}"><span>${esc(a.n)}</span><small>${Math.round(a.k)} kcal/100 g</small></button>`).join('') : '<p class="oc-vazio" style="margin:0">Nada encontrado. Tente outra palavra (ex.: “pão” em vez de “pãozinho”).</p>';
@@ -1434,6 +1463,35 @@ function abrirOutra(t, j) {
     if ($('ocC')) $('ocC').onclick = fecharOv; if ($('ocV')) $('ocV').onclick = voltarPlano;
     $('ocS').onclick = salvar;
     if (!A) carregarAlimentos().then(x => { A = x; if (q.value) q.oninput(); }).catch(() => { R.innerHTML = '<p class="oc-vazio" style="margin:0">Sem internet para buscar os alimentos agora. Tente de novo em instantes.</p>'; });
+  }
+  /* ajuste de um item da IA: muda a quantidade e as calorias acompanham na mesma proporção */
+  function ajusteHTML(x) { return `<div class="oc-ed oc-adj"><div class="oc-q"><button type="button" id="ajMn" aria-label="Menos">−</button><input id="ajQ" inputmode="decimal" value="${fmtQ(x.q)}" aria-label="Quantidade"><button type="button" id="ajMa" aria-label="Mais">+</button></div><span class="oc-adj-u">${esc(x.un)}</span><p class="oc-calc" id="ajC"></p><button class="oc-add" type="button" id="ajOk">Pronto</button></div>`; }
+  function ligarAjuste() {
+    if (iaEd < 0 || !itens[iaEd]) return; const x = itens[iaEd]; x.b = x.b || { q: x.q, g: x.g, m: x.m.slice() };
+    let q = x.q; const passo = x.un === 'gramas' ? 10 : x.b.q >= 4 ? 1 : 0.5;
+    const calc = () => { const f = x.b.q ? q / x.b.q : 1, m = x.b.m.map(v => v * f); $('ajC').innerHTML = `${x.un !== 'gramas' ? `≈ <b>${Math.round(x.b.g * f)} g</b> · ` : ''}<b>${Math.round(m[0])} kcal</b> · P ${Math.round(m[1])} g · C ${Math.round(m[2])} g · G ${Math.round(m[3])} g`; };
+    const setQ = v => { q = Math.max(0, Math.round(v * 100) / 100); $('ajQ').value = fmtQ(q); calc(); };
+    $('ajMn').onclick = () => setQ(q - passo); $('ajMa').onclick = () => setQ(q + passo); $('ajQ').oninput = () => { q = numBR($('ajQ').value) || 0; calc(); };
+    $('ajOk').onclick = () => { if (!(q > 0)) return $('ajQ').focus(); const f = x.b.q ? q / x.b.q : 1; x.q = q; x.g = Math.round(x.b.g * f * 10) / 10; x.m = x.b.m.map(v => Math.round(v * f * 10) / 10); iaEd = -1; desenhar(); };
+    calc();
+  }
+  function ligarIA() {
+    const ta = $('ocIaT'); ta.oninput = () => { iaTxt = ta.value; };
+    const fi = $('ocIaF'); if (fi) fi.onchange = async () => { const f = fi.files[0]; if (!f) return; try { iaImg = await reduzirFoto(f); iaMsg = ''; } catch (e) { iaMsg = 'Não consegui abrir essa foto. Tente outra.'; } desenhar(); };
+    const fx = $('ocIaX'); if (fx) fx.onclick = () => { iaImg = null; desenhar(); };
+    $('ocIaB').onclick = async () => {
+      iaTxt = ta.value.trim(); if (!iaTxt && !iaImg) { iaMsg = 'Escreva o que comeu ou escolha uma foto.'; desenhar(); setTimeout(() => { const t2 = $('ocIaT'); if (t2) t2.focus(); }, 30); return; }
+      if (!navigator.onLine) { iaMsg = 'Sem internet agora. Use a busca abaixo ou tente daqui a pouco.'; desenhar(); return; }
+      iaVai = true; iaMsg = ''; desenhar();
+      let r = null; try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'ia', t: T, p: PIN, txt: iaTxt, img: iaImg ? iaImg.b64 : '', ref: nome }) }); r = await res.json(); } catch (e) { r = null; }
+      iaVai = false;
+      if (r && r.ok) {
+        const novos = (r.itens || []).map(x => ({ n: x.n, q: x.q, un: x.un, g: x.g, m: [x.kcal, x.p, x.c, x.gord], ia: 1 }));
+        if (novos.length) { itens.push(...novos); iaTxt = ''; iaImg = null; iaMsg = r.obs || `${novos.length === 1 ? 'Item adicionado' : novos.length + ' itens adicionados'}. Confira as quantidades e toque em ajustar se precisar.`; }
+        else iaMsg = r.obs || 'Não identifiquei alimentos. Descreva com mais detalhes.';
+      } else { iaMsg = iaRotulo(r && r.erro); if (r && r.erro === 'desligado') LS.set('iaOk', { v: false, em: Date.now() }); }
+      desenhar();
+    };
   }
   function editor() {
     const a = sel.a, U = unidadesDe(a); sel.u = sel.u || U[0]; sel.q = sel.q || (sel.u[0] === 'gramas' ? 100 : 1);
@@ -1528,7 +1586,7 @@ function detDia(t, e) {
   const D = SNAP.dieta || {}, nomes = (D.refs || {})[t] || [], f = (e.feitas[t] || []).slice().sort((a, b) => a - b);
   return f.map(j => { const n = nomes[j] || ('Refeição ' + (j + 1)), R = ((D.det || {})[t] || [])[j], c = ((e.esc || {})[t] || {})[j] || { o: 0, s: [] };
     const ou = ((e.outra || {})[t] || {})[j];
-    if (ou && ou.it && ou.it.length) return { n, troca: 1, it: ou.it.slice(0, 12).map(x => `${x.n}: ${fmtQ(x.q)} ${plurUn(x.q, x.un)}${x.un !== 'gramas' ? ` (${Math.round(x.g)} g)` : ''}`), m: somaM(ou.it).map(v => Math.round(v)) };
+    if (ou && ou.it && ou.it.length) return { n, troca: 1, it: ou.it.slice(0, 12).map(x => `${x.n}: ${fmtQ(x.q)} ${plurUn(x.q, x.un)}${x.un !== 'gramas' ? ` (${Math.round(x.g)} g)` : ''}${x.ia ? ' · estimado pela IA' : ''}`), m: somaM(ou.it).map(v => Math.round(v)), ia: ou.it.some(x => x.ia) ? 1 : undefined };
     const pc = ((e.parc || {})[t] || {})[j], pk = pc ? detParcial(t, j, pc) : null;
     if (pk) { const r = { n, parc: 1, it: pk.it, m: pk.m }; if (pk.pc != null) r.pc = pk.pc; const opP = R && (R.ops[pc.o] || R.ops[0]); if (R && R.ops.length > 1 && opP) r.op = opP.nome; return r; }
     if (!R) return { n }; const op = R.ops[c.o] || R.ops[0], m = op.base.slice(), esc = [];
