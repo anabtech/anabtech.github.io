@@ -1030,6 +1030,7 @@ function ligarPag() {
 const ultFbData = () => { const a = String(LS.get('ultFb', '')), b = String(SNAP.ultFeedback || ''); return a > b ? a : b; };
 function cardFb() {
   /* vale como feedback desta semana o que foi mandado a partir de quarta (2 dias antes da sexta) */
+  if (SNAP.proprio) return null; /* perfil próprio do treinador: sem cobrança de feedback */
   const ult = ultFbData(), P = SNAP.pedidoFb, dow = new Date().getDay(), sexta = isoMenos((dow - 5 + 7) % 7 + 2);
   if (P && P.data && ult < P.data) return { t: 'A equipe pediu o seu feedback da semana', p: P.msg || 'Conta como foi a sua semana para a equipe ajustar o seu plano.' };
   if ([5, 6, 0, 1].includes(dow) && ult < sexta) return { t: dow === 5 ? 'Hoje é sexta: dia do feedback semanal' : 'Tarefa da semana: feedback semanal', p: 'Peso, sono, energia, fome e como foi a dieta. Leva 1 minuto e ajuda a equipe a ajustar o seu plano.' };
@@ -1039,7 +1040,7 @@ function cardsMG() {
   const box = $('mgAv'); if (!box) return;
   const lidas = LS.get('respLidas', []), novas = (SNAP.respostas || []).filter(r => !lidas.includes(r.id)).slice(0, 3), fb = cardFb();
   box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3><i>📋</i>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
-    (() => { const V = testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3><i>⏱️</i>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
+    (() => { const V = SNAP.proprio ? [] : testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3><i>⏱️</i>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
     novas.map(r => `<div class="mgc rs" role="status"><h3><i>💬</i>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
   { const d = $('fbDot'); if (d) d.hidden = !fb; }
   const bp = $('mgPg'); if (bp) bp.onclick = irPagamento;
@@ -1080,6 +1081,7 @@ function mudarDia(iso) {
 /* lembrete do que ficou faltando ontem (some quando o aluno registra ou toca em "Não fiz") */
 function faltouOntem() {
   const ont = isoMenos(1), falta = [];
+  if (SNAP.proprio) return falta;
   if (LS.get('lembOk.' + ont, false) || String(LS.get('desde', hojeISO())) > ont) return falta;
   const k = DIAS_JS[dowISO(ont)], TR = SNAP.treino || {};
   if (TR[k] && (TR[k].ex || []).length && !(SNAP.treinosFeitos || []).concat(LS.get('feitos', [])).some(t => t.data === ont)) falta.push(['t', `o treino ${TR[k].nome ? '(' + TR[k].nome + ')' : ''}`.trim()]);
