@@ -457,6 +457,18 @@ footer span{font-size:13px;color:var(--ink-2)}
 /* Novo: exercícios em 3D */
 .app-3d{margin-top:16px;display:grid;gap:28px;padding:clamp(20px,4vw,36px);border-radius:24px;background:#f4f5f7;color:var(--ink)}
 @media (min-width:900px){.app-3d{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:48px;align-items:center}.app-3d .d3-demo{order:-1}}
+.app-ia{margin-top:16px;display:grid;gap:28px;padding:clamp(20px,4vw,36px);border-radius:24px;background:#f4f5f7;color:var(--ink)}
+@media (min-width:900px){.app-ia{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:48px;align-items:center}}
+.ia-ph{width:min(100%,340px);background:#fff;border:1px solid var(--rule);border-radius:28px;padding:18px 16px 16px;box-shadow:0 30px 60px -30px rgba(11,12,14,.35);text-align:left}
+.ia-top small{display:block;font-size:12px;color:var(--ink-2)}.ia-top b{display:block;font:700 19px/1.2 var(--font-d);letter-spacing:-0.02em;margin-top:2px}
+.ia-in{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--paper);border:1px solid var(--rule);font-size:14.5px;line-height:1.4}
+.ia-row{display:flex;gap:8px;margin-top:8px}.ia-foto{flex:1;min-width:0;display:flex;align-items:center;gap:6px;height:38px;padding:0 10px;border:1px solid var(--rule);border-radius:10px;font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden}
+.ia-bt{flex:none;display:inline-flex;align-items:center;height:38px;padding:0 14px;border-radius:10px;background:var(--ink);color:#fff;font-size:13.5px;font-weight:600}
+.ia-its{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.ia-its li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--rule);border-radius:12px}
+.ia-its b{display:block;font-size:13.5px;letter-spacing:-0.01em}.ia-its small{display:block;font-size:12px;color:var(--ink-2)}.ia-its em{font-style:normal;font-weight:700;font-size:13px;white-space:nowrap}
+.ia-tag{display:inline-block!important;font-size:10px!important;font-weight:700;color:var(--ink-2);border:1px solid var(--rule);border-radius:5px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.ia-tot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}.ia-tot div{background:var(--ink);color:#fff;border-radius:10px;padding:7px 8px}.ia-tot span{display:block;font-size:10.5px;color:rgba(255,255,255,.65)}.ia-tot b{display:block;font:700 15px/1.2 var(--font-d)}
 .d3-copy{display:flex;flex-direction:column;gap:14px;min-width:0}
 .d3-new{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.04em;padding:6px 11px;border-radius:999px;background:var(--accent);color:var(--ink)}
 .d3-copy h3{font-size:clamp(26px,5.4vw,38px);line-height:1.04;font-weight:800;letter-spacing:-0.045em}
@@ -845,6 +857,32 @@ footer span{font-size:13px;color:var(--ink-2)}
       </div>
     </div>
 
+
+    <div class="app-ia" id="appIa">
+      <div class="d3-copy">
+        <span class="d3-new">NOVO NO APP</span>
+        <h3>Comeu fora do plano? Descreva ou fotografe. A IA faz a conta.</h3>
+        <p>Na vida real, nem toda refeição sai como no plano. Agora você escreve o que comeu do seu jeito, ou fotografa o prato ou o rótulo, e a inteligência artificial do app separa os alimentos e calcula calorias, proteína, carboidrato e gordura. Você confere, ajusta se precisar e salva. A equipe vê exatamente o que entrou no seu dia.</p>
+        <ul class="d3-list">
+          <li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></i><div><b>Escreva do seu jeito</b><span>“4 colheres de arroz e um filé de frango” já basta. Sem procurar alimento por alimento.</span></div></li>
+          <li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i><div><b>Foto do prato ou do rótulo</b><span>Com a foto da tabela nutricional, os valores vêm direto da embalagem.</span></div></li>
+          <li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></i><div><b>A palavra final é sua</b><span>Cada item calculado pode ser ajustado antes de salvar. As calorias acompanham.</span></div></li>
+          <li><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 16V11M12 16V7M17 16v-3"/></svg></i><div><b>Sua semana revisada a fundo</b><span>A equipe revisa a sua semana com um resumo feito por IA: treinos, dieta, sono e o que você contou.</span></div></li>
+        </ul>
+        <p class="d3-foot"><b>A IA estima, a equipe decide.</b> Quem prescreve e acompanha o seu protocolo continua sendo a equipe: nutricionista (CRN 5/17690) e educador físico (CREF 014364-G/BA).</p>
+      </div>
+      <div class="d3-demo">
+        <div class="ia-ph" role="img" aria-label="Exemplo no app: o aluno escreve 4 colheres de arroz, 1 concha de feijão e um filé de frango grelhado; o app calcula 444 kcal, 54 g de proteína, 42 g de carboidrato e 6 g de gordura.">
+          <div class="ia-top"><small>Jantar · hoje</small><b>O que você comeu?</b></div>
+          <div class="ia-in">4 colheres de arroz, 1 concha de feijão e um filé de frango grelhado</div>
+          <div class="ia-row"><span class="ia-foto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Foto do prato ou do rótulo</span><span class="ia-bt">Calcular</span></div>
+          <ul class="ia-its"><li><span><b>Arroz branco cozido<small class="ia-tag">IA</small></b><small>4 colheres de sopa · 100 g</small></span><em>128 kcal</em></li><li><span><b>Feijão carioca cozido<small class="ia-tag">IA</small></b><small>1 concha · 80 g</small></span><em>76 kcal</em></li><li><span><b>Filé de frango grelhado<small class="ia-tag">IA</small></b><small>1 filé médio · 150 g</small></span><em>240 kcal</em></li></ul>
+          <div class="ia-tot"><div><span>kcal</span><b>444</b></div><div><span>Proteína</span><b>54 g</b></div><div><span>Carbo</span><b>42 g</b></div><div><span>Gordura</span><b>6 g</b></div></div>
+        </div>
+        <p class="d3-cap">Cálculo real feito pelo app para essa descrição.</p>
+      </div>
+    </div>
+
     <div class="app-evo">
       <div class="t">
         <small>Em evolução constante</small>
@@ -852,11 +890,12 @@ footer span{font-size:13px;color:var(--ink-2)}
         <p>Ele é atualizado o tempo todo. Cada necessidade de um aluno vira melhoria para todos, para o app dar conta de tudo o que você precisa no dia a dia. As novidades mais recentes:</p>
       </div>
       <ul class="news">
-        <li><em>NOVO</em>Comeu outra coisa? Registre e o app calcula a refeição</li>
+        <li><em>NOVO</em>Descreva ou fotografe o que comeu: a IA calcula calorias e macros</li>
+        <li><em>NOVO</em>Comeu só uma parte? Marque quanto de cada alimento</li>
+        <li><em>NOVO</em>Trilha, luta, dança ou esporte entram no seu gasto do dia</li>
         <li><em>NOVO</em>Água do dia e resumo da sua semana</li>
         <li><em>NOVO</em>Cargas de aquecimento calculadas a partir da série válida</li>
-        <li><em>NOVO</em>A equipe responde as suas observações dentro do app</li>
-        <li><em>NOVO</em>Exercícios em 3D: gire, pause e veja cada fase</li>
+                <li><em>NOVO</em>Exercícios em 3D: gire, pause e veja cada fase</li>
       </ul>
     </div>
   </div>
