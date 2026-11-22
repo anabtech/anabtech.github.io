@@ -1232,11 +1232,17 @@ function salvarTreino(k, fim) {
   const dados = lerSessao(k); const L = (SNAP.treino[k] || {}).ex || [];
   const exs = L.map(x => { const d = dados[x.uid] || {}, alt = !!(x.alt && d.alt); const o = { uid: x.uid, exId: alt ? x.alt.exId : x.exId, n: alt ? x.alt.n : x.n, alt: alt ? 1 : undefined, sets: (d.sets || []).map(z => { const c = Object.assign({}, z); delete c.ok; return c; }), nota: d.nota || '' }; if (d.rir !== undefined && d.rir !== '') o.rir = +d.rir; return o; }).filter(x => x.sets.length || x.nota);
   const cardio = ((SNAP.treino[k] || {}).cardio || []).map(c => { const d = dados['c:' + c.id] || {}; const o = { id: c.id, mod: c.mod, eq: c.eq, zona: c.zona, min: d.min, fc: d.fc, km: d.km, pse: d.pse, nota: d.nota }; if (c.mod === 'ativ') { o.an = c.an; o.met = c.met; } return o; }).filter(c => c.min || c.fc || c.km || c.pse !== '' && c.pse != null || c.nota);
-  if (!exs.length && !cardio.length) { aviso(L.length ? 'Anote pelo menos uma série antes de salvar.' : 'Anote o tempo ou o esforço do cardio antes de salvar.'); return; }
+  /* sem nenhuma série anotada: oferece salvar só como "feito", com duração e esforço se houver */
+  if (!exs.length && !cardio.length && !(fim && fim.dataset.rapido)) {
+    if (!L.length) { aviso('Anote o tempo ou o esforço do cardio antes de salvar.'); return; }
+    const p = fim.querySelector('p'); p.className = ''; p.innerHTML = 'Você não anotou nenhuma série. Pode salvar só como <b>treino feito</b>, sem as cargas: a equipe vê que você treinou, mas não consegue acompanhar a evolução das cargas.<br><button type="button" class="bt" id="rpOk" style="margin-top:10px">Salvar como feito, sem cargas</button>';
+    $('rpOk').onclick = () => { fim.dataset.rapido = '1'; salvarTreino(k, fim); delete fim.dataset.rapido; }; return;
+  }
   const data = dataReg(); const feitos = LS.get('feitos', []);
   const ant = feitos.find(t => t.data === data && t.dia === k) || (SNAP.treinosFeitos || []).find(t => t.data === data && t.dia === k);
   const reg = { tipo: 'treino', id: ant ? ant.id : novoId(), _v: Date.now(), data, dia: k, nomeDia: SNAP.treino[k].nome, exs };
   if (cardio.length) reg.cardio = cardio;
+  if (!exs.length && !cardio.length) reg.rapido = 1;
   { const ss = dados._s || {}, mn = parseInt(ss.min, 10) || minDesde(k); if (ss.pse !== undefined && ss.pse !== '') reg.pse = +ss.pse; if (mn > 0 && mn <= 400) reg.min = mn; }
   guardarEvo(reg);
   const hist = LS.get('hist', {});
