@@ -503,6 +503,12 @@ if (T && T !== LS.get('t', '')) { ['pin', 'snap'].forEach(LS.del); LS.set('t', T
 T = T || LS.get('t', '');
 if (T && !tokenDaUrl()) { try { history.replaceState(null, '', location.pathname + '#t=' + T); } catch (e) {} }
 let PIN = LS.get('pin', ''), SNAP = LS.get('snap', null);
+/* perfil próprio do treinador: ícone com fundo preto para não confundir com o app da consultoria (verde) na tela inicial */
+function iconePerfil() { const pr = !!(SNAP && SNAP.proprio), sfx = pr ? '-preto' : '';
+  const at = document.querySelector('link[rel=apple-touch-icon]'), fv = document.querySelector('link[rel=icon]');
+  if (at && at.getAttribute('href') !== 'apple-touch-icon' + sfx + '.png') at.setAttribute('href', 'apple-touch-icon' + sfx + '.png');
+  if (fv && fv.getAttribute('href') !== 'favicon' + sfx + '.png') fv.setAttribute('href', 'favicon' + sfx + '.png'); }
+iconePerfil();
 
 async function buscar(pin) {
   const r = await fetch(`${API}?acao=aluno&t=${encodeURIComponent(T)}&p=${encodeURIComponent(pin)}`, { cache: 'no-store' });
@@ -567,7 +573,7 @@ window.addEventListener('online', () => enviarFila());
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { enviarFila(); atualizarSnap(); } });
 
 /* ---------- monta a página a partir do protocolo publicado ---------- */
-function montar() {
+function montar() { iconePerfil();
   if (!SNAP || !SNAP.html) return telaPin();
   const doc = new DOMParser().parseFromString(SNAP.html, 'text/html');
   let st = $('pcss'); if (!st) { st = document.createElement('style'); st.id = 'pcss'; document.head.appendChild(st); }
