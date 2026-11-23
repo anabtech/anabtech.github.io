@@ -1095,8 +1095,10 @@ const ehIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.p
 const naTelaInicial = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 function pushEstado() {
   if (!FB_CFG || !FB_VAPID) return 'off';
-  if (!('serviceWorker' in navigator) || !('Notification' in window)) return 'sem';
+  /* no iPhone o Safari só expõe as notificações ao app aberto pelo ícone da tela inicial: checar isso antes de concluir que não há suporte */
   if (ehIOS() && !naTelaInicial()) return 'ios';
+  if (ehIOS() && !('PushManager' in window)) return 'iosVelho';
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) return 'sem';
   if (!('PushManager' in window)) return 'sem';
   if (Notification.permission === 'denied') return 'negado';
   return 'ok';
@@ -1143,8 +1145,9 @@ function pushResumo() {
 function abrirNotif() {
   const est = pushEstado(), P = LS.get('push', null), on = !!(P && P.on), p = pushPrefs(), refs = refsDoDia();
   const sw = (id, v, lbl) => `<button type="button" class="nt-sw" role="switch" id="${id}" aria-checked="${v ? 'true' : 'false'}" aria-label="${esc(lbl)}"><i></i></button>`;
-  const bloqueio = est === 'ios' ? `<div class="nt-aviso"><b>No iPhone, primeiro coloque o app na tela inicial.</b><span>Toque em Compartilhar e em Adicionar à Tela de Início. Depois abra o app pelo ícone e volte aqui. É exigência da Apple para mandar notificações.</span></div>`
-    : est === 'negado' ? `<div class="nt-aviso"><b>As notificações estão bloqueadas para o app.</b><span>Libere nos ajustes do celular (Notificações) ou nas permissões do site no navegador e volte aqui.</span></div>`
+  const bloqueio = est === 'ios' ? `<div class="nt-aviso"><b>No iPhone, as notificações só funcionam pelo ícone do app na tela inicial.</b><span>No Safari, toque em Compartilhar e em Adicionar à Tela de Início. Se aparecer a opção Abrir como App Web, deixe ligada. Depois feche o Safari, abra o app pelo ícone e ative aqui. O AnabTech só aparece em Ajustes, Notificações, depois que você permite por esse caminho.</span><span style="display:block;margin-top:6px">Se você já tem o ícone e mesmo assim está vendo este aviso, ele foi salvo como atalho do Safari: apague o ícone e adicione de novo com Abrir como App Web ligado.</span></div>`
+    : est === 'iosVelho' ? `<div class="nt-aviso"><b>Este iPhone precisa de atualização para receber notificações do app.</b><span>As notificações funcionam a partir do iOS 16.4. Atualize em Ajustes, Geral, Atualização de Software e abra o app de novo pelo ícone.</span></div>`
+    : est === 'negado' ? `<div class="nt-aviso"><b>As notificações estão bloqueadas para o app.</b><span>${ehIOS() ? 'Libere em Ajustes, Notificações, AnabTech e volte aqui.' : 'Libere nos ajustes do celular (Notificações) ou nas permissões do site no navegador e volte aqui.'}</span></div>`
     : est === 'sem' ? `<div class="nt-aviso"><b>Este navegador não recebe notificações.</b><span>Abra o app no Chrome (Android) ou pela tela inicial (iPhone).</span></div>`
     : est === 'off' ? `<div class="nt-aviso"><b>As notificações ainda não estão ativas no app.</b><span>Em breve.</span></div>` : '';
   document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovNt" role="dialog" aria-modal="true" aria-labelledby="ntT"><div class="ov-c">
