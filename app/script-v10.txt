@@ -278,6 +278,12 @@ function instalarLembretes() {
   ScriptApp.newTrigger('lembretes').timeBased().everyMinutes(10).create();
   Logger.log('Lembretes ligados: rodam a cada 10 minutos. Conta do Firebase: ' + (fcmConta() ? 'ok (' + fcmConta().project_id + ')' : 'falta colar FCM_SA'));
 }
+// Rode pelo botão Executar para conferir a ligação com o Firebase (e mandar um teste para os aparelhos do treinador)
+function testarPush() {
+  const sa = fcmConta(); if (!sa) return Logger.log('Falta colar FCM_SA nas Propriedades do script.');
+  const ac = fcmAcesso(sa); Logger.log('Acesso ao Firebase (' + sa.project_id + '): ' + (ac ? 'ok' : 'falhou'));
+  const L = lerProp('pt') || []; Logger.log('Aparelhos do treinador: ' + L.length + (L.length ? ' · enviados: ' + pushEnviar(L, { t: 'Teste do AnabTech', b: 'Notificação de teste.', u: 'https://anabtech.github.io/app/' }).ok : ''));
+}
 // o app do treinador: registra este aparelho para receber os avisos dos alunos
 function pushTreinador(d) {
   if (!treinadorOk(d)) return { erro: 'auth' };
