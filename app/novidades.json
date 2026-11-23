@@ -2,6 +2,17 @@
  "itens": [
   {
    "data": "2026-11-22",
+   "seq": "b",
+   "titulo": "Lembretes no celular, nos horários que você escolher",
+   "resumo": "Ative as notificações e o app avisa na hora de marcar cada refeição e, à noite, se faltou marcar algo.",
+   "texto": "<b>Lembrete de cada refeição</b>: na aba Dieta, toque em <b>Lembretes no celular</b> e escolha o horário de cada refeição. O aviso só chega se a refeição ainda não estiver marcada.<br><br><b>Aviso da noite</b>: escolha um horário, por exemplo 21:30. Se até lá faltar marcar alguma refeição ou o treino do dia, o app avisa de novo dizendo o que faltou.<br><br><b>Avisos da equipe</b>: quando a equipe responder uma observação sua ou atualizar o seu protocolo, chega uma notificação.<br><br><b>No iPhone</b>: as notificações só funcionam com o app colocado na tela inicial (Compartilhar, Adicionar à Tela de Início). Abra pelo ícone e ative por ali.<br><br>Você escolhe o que quer receber e pode desligar quando quiser.",
+   "acao": {
+    "rotulo": "Abrir a dieta",
+    "ir": "tb-d"
+   }
+  },
+  {
+   "data": "2026-11-22",
    "titulo": "Comeu outra coisa? Agora é só descrever ou fotografar",
    "resumo": "Na Dieta, em Comi outra coisa, escreva o que comeu ou mande uma foto do prato ou do rótulo. O app calcula as calorias e os macros para você.",
    "texto": "<b>Descreva o que comeu</b>: em <b>Comi outra coisa</b>, escreva do seu jeito, por exemplo \"4 colheres de arroz, 1 concha de feijão e um bife médio\", e toque em <b>Calcular</b>. A inteligência artificial do app separa os alimentos e estima gramas, calorias, proteína, carboidrato e gordura.<br><br><b>Foto do prato ou do rótulo</b>: no mesmo lugar, toque em <b>Foto do prato ou do rótulo</b>. Com a foto da tabela nutricional da embalagem, os valores vêm direto do rótulo.<br><br><b>Você confere antes de salvar</b>: cada item calculado aparece com a marca <b>IA</b>. Toque em <b>ajustar</b> para mudar a quantidade; as calorias acompanham. A busca por alimento continua lá embaixo, se preferir.<br><br><b>Também novo</b>: <b>Comi só uma parte</b>, para marcar quanto você comeu de cada alimento da refeição, e <b>Fez outra atividade?</b>, no treino, para registrar trilha, luta, dança, esporte ou corrida fora do plano. Tudo entra no seu gasto e no seu balanço do dia.",

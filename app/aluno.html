@@ -122,6 +122,19 @@ button,input,textarea,select{font:inherit;color:inherit}
 .ov-f{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card,#fff);border-top:1px solid var(--rule)}
 .ov-f button{flex:1;min-height:46px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink)}
 .ov-f .pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.ov-f .pri:disabled{opacity:.45}
+.lemb{display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 0;padding:11px 12px;border-radius:14px;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lemb>span{flex:1;min-width:0}.lemb b{display:block;font-size:14px}.lemb .lemb-s{display:block;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lemb i{font-style:normal;font-size:13px;font-weight:600;color:var(--ink-2)}.lemb.on svg{color:#4f6b00}
+.ov-b.nt{padding:12px 16px 16px;overflow:auto}
+.nt-aviso{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;margin-bottom:10px}.nt-aviso b{display:block;font-size:14px;color:#9a3412}.nt-aviso span{display:block;font-size:13px;line-height:1.45;color:#7c2d12;margin-top:2px}
+.nt-b{background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:12px;margin-top:10px}
+.nt-r{display:flex;align-items:flex-start;gap:12px}.nt-r>div{flex:1;min-width:0}.nt-r b{display:block;font-size:14.5px}.nt-r span{display:block;font-size:12.5px;line-height:1.45;color:var(--ink-3);margin-top:2px}
+.nt-sw{flex:none;position:relative;width:46px;height:28px;border-radius:999px;border:0;background:var(--rule);cursor:pointer;margin-top:2px;transition:background .15s}.nt-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.nt-sw[aria-checked=true]{background:var(--ink)}.nt-sw[aria-checked=true] i{transform:translateX(18px)}
+.nt-hs{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.nt-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--rule-soft,#ecede8)}.nt-hs .nt-h:first-child{border-top:0}#ntNh{margin-top:8px}
+.nt-h span{font-size:14px}.nt-h input{font:inherit;font-size:16px;height:38px;padding:0 10px;border:1px solid var(--rule);border-radius:10px;background:var(--paper,#f2f3ef);color:var(--ink);min-width:110px}
+.nt-vz{font-size:12px;color:var(--ink-3);margin-top:4px}.nt-m{font-size:13px;color:var(--down,#b42318);margin-top:10px;min-height:1px}
+@media (prefers-reduced-motion:reduce){.nt-sw,.nt-sw i{transition:none}}
 .oc-ia{margin-top:10px;background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:12px}
 .oc-ia label[for]{display:block}.oc-ia label b{display:block;font-size:14.5px}.oc-ia label span{display:block;font-size:12.5px;color:var(--ink-3);margin-top:1px}
 .oc-ia textarea{width:100%;margin-top:8px;border:1px solid var(--rule);border-radius:10px;background:var(--paper,#f2f3ef);padding:9px 10px;font:inherit;font-size:16px;line-height:1.4;resize:vertical;min-height:62px;outline:none;color:var(--ink)}
@@ -1068,14 +1081,117 @@ function cardFb() {
   if ([5, 6, 0, 1].includes(dow) && ult < sexta) return { t: dow === 5 ? 'Hoje é sexta: dia do feedback semanal' : 'Tarefa da semana: feedback semanal', p: 'Peso, sono, energia, fome e como foi a dieta. Leva 1 minuto e ajuda a equipe a ajustar o seu plano.' };
   return null;
 }
+/* ---------- notificações no celular (Firebase Cloud Messaging) ----------
+   O aluno escolhe: lembrete de cada refeição no horário dele, um aviso à noite se faltar marcar algo,
+   avisos da equipe e o pedido de feedback na sexta. Quem manda é o script do Google; o service worker mostra. */
+const FB_CFG = { apiKey: 'AIzaSyACN04lbptxlfemGDcOgF_z9olwH9Ql4k8', authDomain: 'anabtech-1d07c.firebaseapp.com', projectId: 'anabtech-1d07c', storageBucket: 'anabtech-1d07c.firebasestorage.app', messagingSenderId: '1050061410844', appId: '1:1050061410844:web:9417a6d26d4aab160605d9' }; /* Firebase: dados públicos do app web (projeto anabtech-1d07c) */
+const FB_VAPID = 'BHEMF4RhAZAZPKhsqe16t6R_kLMz_Z89iJQST9oDMFKvXE91mvpu58WtbttTrhDXps1Z5Qw7KhYGRFpxqSEORGQ';
+const FB_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+const ehIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const naTelaInicial = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function pushEstado() {
+  if (!FB_CFG || !FB_VAPID) return 'off';
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) return 'sem';
+  if (ehIOS() && !naTelaInicial()) return 'ios';
+  if (!('PushManager' in window)) return 'sem';
+  if (Notification.permission === 'denied') return 'negado';
+  return 'ok';
+}
+let _fb;
+function carregarFirebase() {
+  if (_fb) return _fb;
+  const s = src => new Promise((ok, erro) => { const e = document.createElement('script'); e.src = FB_SDK + src; e.onload = ok; e.onerror = erro; document.head.appendChild(e); });
+  _fb = s('firebase-app-compat.js').then(() => s('firebase-messaging-compat.js')).then(() => { if (!firebase.apps.length) firebase.initializeApp(FB_CFG); return firebase.messaging(); }).catch(e => { _fb = null; throw e; });
+  return _fb;
+}
+async function pushToken() {
+  const reg = await navigator.serviceWorker.ready, m = await carregarFirebase();
+  return m.getToken({ vapidKey: FB_VAPID, serviceWorkerRegistration: reg });
+}
+const HORA_PADRAO = [[/caf[eé]/i, '07:30'], [/cola[cç][aã]o|lanche da manh/i, '10:00'], [/almo[cç]o/i, '12:30'], [/pr[eé].?treino/i, '17:30'], [/p[oó]s.?treino/i, '19:30'], [/lanche/i, '16:00'], [/jantar/i, '20:00'], [/ceia/i, '22:00']];
+function refsDoDia() { const D = SNAP.dieta || {}, t = tipoDoDia(hojeISO()); return ((D.refs || {})[t] || (D.refs || {}).unico || []).slice(0, 12); }
+function pushPrefs() {
+  const p = LS.get('pushPr', null) || { rOn: true, ref: {}, noite: '21:30', eq: true, fb: true };
+  refsDoDia().forEach((n, i, L) => { if (p.ref[n] === undefined) { const h = HORA_PADRAO.find(x => x[0].test(n)); p.ref[n] = h ? h[1] : ['08:00', '12:30', '16:00', '20:00', '22:00'][Math.min(i, 4)] || ''; } });
+  return p;
+}
+function diasDeTreino() { const T = SNAP.treino || {}; return Object.keys(T).filter(k => ((T[k].ex || []).length || (T[k].cardio || []).length)).map(k => DIAS_JS.indexOf(k)).filter(x => x >= 0); }
+async function pushEnviarPrefs(tk, teste) {
+  const p = pushPrefs(), refs = refsDoDia();
+  const corpo = { acao: 'push', t: T, p: PIN, tk, on: true, teste: !!teste, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Bahia'), pp: !!SNAP.proprio, refs, td: diasDeTreino(),
+    pr: { rOn: !!p.rOn, ref: refs.map(n => ({ n, h: p.ref[n] || '' })), noite: p.noite || '', eq: p.eq !== false, fb: p.fb !== false && !SNAP.proprio } };
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) }).then(x => x.json());
+  if (!r || !r.ok) throw new Error((r && r.erro) || 'falhou');
+  LS.set('push', { on: true, tk, em: Date.now() });
+}
+/* abrir o app: o token do aparelho pode mudar; confere uma vez por dia */
+async function pushRenovar() {
+  const P = LS.get('push', null); if (!P || !P.on || pushEstado() !== 'ok' || Notification.permission !== 'granted') return;
+  if (Date.now() - (P.em || 0) < 20 * 3600e3) return;
+  try { const tk = await pushToken(); if (tk) await pushEnviarPrefs(tk, false); } catch (e) {}
+}
+function pushResumo() {
+  const P = LS.get('push', null), p = pushPrefs();
+  if (!P || !P.on) return 'Desligados';
+  const hs = p.rOn ? refsDoDia().map(n => p.ref[n]).filter(Boolean) : [];
+  return hs.length ? `Ligados: ${hs.join(', ')}${p.noite ? ` e ${p.noite} se faltar algo` : ''}` : p.noite ? `Aviso às ${p.noite} se faltar algo` : 'Só avisos da equipe';
+}
+function abrirNotif() {
+  const est = pushEstado(), P = LS.get('push', null), on = !!(P && P.on), p = pushPrefs(), refs = refsDoDia();
+  const sw = (id, v, lbl) => `<button type="button" class="nt-sw" role="switch" id="${id}" aria-checked="${v ? 'true' : 'false'}" aria-label="${esc(lbl)}"><i></i></button>`;
+  const bloqueio = est === 'ios' ? `<div class="nt-aviso"><b>No iPhone, primeiro coloque o app na tela inicial.</b><span>Toque em Compartilhar e em Adicionar à Tela de Início. Depois abra o app pelo ícone e volte aqui. É exigência da Apple para mandar notificações.</span></div>`
+    : est === 'negado' ? `<div class="nt-aviso"><b>As notificações estão bloqueadas para o app.</b><span>Libere nos ajustes do celular (Notificações) ou nas permissões do site no navegador e volte aqui.</span></div>`
+    : est === 'sem' ? `<div class="nt-aviso"><b>Este navegador não recebe notificações.</b><span>Abra o app no Chrome (Android) ou pela tela inicial (iPhone).</span></div>`
+    : est === 'off' ? `<div class="nt-aviso"><b>As notificações ainda não estão ativas no app.</b><span>Em breve.</span></div>` : '';
+  document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovNt" role="dialog" aria-modal="true" aria-labelledby="ntT"><div class="ov-c">
+    <div class="ov-h"><div><small>${on ? 'Ligadas neste celular' : 'Neste celular'}</small><h3 id="ntT">Notificações</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
+    <div class="ov-b nt">${bloqueio}
+      <section class="nt-b"><div class="nt-r"><div><b>Lembrar de marcar as refeições</b><span>Um aviso no horário de cada refeição, só se ela ainda não estiver marcada.</span></div>${sw('ntR', p.rOn, 'Lembrar de marcar as refeições')}</div>
+        <div class="nt-hs" id="ntHs"${p.rOn ? '' : ' hidden'}>${refs.length ? refs.map((n, i) => `<label class="nt-h"><span>${esc(n)}</span><input type="time" data-i="${i}" value="${esc(p.ref[n] || '')}" aria-label="Horário: ${esc(n)}"></label>`).join('') : '<p class="nt-vz">Sua dieta ainda não tem refeições cadastradas.</p>'}<p class="nt-vz">Apague o horário de uma refeição para não receber o lembrete dela.</p></div></section>
+      <section class="nt-b"><div class="nt-r"><div><b>Aviso da noite</b><span>Se até esse horário faltar marcar alguma refeição${diasDeTreino().length ? ' ou o treino do dia' : ''}, o app avisa de novo dizendo o que faltou.</span></div>${sw('ntN', !!p.noite, 'Aviso da noite')}</div>
+        <label class="nt-h" id="ntNh"${p.noite ? '' : ' hidden'}><span>Horário</span><input type="time" id="ntNt" value="${esc(p.noite || '21:30')}"></label></section>
+      <section class="nt-b"><div class="nt-r"><div><b>Avisos da equipe</b><span>Quando a equipe responder uma observação sua ou atualizar o seu protocolo.</span></div>${sw('ntE', p.eq !== false, 'Avisos da equipe')}</div></section>
+      ${SNAP.proprio ? '' : `<section class="nt-b"><div class="nt-r"><div><b>Feedback da semana</b><span>Na sexta, às 9h, se você ainda não tiver mandado.</span></div>${sw('ntF', p.fb !== false, 'Feedback da semana')}</div></section>`}
+      <p class="nt-m" id="ntM"></p></div>
+    <div class="ov-f">${on ? '<button type="button" id="ntOff">Desligar</button>' : '<button type="button" id="ntC">Agora não</button>'}<button type="button" class="pri" id="ntOk"${est === 'ok' ? '' : ' disabled'}>${on ? 'Salvar' : 'Ativar notificações'}</button></div></div></div>`);
+  document.body.style.overflow = 'hidden';
+  const ov = $('ovNt'), fechar = () => { ov.remove(); document.body.style.overflow = ''; pintarLemb(); };
+  ov.querySelector('.ov-x').onclick = fechar; ov.onclick = ev => { if (ev.target === ov) fechar(); };
+  if ($('ntC')) $('ntC').onclick = () => { LS.set('pushNao', hojeISO()); fechar(); cardsMG(); };
+  ov.querySelectorAll('.nt-sw').forEach(b => b.onclick = () => { const v = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', String(v));
+    if (b.id === 'ntR') $('ntHs').hidden = !v; if (b.id === 'ntN') $('ntNh').hidden = !v; });
+  const ler = () => { const q = pushPrefs(); q.rOn = $('ntR').getAttribute('aria-checked') === 'true';
+    ov.querySelectorAll('#ntHs input[type=time]').forEach(x => { q.ref[refs[+x.dataset.i]] = x.value || ''; });
+    q.noite = $('ntN').getAttribute('aria-checked') === 'true' ? ($('ntNt').value || '21:30') : '';
+    q.eq = $('ntE').getAttribute('aria-checked') === 'true'; if ($('ntF')) q.fb = $('ntF').getAttribute('aria-checked') === 'true'; return q; };
+  $('ntOk').onclick = async () => {
+    const bt = $('ntOk'), msg = $('ntM'); LS.set('pushPr', ler()); bt.disabled = true; bt.textContent = on ? 'Salvando…' : 'Ativando…'; msg.textContent = '';
+    try {
+      if (Notification.permission !== 'granted') { const pm = await Notification.requestPermission(); if (pm !== 'granted') throw new Error('permissao'); }
+      const tk = await pushToken(); if (!tk) throw new Error('token');
+      await pushEnviarPrefs(tk, !on); fechar(); cardsMG(); aviso(on ? 'Notificações salvas' : 'Notificações ativadas. Chega um aviso de teste agora.', 3500);
+    } catch (e) {
+      bt.disabled = false; bt.textContent = on ? 'Salvar' : 'Ativar notificações';
+      msg.textContent = e.message === 'permissao' ? 'Você não permitiu as notificações. Para ativar depois, libere nos ajustes do celular.' : !navigator.onLine ? 'Sem internet agora. Tente de novo em instantes.' : 'Não deu para ativar agora. Tente de novo em instantes.';
+    }
+  };
+  if ($('ntOff')) $('ntOff').onclick = async () => { const P2 = LS.get('push', null) || {};
+    try { await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'push', t: T, p: PIN, tk: P2.tk || '', on: false }) }); } catch (e) {}
+    LS.set('push', { on: false }); fechar(); aviso('Notificações desligadas neste celular'); };
+}
+/* linha na aba Dieta: mostra como estão os lembretes e abre as configurações */
+function pintarLemb() { document.querySelectorAll('.lemb').forEach(el => { const on = !!(LS.get('push', null) || {}).on; el.classList.toggle('on', on); el.querySelector('.lemb-s').textContent = pushResumo(); }); }
 function cardsMG() {
   const box = $('mgAv'); if (!box) return;
   const lidas = LS.get('respLidas', []), novas = (SNAP.respostas || []).filter(r => !lidas.includes(r.id)).slice(0, 3), fb = cardFb();
+  const pn = LS.get('pushNao', ''), nudge = pushEstado() !== 'off' && pushEstado() !== 'sem' && !(LS.get('push', null) || {}).on && (!pn || pn < isoMenos(21)) && ((SNAP.dieta || {}).tipos || []).length;
   box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
+    (nudge ? `<div class="mgc fb" role="status"><h3>Quer lembretes no celular?</h3><p>O app avisa na hora de marcar cada refeição e, à noite, se faltar marcar algo. Você escolhe os horários.</p><div class="lb"><button type="button" id="mgPush">Escolher horários</button><button type="button" id="mgPushN">Agora não</button></div></div>` : '') +
     (() => { const V = SNAP.proprio ? [] : testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
     novas.map(r => `<div class="mgc rs" role="status"><h3>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
   { const d = $('fbDot'); if (d) d.hidden = !fb; }
   const bp = $('mgPg'); if (bp) bp.onclick = irPagamento;
+  { const a1 = $('mgPush'), a2 = $('mgPushN'); if (a1) a1.onclick = abrirNotif; if (a2) a2.onclick = () => { LS.set('pushNao', hojeISO()); cardsMG(); }; }
   { const g = $('mgTs'), dp = $('mgTsD'); if (dp) dp.onclick = () => { LS.set('tstAdia', hojeISO()); cardsMG(); };
     if (g) g.onclick = () => { const tb = $('tb-e'); if (tb) { tb.checked = true; LS.set('aba', 'tb-e'); tb.dispatchEvent(new Event('change')); } setTimeout(() => { const el = document.querySelector('.pg-e .ts'); if (el) el.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); }, 60); }; }
   const b = $('mgFb'); if (b) b.onclick = () => { const tb = $('tb-f'); if (tb) { tb.checked = true; LS.set('aba', 'tb-f'); } window.scrollTo(0, 0); };
@@ -1313,6 +1429,7 @@ function montarDieta(app) {
     const al = pl.querySelector('.alvo'); (al || pl.firstChild) && pl.insertBefore(topo, al ? al.nextSibling : pl.firstChild);
     const ag = document.createElement('div'); ag.className = 'agua'; ag.innerHTML = '<div class="ag-t"><span>💧 <b class="ag-v">0 L</b> de água <i class="ag-q" style="font-style:normal"></i></span><span class="ag-m"></span></div><div class="ag-b"><i></i></div><div class="ag-bt"><button type="button" class="mn" data-ml="-250" aria-label="Tirar 250 ml">−</button><button type="button" data-ml="250">+ Copo 250 ml</button><button type="button" data-ml="500">+ Garrafa 500 ml</button></div>';
     topo.insertAdjacentElement('afterend', ag);
+    if (pushEstado() !== 'off') { const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'lemb'; lb.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg><span><b>Lembretes no celular</b><span class="lemb-s"></span></span><i>Configurar</i>'; lb.onclick = abrirNotif; ag.insertAdjacentElement('afterend', lb); }
     ag.querySelectorAll('[data-ml]').forEach(b => b.onclick = () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }); e.agua = Math.max(0, (+e.agua || 0) + +b.dataset.ml); LS.set('dieta.' + d, e); pintarDieta(); agendarDieta(tipoDoDia(d), d, 2500); });
     const sm = document.createElement('details'); sm.className = 'sem'; ag.insertAdjacentElement('afterend', sm);
     const nt = document.createElement('label'); nt.className = 'dnota'; nt.innerHTML = '<span>Observação sobre a alimentação <b class="dn-d"></b></span><textarea rows="2" maxlength="1000" placeholder="Ex.: não deu para jantar, troquei o arroz por batata, senti muita fome à noite…"></textarea><small>A equipe lê e pode te responder aqui no app.</small>';
@@ -2036,6 +2153,7 @@ async function atualizarSnap() {
 }
 
 /* ---------- sem internet: a página fica guardada no aparelho ---------- */
+window.addEventListener('load', () => { setTimeout(() => { try { pintarLemb(); pushRenovar(); } catch (e) {} }, 4000); });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 
 /* ---------- início ---------- */

@@ -2,7 +2,7 @@
 // Página: busca a versão nova na rede primeiro e usa a cópia guardada sem internet.
 // Fontes, ícones e GIFs: usa a cópia guardada e atualiza em segundo plano.
 // Imagens de exercícios de fora e buscas no Open Food Facts não passam pelo cache.
-const CACHE_NAME = 'mgcoach-consultoria-v2-2-17';
+const CACHE_NAME = 'mgcoach-consultoria-v2-2-18';
 const ICONES = ['./apple-touch-icon.png', './icon-192.png', './icon-512.png', './favicon.png', './apple-touch-icon-preto.png', './favicon-preto.png'];
 const DO_COACH = ['./', './index.html', './manifest.json'], DO_ALUNO = ['./aluno.html', './guia.html', './novidades.json'];
 // Quem instala decide o que guardar: a página do aluno não precisa baixar o app do treinador, e vice-versa.
@@ -37,4 +37,19 @@ self.addEventListener('fetch', e => {
       return cached || rede;
     }));
   }
+});
+// Notificações (Firebase Cloud Messaging, mensagens só de dados): o próprio service worker mostra o aviso.
+self.addEventListener('push', e => {
+  let j = {}; try { j = e.data ? e.data.json() : {}; } catch (err) { try { j = { data: { b: e.data.text() } }; } catch (e2) {} }
+  const d = j.data || (j.notification ? { t: j.notification.title, b: j.notification.body } : j) || {};
+  const titulo = d.t || 'AnabTech', base = self.registration.scope;
+  e.waitUntil(self.registration.showNotification(titulo, { body: d.b || '', tag: d.g || undefined, renotify: !!d.g, icon: base + (d.ic || 'icon-192.png'), badge: base + 'favicon.png', data: { u: d.u || base } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close(); const u = (e.notification.data && e.notification.data.u) || self.registration.scope;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cl => {
+    const alvo = new URL(u, self.registration.scope), mesma = cl.find(c => { try { const x = new URL(c.url); return x.pathname === alvo.pathname; } catch (err) { return false; } });
+    if (mesma) return mesma.focus().then(c => { try { if (alvo.hash && c && c.url !== alvo.href) return c.navigate(alvo.href); } catch (err) {} return c; });
+    return self.clients.openWindow(alvo.href);
+  }));
 });
