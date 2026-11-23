@@ -15,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <title>AnabTech · Minha página</title>
 <style>
-:root{--paper:#f2f3ef;--card:#fff;--rule:#dfe2da;--rule-soft:#ecede8;--ink:#0b0c0e;--ink-2:#5d626a;--ink-3:#90959c;--accent:#c8ff3d;--accent-ink:#4f6b00;--on-accent:#0b0c0e;--accent-soft:#eefad0;--ok:#16a34a;--ok-soft:#dcfce7;--down:#c2410c}
+:root{--paper:#f2f3ef;--card:#fff;--rule:#dfe2da;--rule-soft:#ecede8;--ink:#0b0c0e;--ink-2:#5d626a;--ink-3:#6a6f77;--accent:#c8ff3d;--accent-ink:#4f6b00;--on-accent:#0b0c0e;--accent-soft:#eefad0;--ok:#16a34a;--ok-soft:#dcfce7;--down:#c2410c}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;font-size:14px;min-height:100vh}
@@ -88,6 +88,8 @@ button,input,textarea,select{font:inherit;color:inherit}
 .agua{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:12px 15px;margin:0 0 12px}
 .ag-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}.ag-t b{font-size:18px}.ag-t span{color:var(--ink-2);font-size:13px}
 .ag-b{height:10px;border-radius:999px;background:#e0f2fe;margin-top:8px;overflow:hidden}.ag-b i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#0284c7);border-radius:999px;transition:width .3s}
+.pesp{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:12px 15px;margin:0 0 12px}.pesp-c{display:flex;gap:10px}.pesp-c label{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}.pesp-c b{font-weight:500;color:var(--ink-3)}
+.pesp-i{display:flex;align-items:center;border:1px solid var(--rule);border-radius:10px;background:var(--paper);padding:0 11px;min-height:44px}.pesp-i:focus-within{border-color:var(--ink)}.pesp-i input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:17px;font-weight:600;color:var(--ink);padding:0;outline:none;font-variant-numeric:tabular-nums}.pesp-i i{font-style:normal;color:var(--ink-3);font-size:13px}.pesp small{display:block;margin-top:8px;color:var(--ink-3);font-size:12px;line-height:1.45}
 .ag-bt{display:flex;gap:6px;margin-top:10px}.ag-bt button{flex:1;min-height:40px;border-radius:10px;border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;font-weight:700;font-size:13.5px;cursor:pointer}.ag-bt button.mn{flex:0 0 44px;background:var(--paper);border-color:var(--rule);color:var(--ink-2)}
 .sem{background:var(--card);border:1px solid var(--rule);border-radius:14px;margin:0 0 12px;overflow:hidden}
 .sem summary{list-style:none;cursor:pointer;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14.5px}.sem summary::-webkit-details-marker{display:none}.sem summary::after{content:"▾";color:var(--ink-3)}.sem[open] summary::after{content:"▴"}
@@ -122,6 +124,17 @@ button,input,textarea,select{font:inherit;color:inherit}
 .ov-f{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card,#fff);border-top:1px solid var(--rule)}
 .ov-f button{flex:1;min-height:46px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink)}
 .ov-f .pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.ov-f .pri:disabled{opacity:.45}
+.pp{background:var(--card,#fff);border:1px solid var(--rule);border-radius:16px;padding:12px 14px;margin:12px 0 4px}
+.pp-h{display:flex;align-items:baseline;gap:8px}.pp-h b{font-size:15px}.pp-h span{font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}.pp-h button{margin-left:auto;border:0;background:none;font:inherit;font-size:13px;color:var(--ink-2);cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px}
+.pp ol{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column}
+.pp li{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--rule-soft,#ecede8)}.pp li:first-child{border-top:0}
+.pp li>i{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);display:inline-flex;align-items:center;justify-content:center}.pp li.ok>i{background:var(--ink);border-color:var(--ink);color:var(--accent)}
+.pp li>div{flex:1;min-width:0}.pp li b{display:block;font-size:14px}.pp li.ok b{color:var(--ink-3);font-weight:500;text-decoration:line-through;text-decoration-color:var(--rule)}.pp li span{display:block;font-size:12.5px;line-height:1.4;color:var(--ink-3);margin-top:1px}
+.pp li a,.pp li button{flex:none;display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:999px;background:var(--ink);color:#fff;font:inherit;font-size:13px;font-weight:600;text-decoration:none;border:0;cursor:pointer}
+.oc-ia-tx{position:relative}.oc-ia-tx textarea{padding-right:52px}
+.oc-mic{position:absolute;right:8px;top:16px;width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.oc-mic.on{background:var(--ink);border-color:var(--ink);color:var(--accent);box-shadow:0 0 0 4px rgba(200,255,61,.35)}
+#app .vid-av{display:none}
 .lemb{display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 0;padding:11px 12px;border-radius:14px;border:1px solid var(--rule);background:var(--card,#fff);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .lemb>span{flex:1;min-width:0}.lemb b{display:block;font-size:14px}.lemb .lemb-s{display:block;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lemb i{font-style:normal;font-size:13px;font-weight:600;color:var(--ink-2)}.lemb.on svg{color:#4f6b00}
 .ov-b.nt{padding:12px 16px 16px;overflow:auto}
@@ -637,16 +650,7 @@ function montar() { iconePerfil();
     main.insertAdjacentHTML('afterend', `<nav class="tabbar" aria-label="Seções do app">${[['t', 'Treino'], ['d', 'Dieta'], ['e', 'Evolução'], ['f', 'Feedback'], ['p', 'Protocolo']].filter(x => tem(x[0])).map(([id, n]) => `<label for="tb-${id}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${ic[id]}</svg></span>${id === 'f' ? '<i class="tbdot" id="fbDot" hidden></i>' : ''}${n}</label>`).join('')}</nav>`); }
   main.insertAdjacentHTML('afterbegin', '<p class="fila" id="filaAv" hidden></p><div id="mgAv"></div><div id="lembAv"></div>' + barraDia());
   const instalado = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-  if (!LS.get('bv', false)) {
-    main.insertAdjacentHTML('afterbegin', `<div class="bv" id="bv"><h3>Bem-vindo${SNAP.nome ? ', ' + esc(SNAP.nome) : ''}!</h3><p>${instalado ? 'Veja em 2 minutos onde anotar as cargas, marcar as refeições e mandar o feedback.' : 'Antes de começar, coloque o app na tela inicial do celular e veja como anotar as cargas, marcar as refeições e mandar o feedback.'}</p><div class="bvb"><a href="guia.html">Ver o guia</a><button type="button" id="bvx">Agora não</button></div></div>`);
-    $('bvx').onclick = () => { LS.set('bv', true); $('bv').remove(); };
-    main.querySelector('.bv a').addEventListener('click', () => LS.set('bv', true));
-  }
-  if (LS.get('migrou', false) && !LS.get('mudouOk', false)) {
-    main.insertAdjacentHTML('afterbegin', `<div class="bv mud" id="mudAv"><h3>Agora somos <span class="mk" style="font-size:inherit;color:#fff">anab<b style="color:var(--accent)">tech</b></span></h3><p>O app ganhou nome e endereço novos. Seu treino, sua dieta e seus registros vieram junto.${instalado ? ' O ícone antigo da tela inicial não abre mais o app: apague ele e coloque o novo.' : ' Se você usava o app pela tela inicial, coloque o ícone novo.'}</p><div class="bvb"><a href="guia.html">Colocar na tela inicial</a><button type="button" id="mudX">Entendi</button></div></div>`);
-    $('mudX').onclick = () => { LS.set('mudouOk', true); $('mudAv').remove(); };
-    main.querySelector('#mudAv a').addEventListener('click', () => LS.set('mudouOk', true));
-  }
+  main.insertAdjacentHTML('afterbegin', '<div id="ppAv"></div>');
   main.querySelector('.foot').insertAdjacentHTML('beforebegin', '<a class="ajuda" href="guia.html">Como usar o app e colocar na tela inicial</a>');
   const pf = document.createElement('section'); pf.className = 'pg pg-f'; main.insertBefore(pf, main.querySelector('.foot'));
   const pn = document.createElement('section'); pn.className = 'pg pg-n'; main.insertBefore(pn, main.querySelector('.foot'));
@@ -1155,7 +1159,7 @@ function abrirNotif() {
       <p class="nt-m" id="ntM"></p></div>
     <div class="ov-f">${on ? '<button type="button" id="ntOff">Desligar</button>' : '<button type="button" id="ntC">Agora não</button>'}<button type="button" class="pri" id="ntOk"${est === 'ok' ? '' : ' disabled'}>${on ? 'Salvar' : 'Ativar notificações'}</button></div></div></div>`);
   document.body.style.overflow = 'hidden';
-  const ov = $('ovNt'), fechar = () => { ov.remove(); document.body.style.overflow = ''; pintarLemb(); };
+  const ov = $('ovNt'), fechar = () => { ov.remove(); document.body.style.overflow = ''; pintarLemb(); primeirosPassos(); };
   ov.querySelector('.ov-x').onclick = fechar; ov.onclick = ev => { if (ev.target === ov) fechar(); };
   if ($('ntC')) $('ntC').onclick = () => { LS.set('pushNao', hojeISO()); fechar(); cardsMG(); };
   ov.querySelectorAll('.nt-sw').forEach(b => b.onclick = () => { const v = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', String(v));
@@ -1181,16 +1185,34 @@ function abrirNotif() {
 }
 /* linha na aba Dieta: mostra como estão os lembretes e abre as configurações */
 function pintarLemb() { document.querySelectorAll('.lemb').forEach(el => { const on = !!(LS.get('push', null) || {}).on; el.classList.toggle('on', on); el.querySelector('.lemb-s').textContent = pushResumo(); }); }
+/* ---------- primeiros passos: um cartão só, que some quando tudo estiver feito ---------- */
+const appInstalado = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function primeirosPassos() {
+  const box = $('ppAv'); if (!box) return;
+  if (LS.get('ppOk', false)) { box.innerHTML = ''; return; }
+  const pe = pushEstado(), P = [
+    { k: 'tela', ok: appInstalado() || LS.get('ppTela', false), t: 'Colocar o app na tela inicial', s: LS.get('migrou', false) && !LS.get('mudouOk', false) ? 'O app agora se chama AnabTech. Se você usava o ícone antigo, apague e coloque o novo.' : 'Assim ele abre como aplicativo, mesmo sem internet.', a: 'Ver como', h: 'guia.html#instalar' },
+    { k: 'lemb', ok: !!(LS.get('push', null) || {}).on || pe === 'off' || pe === 'sem', t: 'Ativar os lembretes', s: 'O app avisa na hora de marcar cada refeição.', a: 'Ativar' },
+    { k: 'guia', ok: LS.get('bv', false), t: 'Ver como usar o app', s: 'Cargas, refeições e feedback em 2 minutos.', a: 'Abrir', h: 'guia.html' }];
+  const feitos = P.filter(x => x.ok).length;
+  if (feitos === P.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<section class="pp" aria-label="Primeiros passos"><div class="pp-h"><b>Primeiros passos</b><span>${feitos} de ${P.length}</span><button type="button" id="ppX" aria-label="Ocultar primeiros passos">Ocultar</button></div>
+    <ol>${P.map(x => `<li class="${x.ok ? 'ok' : ''}"><i aria-hidden="true">${x.ok ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ''}</i><div><b>${x.t}</b>${x.ok ? '' : `<span>${x.s}</span>`}</div>${x.ok ? '' : x.h ? `<a href="${x.h}" data-pp="${x.k}">${x.a}</a>` : `<button type="button" data-pp="${x.k}">${x.a}</button>`}</li>`).join('')}</ol></section>`;
+  $('ppX').onclick = () => { LS.set('ppOk', true); LS.set('mudouOk', true); primeirosPassos(); };
+  box.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => { const k = b.dataset.pp;
+    if (k === 'guia') LS.set('bv', true); if (k === 'tela') { LS.set('ppTela', true); LS.set('mudouOk', true); } if (k === 'lemb') abrirNotif(); }));
+}
 function cardsMG() {
   const box = $('mgAv'); if (!box) return;
   const lidas = LS.get('respLidas', []), novas = (SNAP.respostas || []).filter(r => !lidas.includes(r.id)).slice(0, 3), fb = cardFb();
-  const pn = LS.get('pushNao', ''), nudge = pushEstado() !== 'off' && pushEstado() !== 'sem' && !(LS.get('push', null) || {}).on && (!pn || pn < isoMenos(21)) && ((SNAP.dieta || {}).tipos || []).length;
+  const pn = LS.get('pushNao', ''), nudge = LS.get('ppOk', false) && pushEstado() !== 'off' && pushEstado() !== 'sem' && !(LS.get('push', null) || {}).on && (!pn || pn < isoMenos(21)) && ((SNAP.dieta || {}).tipos || []).length;
   box.innerHTML = cardPag() + (fb ? `<div class="mgc fb" role="status"><h3>${esc(fb.t)}</h3><p>${esc(fb.p)}</p><div class="lb"><button type="button" id="mgFb">Responder agora</button></div></div>` : '') +
     (nudge ? `<div class="mgc fb" role="status"><h3>Quer lembretes no celular?</h3><p>O app avisa na hora de marcar cada refeição e, à noite, se faltar marcar algo. Você escolhe os horários.</p><div class="lb"><button type="button" id="mgPush">Escolher horários</button><button type="button" id="mgPushN">Agora não</button></div></div>` : '') +
     (() => { const V = SNAP.proprio ? [] : testesVencidos(); if (!V.length || LS.get('tstAdia', '') > isoMenos(7)) return ''; return `<div class="mgc fb" role="status"><h3>Hora de refazer ${V.length === 1 ? 'o teste' : 'os testes'}</h3><p>${esc(V.map(k => T_INFO[k][0]).join(', '))}: o último foi há mais de 6 semanas. Refazer nas mesmas condições mostra a sua evolução.</p><div class="lb"><button type="button" id="mgTs">Ir para os testes</button><button type="button" id="mgTsD" class="ln">Depois</button></div></div>`; })() +
     novas.map(r => `<div class="mgc rs" role="status"><h3>A equipe respondeu sua observação</h3><small>${esc(r.onde || '')}</small>${r.obs ? `<div class="q">Você: ${esc(r.obs)}</div>` : ''}<div class="r">${esc(r.txt)}</div><div class="lb"><button type="button" data-lida="${esc(r.id)}">Entendi ✓</button></div></div>`).join('');
   { const d = $('fbDot'); if (d) d.hidden = !fb; }
   const bp = $('mgPg'); if (bp) bp.onclick = irPagamento;
+  primeirosPassos();
   { const a1 = $('mgPush'), a2 = $('mgPushN'); if (a1) a1.onclick = abrirNotif; if (a2) a2.onclick = () => { LS.set('pushNao', hojeISO()); cardsMG(); }; }
   { const g = $('mgTs'), dp = $('mgTsD'); if (dp) dp.onclick = () => { LS.set('tstAdia', hojeISO()); cardsMG(); };
     if (g) g.onclick = () => { const tb = $('tb-e'); if (tb) { tb.checked = true; LS.set('aba', 'tb-e'); tb.dispatchEvent(new Event('change')); } setTimeout(() => { const el = document.querySelector('.pg-e .ts'); if (el) el.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); }, 60); }; }
@@ -1427,11 +1449,20 @@ function montarDieta(app) {
     const arts = pl.querySelectorAll('article.ref'); const nomes = (D.refs || {})[t] || [];
     const topo = document.createElement('div'); topo.className = 'dhoje'; topo.dataset.t = t;
     const al = pl.querySelector('.alvo'); (al || pl.firstChild) && pl.insertBefore(topo, al ? al.nextSibling : pl.firstChild);
-    const ag = document.createElement('div'); ag.className = 'agua'; ag.innerHTML = '<div class="ag-t"><span>💧 <b class="ag-v">0 L</b> de água <i class="ag-q" style="font-style:normal"></i></span><span class="ag-m"></span></div><div class="ag-b"><i></i></div><div class="ag-bt"><button type="button" class="mn" data-ml="-250" aria-label="Tirar 250 ml">−</button><button type="button" data-ml="250">+ Copo 250 ml</button><button type="button" data-ml="500">+ Garrafa 500 ml</button></div>';
+    const ag = document.createElement('div'); ag.className = 'agua'; ag.innerHTML = '<div class="ag-t"><span><b class="ag-v">0 L</b> de água <i class="ag-q" style="font-style:normal"></i></span><span class="ag-m"></span></div><div class="ag-b"><i></i></div><div class="ag-bt"><button type="button" class="mn" data-ml="-250" aria-label="Tirar 250 ml">−</button><button type="button" data-ml="250">+ Copo 250 ml</button><button type="button" data-ml="500">+ Garrafa 500 ml</button></div>';
     topo.insertAdjacentElement('afterend', ag);
+    const pp = document.createElement('div'); pp.className = 'pesp';
+    pp.innerHTML = `<div class="pesp-c">${D.pesagem !== false ? '<label><span>Peso <b class="pesp-q"></b></span><span class="pesp-i"><input type="text" inputmode="decimal" autocomplete="off" data-pp="peso" placeholder="—" aria-label="Peso em kg"><i>kg</i></span></label>' : ''}<label><span>Passos <b class="pesp-q"></b></span><span class="pesp-i"><input type="text" inputmode="numeric" autocomplete="off" data-pp="passos" placeholder="—" aria-label="Passos do dia"></span></label></div><small>${D.pesagem !== false ? 'Pese-se ao acordar, depois do banheiro e antes de comer. A equipe acompanha a média da semana, não o número de um dia.' : 'Os passos aparecem no app de saúde do celular ou no relógio.'}</small>`;
+    pp.querySelectorAll('[data-pp]').forEach(inp => inp.addEventListener('change', () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }), k = inp.dataset.pp;
+      const v = k === 'peso' ? parseFloat(String(inp.value).replace(',', '.')) : parseInt(String(inp.value).replace(/\D/g, ''), 10);
+      const ok = k === 'peso' ? v >= 25 && v <= 350 : v >= 0 && v <= 100000;
+      if (inp.value.trim() && !ok) { aviso(k === 'peso' ? 'Confira o peso: use quilos, por exemplo 72,4' : 'Confira o número de passos'); inp.value = e[k] ? fmtPP(k, e[k]) : ''; return; }
+      if (inp.value.trim()) e[k] = k === 'peso' ? Math.round(v * 10) / 10 : v; else delete e[k];
+      LS.set('dieta.' + d, e); inp.value = e[k] ? fmtPP(k, e[k]) : ''; agendarDieta(tipoDoDia(d), d, 1200); }));
     if (pushEstado() !== 'off') { const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'lemb'; lb.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg><span><b>Lembretes no celular</b><span class="lemb-s"></span></span><i>Configurar</i>'; lb.onclick = abrirNotif; ag.insertAdjacentElement('afterend', lb); }
     ag.querySelectorAll('[data-ml]').forEach(b => b.onclick = () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }); e.agua = Math.max(0, (+e.agua || 0) + +b.dataset.ml); LS.set('dieta.' + d, e); pintarDieta(); agendarDieta(tipoDoDia(d), d, 2500); });
     const sm = document.createElement('details'); sm.className = 'sem'; ag.insertAdjacentElement('afterend', sm);
+    ag.insertAdjacentElement('afterend', pp);
     const nt = document.createElement('label'); nt.className = 'dnota'; nt.innerHTML = '<span>Observação sobre a alimentação <b class="dn-d"></b></span><textarea rows="2" maxlength="1000" placeholder="Ex.: não deu para jantar, troquei o arroz por batata, senti muita fome à noite…"></textarea><small>A equipe lê e pode te responder aqui no app.</small>';
     pl.appendChild(nt);
     let ntT; nt.querySelector('textarea').addEventListener('input', ev => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }); e.nota = ev.target.value; LS.set('dieta.' + d, e);
@@ -1535,6 +1566,19 @@ function abrirParcial(t, j, art) {
   desenhar();
 }
 /* IA no "Comi outra coisa": o script do Google guarda a chave e diz se está ativo; a resposta fica 6 h no aparelho */
+/* ditado por voz (Web Speech API): o texto falado entra no campo e o aluno confere antes de calcular */
+const VOZ = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let _rec = null;
+function ditar(ta, bt, mudou) {
+  if (_rec) { try { _rec.stop(); } catch (e) {} return; }
+  const r = new VOZ(); r.lang = 'pt-BR'; r.interimResults = true; r.continuous = false;
+  const base = ta.value.trim() ? ta.value.trim() + ' ' : ''; _rec = r;
+  bt.classList.add('on'); bt.setAttribute('aria-pressed', 'true'); ta.placeholder = 'Pode falar…';
+  r.onresult = ev => { let t = ''; for (const x of ev.results) t += x[0].transcript; ta.value = base + t; mudou(ta.value); };
+  const fim = () => { _rec = null; bt.classList.remove('on'); bt.setAttribute('aria-pressed', 'false'); ta.placeholder = 'Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada'; };
+  r.onend = fim; r.onerror = ev => { fim(); if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') aviso('Libere o microfone para o app nos ajustes do celular.', 4000); };
+  try { r.start(); } catch (e) { fim(); }
+}
 function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em < 6 * 3600e3) return Promise.resolve(!!c.v);
   return fetch(API + '?acao=versao', { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
 function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
@@ -1560,7 +1604,7 @@ function abrirOutra(t, j) {
     B.innerHTML = `${pl ? `<p class="oc-plan">No plano, esta refeição tinha <b>${Math.round(pl[0])} kcal</b> · P ${Math.round(pl[1])} g · C ${Math.round(pl[2])} g · G ${Math.round(pl[3])} g. Coloque abaixo o que você comeu de verdade.</p>` : ''}
       <button class="oc-gbt" type="button" id="ocG"><span style="font-size:20px">✋</span><span>Não sabe a quantidade? <u>Veja como estimar com a mão e medidas caseiras</u></span></button>
       ${iaOn ? `<div class="oc-ia"><label for="ocIaT"><b>Descreva o que comeu</b><span>A IA estima as quantidades e as calorias. Confira antes de salvar.</span></label>
-        <textarea id="ocIaT" rows="2" maxlength="600" placeholder="Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada">${esc(iaTxt)}</textarea>
+        <div class="oc-ia-tx"><textarea id="ocIaT" rows="2" maxlength="600" placeholder="Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada">${esc(iaTxt)}</textarea>${VOZ ? `<button type="button" class="oc-mic" id="ocMic" aria-label="Falar em vez de digitar" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>` : ''}</div>
         <div class="oc-ia-a">${iaImg ? `<span class="oc-ia-th"><img src="${iaImg.url}" alt="Foto escolhida"><button type="button" id="ocIaX" aria-label="Tirar a foto">×</button></span>` : `<label class="oc-ia-f"><input type="file" accept="image/*" id="ocIaF" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto do prato ou do rótulo</span></label>`}
         <button type="button" class="oc-ia-b" id="ocIaB"${iaVai ? ' disabled' : ''}>${iaVai ? 'Calculando…' : 'Calcular'}</button></div>${iaMsg ? `<p class="oc-ia-m">${esc(iaMsg)}</p>` : ''}</div>` : ''}
       ${itens.length ? `<div class="oc-its">${itens.map((x, i) => `<div class="oc-it${x.ia ? ' ia' : ''}"><div><b>${esc(x.n)}${x.ia ? ' <small class="oc-ia-tag">IA</small>' : ''}</b>${x.ia ? `<button type="button" class="oc-aj" data-aj="${i}">${esc(fmtQ(x.q))} ${esc(plurUn(x.q, x.un))}${x.un !== 'gramas' ? ` · ${Math.round(x.g)} g` : ''} <u>ajustar</u></button>` : `<span>${esc(fmtQ(x.q))} ${esc(plurUn(x.q, x.un))}${x.un !== 'gramas' ? ` · ${Math.round(x.g)} g` : ''}</span>`}</div><em>${Math.round(x.m[0])} kcal</em><button type="button" data-del="${i}" aria-label="Tirar ${esc(x.n)}">✕</button></div>${iaEd === i ? ajusteHTML(x) : ''}`).join('')}</div>${tot()}` : iaOn ? '' : `<p class="oc-vazio">Busque e adicione cada alimento: pão, ovo, atum, arroz…</p>`}
@@ -1594,6 +1638,7 @@ function abrirOutra(t, j) {
   }
   function ligarIA() {
     const ta = $('ocIaT'); ta.oninput = () => { iaTxt = ta.value; };
+    const mic = $('ocMic'); if (mic) mic.onclick = () => ditar(ta, mic, v => { iaTxt = v; });
     const fi = $('ocIaF'); if (fi) fi.onchange = async () => { const f = fi.files[0]; if (!f) return; try { iaImg = await reduzirFoto(f); iaMsg = ''; } catch (e) { iaMsg = 'Não consegui abrir essa foto. Tente outra.'; } desenhar(); };
     const fx = $('ocIaX'); if (fx) fx.onclick = () => { iaImg = null; desenhar(); };
     $('ocIaB').onclick = async () => {
@@ -1685,6 +1730,7 @@ function pintarDieta() {
   document.querySelectorAll('.agua').forEach(el => { el.querySelector('.ag-v').textContent = (Math.round(ml / 100) / 10).toString().replace('.', ',') + ' L'; el.querySelector('.ag-q').textContent = qd;
     el.querySelector('.ag-m').textContent = meta ? `meta ${(Math.round(meta / 100) / 10).toString().replace('.', ',')} L${ml >= meta ? ' ✓' : ''}` : ''; el.querySelector('.ag-b i').style.width = (meta ? Math.min(100, ml / meta * 100) : Math.min(100, ml / 30)) + '%'; });
   document.querySelectorAll('.sem').forEach(el => { const op = el.open; el.innerHTML = resumoSemana(); el.open = op; });
+  document.querySelectorAll('.pesp').forEach(el => { el.querySelectorAll('.pesp-q').forEach(b => b.textContent = qd); el.querySelectorAll('[data-pp]').forEach(inp => { if (document.activeElement !== inp) inp.value = e[inp.dataset.pp] ? fmtPP(inp.dataset.pp, e[inp.dataset.pp]) : ''; }); });
   document.querySelectorAll('.oc-o').forEach(b => { const o = ((e.outra || {})[b.dataset.t] || {})[b.dataset.j]; b.textContent = o ? 'Editar o que comi' : 'Comi outra coisa'; });
   document.querySelectorAll('.pc-bt').forEach(b => { const pc = ((e.parc || {})[b.dataset.t] || {})[b.dataset.j], on = (e.feitas[b.dataset.t] || []).includes(+b.dataset.j); b.textContent = pc && on ? 'Editar quanto comi' : 'Comi só uma parte'; });
   document.querySelectorAll('.dnota').forEach(el => { el.querySelector('.dn-d').textContent = qd; const ta = el.querySelector('textarea'); if (document.activeElement !== ta) ta.value = e.nota || ''; });
@@ -1711,11 +1757,12 @@ function detDia(t, e) {
     const o = { n, m, esc }; if (R.ops.length > 1) o.op = op.nome; return o; });
 }
 const tipoDoDia = d => { const D = SNAP.dieta || {}; return D.ciclo ? (D.ciclo[DIAS_JS[dowISO(d)]] || (D.tipos || ['unico'])[0]) : (D.tipos || ['unico'])[0]; };
+function fmtPP(k, v) { return k === 'peso' ? String(v).replace('.', ',') : Number(v).toLocaleString('pt-BR'); }
 function enviarDieta(t, hoje) {
   const D = SNAP.dieta || {}; hoje = hoje || dataReg(); t = t || tipoDoDia(hoje); const e = LS.get('dieta.' + hoje, { feitas: {} });
   const nomes = (D.refs || {})[t] || []; const f = (e.feitas[t] || []).slice().sort((a, b) => a - b);
   const det = detDia(t, e);
-  enfileirar({ tipo: 'dieta', id: 'dieta-' + hoje, _v: Date.now(), data: hoje, plano: t, feitas: f.map(j => nomes[j] || ('Refeição ' + (j + 1))), total: nomes.length, det, refs: nomes, alvo: (D.alvo || {})[t] || null, nota: String(e.nota || '').trim().slice(0, 1000), agua: Math.max(0, Math.min(10000, Math.round(+e.agua || 0))) });
+  enfileirar({ tipo: 'dieta', id: 'dieta-' + hoje, _v: Date.now(), data: hoje, plano: t, feitas: f.map(j => nomes[j] || ('Refeição ' + (j + 1))), total: nomes.length, det, refs: nomes, alvo: (D.alvo || {})[t] || null, nota: String(e.nota || '').trim().slice(0, 1000), agua: Math.max(0, Math.min(10000, Math.round(+e.agua || 0))), peso: +e.peso > 0 ? +e.peso : 0, passos: +e.passos > 0 ? Math.round(+e.passos) : 0 });
 }
 
 

@@ -13,6 +13,17 @@
   },
   {
    "data": "2026-11-22",
+   "seq": "a",
+   "titulo": "Peso e passos do dia, direto na aba Dieta",
+   "resumo": "Logo abaixo da água, anote o seu peso ao acordar e os passos do dia. A equipe acompanha a média da semana.",
+   "texto": "<b>Peso</b>: pese-se ao acordar, depois do banheiro e antes de comer, de preferência na mesma balança. O peso de um dia sozinho oscila com água, sal e intestino; por isso a equipe olha a <b>média da semana</b>, não o número de um dia.<br><br><b>Passos</b>: copie o total do app de saúde do celular ou do relógio. Eles entram no cálculo do seu gasto do dia.<br><br>Os dois campos são opcionais e você pode corrigir quando quiser.",
+   "acao": {
+    "rotulo": "Abrir a dieta",
+    "ir": "tb-d"
+   }
+  },
+  {
+   "data": "2026-11-22",
    "titulo": "Comeu outra coisa? Agora é só descrever ou fotografar",
    "resumo": "Na Dieta, em Comi outra coisa, escreva o que comeu ou mande uma foto do prato ou do rótulo. O app calcula as calorias e os macros para você.",
    "texto": "<b>Descreva o que comeu</b>: em <b>Comi outra coisa</b>, escreva do seu jeito, por exemplo \"4 colheres de arroz, 1 concha de feijão e um bife médio\", e toque em <b>Calcular</b>. A inteligência artificial do app separa os alimentos e estima gramas, calorias, proteína, carboidrato e gordura.<br><br><b>Foto do prato ou do rótulo</b>: no mesmo lugar, toque em <b>Foto do prato ou do rótulo</b>. Com a foto da tabela nutricional da embalagem, os valores vêm direto do rótulo.<br><br><b>Você confere antes de salvar</b>: cada item calculado aparece com a marca <b>IA</b>. Toque em <b>ajustar</b> para mudar a quantidade; as calorias acompanham. A busca por alimento continua lá embaixo, se preferir.<br><br><b>Também novo</b>: <b>Comi só uma parte</b>, para marcar quanto você comeu de cada alimento da refeição, e <b>Fez outra atividade?</b>, no treino, para registrar trilha, luta, dança, esporte ou corrida fora do plano. Tudo entra no seu gasto e no seu balanço do dia.",
@@ -59,7 +70,7 @@
    "titulo": "Todos os exercícios agora em 3D",
    "resumo": "Os mais de 200 exercícios do app ganharam vídeo e modelo 3D com fases, ângulos e músculos.",
    "texto": "Terminamos: <b>todos os exercícios do app</b> agora têm vídeo de execução com o modelo anatômico em 3D. Máquinas, polias, peso livre, abdominais, cardio e alongamentos: cada um com o <b>passo a passo por fase</b>, os <b>ângulos das articulações</b> e os <b>músculos que mais trabalham</b> em destaque. No treino, abra <b>Ver execução</b> e toque em <b>Girar e pausar em 3D</b> para ver de qualquer ângulo.",
-   "img": "videos/leg-press.jpg",
+   "img": "https://anabtech.github.io/videos/leg-press.jpg",
    "acao": {
     "rotulo": "Ir para o treino",
     "ir": "tb-t"
