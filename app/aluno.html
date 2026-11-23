@@ -98,7 +98,15 @@ button,input,textarea,select{font:inherit;color:inherit}
 .sem-d{display:flex;gap:4px;align-items:flex-end;height:70px;margin:12px 0 4px}.sem-d div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}.sem-d i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--accent);min-height:2px}.sem-d i.vz{background:var(--rule)}.sem-d span{font-size:10.5px;color:var(--ink-3)}
 .sem-n{font-size:12px;color:var(--ink-3);margin-top:8px;line-height:1.45}
 /* comi outra coisa */
+.ader{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:12px 15px;margin:0 0 12px}.ader.bx{border-color:var(--ink-3)}
+.ader-t{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--ink-2)}.ader-t b{font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.ader-b{position:relative;height:6px;border-radius:999px;background:var(--rule);margin:8px 0 8px;overflow:hidden}.ader-b i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:999px}.ader.bx .ader-b i{background:var(--ink-3)}.ader-b u{position:absolute;top:0;bottom:0;width:2px;background:var(--ink)}
+.ader p{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)}.ader p b{color:var(--ink)}
+.oc-80{padding:2px 0}.oc-80>b{display:block;font-size:17px;line-height:1.3;margin-bottom:8px}.oc-80 p{margin:0 0 10px;font-size:14px;line-height:1.5;color:var(--ink-2)}.oc-80 p b{color:var(--ink)}
+.oc-80n{display:flex;flex-direction:column;gap:2px;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;margin:4px 0 12px}.oc-80n span{font-size:12px;color:var(--ink-3)}.oc-80n b{font-size:16px}.oc-80n small{font-size:12.5px;color:var(--ink-2)}
+.oc-80 .oc-80s{font-size:12.5px;color:var(--ink-3)}
 .oc-bt{display:block;width:calc(100% - 30px);margin:6px 15px 0;min-height:38px;border:1px dashed var(--rule);border-radius:10px;background:transparent;color:var(--ink-2);font-size:13.5px;font-weight:600;cursor:pointer}
+.oc-bt.oc-o{border:0;min-height:34px;margin-top:2px;font-weight:500;font-size:12.5px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
 .ck.troca.on{background:#eef6ff!important;color:#1668a8!important;border-color:#93c5fd!important}
 .ck.parc.on{background:#fff7ed!important;color:#9a3412!important;border-color:#fdba74!important}
 .atv-c{background:var(--card,#fff);border:1px solid var(--rule);border-radius:16px;padding:14px 15px;margin:16px 0 8px}
@@ -1454,6 +1462,7 @@ function montarDieta(app) {
     const al = pl.querySelector('.alvo'); (al || pl.firstChild) && pl.insertBefore(topo, al ? al.nextSibling : pl.firstChild);
     const ag = document.createElement('div'); ag.className = 'agua'; ag.innerHTML = '<div class="ag-t"><span><b class="ag-v">0 L</b> de água <i class="ag-q" style="font-style:normal"></i></span><span class="ag-m"></span></div><div class="ag-b"><i></i></div><div class="ag-bt"><button type="button" class="mn" data-ml="-250" aria-label="Tirar 250 ml">−</button><button type="button" data-ml="250">+ Copo 250 ml</button><button type="button" data-ml="500">+ Garrafa 500 ml</button></div>';
     topo.insertAdjacentElement('afterend', ag);
+    const ad = document.createElement('div'); ad.className = 'ader'; ad.hidden = true; topo.insertAdjacentElement('afterend', ad);
     const pp = document.createElement('div'); pp.className = 'pesp';
     pp.innerHTML = `<div class="pesp-c">${D.pesagem !== false ? '<label><span>Peso <b class="pesp-q"></b></span><span class="pesp-i"><input type="text" inputmode="decimal" autocomplete="off" data-pp="peso" placeholder="—" aria-label="Peso em kg"><i>kg</i></span></label>' : ''}<label><span>Passos <b class="pesp-q"></b></span><span class="pesp-i"><input type="text" inputmode="numeric" autocomplete="off" data-pp="passos" placeholder="—" aria-label="Passos do dia"></span></label></div><small>${D.pesagem !== false ? 'Pese-se ao acordar, depois do banheiro e antes de comer. A equipe acompanha a média da semana, não o número de um dia.' : 'Os passos aparecem no app de saúde do celular ou no relógio.'}</small>`;
     pp.querySelectorAll('[data-pp]').forEach(inp => inp.addEventListener('change', () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }), k = inp.dataset.pp;
@@ -1587,7 +1596,7 @@ function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em <
 function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
 function abrirOutra(t, j) {
   const D = SNAP.dieta || {}, d = dataReg(), e0 = LS.get('dieta.' + d, { feitas: {} }), nome = ((D.refs || {})[t] || [])[j] || 'Refeição';
-  let itens = JSON.parse(JSON.stringify((((e0.outra || {})[t] || {})[j] || {}).it || [])), sel = null, A = null, guia = false;
+  let itens = JSON.parse(JSON.stringify((((e0.outra || {})[t] || {})[j] || {}).it || [])), sel = null, A = null, guia = false, aviso80 = !itens.length;
   let iaOn = !!(LS.get('iaOk', null) || {}).v, iaTxt = '', iaImg = null, iaMsg = '', iaVai = false, iaEd = -1;
   iaDisp().then(v => { if (v !== iaOn && $('ovOc')) { iaOn = v; if (!guia && !sel) desenhar(); } });
   const pl = planoRef(t, j), qd = d === hojeISO() ? 'hoje' : d === isoMenos(1) ? 'ontem' : dataBR(d);
@@ -1603,9 +1612,18 @@ function abrirOutra(t, j) {
   const voltarPlano = () => { const e = LS.get('dieta.' + d, { feitas: {} }); if (e.outra && e.outra[t]) delete e.outra[t][j]; e.feitas[t] = (e.feitas[t] || []).filter(x => x !== j); LS.set('dieta.' + d, e); fecharOv(); pintarDieta(); agendarDieta(t, d); aviso('Voltou para a refeição do plano'); };
   const tot = () => { const m = somaM(itens); return `<div class="oc-tot">${[['kcal', 0, ''], ['Proteína', 1, ' g'], ['Carbo', 2, ' g'], ['Gordura', 3, ' g']].map(([l, i, u]) => `<div><span>${l}</span><b>${Math.round(m[i])}${u}</b></div>`).join('')}</div>`; };
   function desenhar() {
+    if (aviso80) { /* antes de registrar algo fora do plano: lembra a regra dos 80% e oferece voltar ao plano */
+      const A = foraDoPlano(), lim = Math.floor(A.total * (100 - META_PLANO) / 100), ops = (((SNAP.dieta || {}).det || {})[t] || [])[j], nOps = ops && ops.ops ? ops.ops.length : 0, alts = ops && ops.ops ? [...new Set(ops.ops.flatMap(o => (o.tr || []).filter(x => x.length > 1).flat().map(x => x.n)))].slice(0, 3) : [];
+      B.innerHTML = `<div class="oc-80"><b>Use só quando não der para seguir o plano.</b>
+        <p>O resultado vem do planejamento que a equipe montou para você. A meta é seguir o plano em <b>pelo menos ${META_PLANO}% das refeições</b>; sair dele com frequência atrasa a evolução.</p>
+        ${nOps > 1 || alts.length ? `<p>${nOps > 1 ? `Esta refeição tem <b>${nOps} opções</b> no plano` : `Esta refeição tem trocas no plano (${esc(alts.join(', '))})`}. Usar uma delas conta como plano e é sempre melhor do que uma refeição por fora.</p>` : ''}
+        ${A.total ? `<div class="oc-80n"><span>Nesta semana</span><b>${A.pc}% no plano</b><small>${A.fora} de ${A.total} refeições fora${A.fora >= lim ? ' · limite da semana atingido' : ` · limite ${lim}`}</small></div>` : ''}
+        <p class="oc-80s">Se realmente comeu outra coisa, registre com sinceridade: a equipe ajusta melhor com a informação real.</p></div>`;
+      F.innerHTML = '<button type="button" id="ocSeg">Comi mesmo assim</button><button type="button" class="pri" id="ocVp">Voltar ao plano</button>';
+      $('ocVp').onclick = fecharOv; $('ocSeg').onclick = () => { aviso80 = false; desenhar(); }; B.scrollTop = 0; return; }
     if (guia) { B.innerHTML = guiaPorcoes(); F.innerHTML = '<button type="button" class="pri" id="ocGv">Entendi, voltar</button>'; $('ocGv').onclick = () => { guia = false; desenhar(); }; B.scrollTop = 0; return; }
     B.innerHTML = `${pl ? `<p class="oc-plan">No plano, esta refeição tinha <b>${Math.round(pl[0])} kcal</b> · P ${Math.round(pl[1])} g · C ${Math.round(pl[2])} g · G ${Math.round(pl[3])} g. Coloque abaixo o que você comeu de verdade.</p>` : ''}
-      <button class="oc-gbt" type="button" id="ocG"><span style="font-size:20px">✋</span><span>Não sabe a quantidade? <u>Veja como estimar com a mão e medidas caseiras</u></span></button>
+      <button class="oc-gbt" type="button" id="ocG"><span>Não sabe a quantidade? <u>Veja como estimar com a mão e medidas caseiras</u></span></button>
       ${iaOn ? `<div class="oc-ia"><label for="ocIaT"><b>Descreva o que comeu</b><span>A IA estima as quantidades e as calorias. Confira antes de salvar.</span></label>
         <div class="oc-ia-tx"><textarea id="ocIaT" rows="2" maxlength="600" placeholder="Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada">${esc(iaTxt)}</textarea>${VOZ ? `<button type="button" class="oc-mic" id="ocMic" aria-label="Falar em vez de digitar" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>` : ''}</div>
         <div class="oc-ia-a">${iaImg ? `<span class="oc-ia-th"><img src="${iaImg.url}" alt="Foto escolhida"><button type="button" id="ocIaX" aria-label="Tirar a foto">×</button></span>` : `<label class="oc-ia-f"><input type="file" accept="image/*" id="ocIaF" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto do prato ou do rótulo</span></label>`}
@@ -1676,6 +1694,22 @@ function abrirOutra(t, j) {
   desenhar();
 }
 /* ---------- resumo dos últimos 7 dias (calculado com o que foi marcado neste celular) ---------- */
+/* fidelidade ao plano: refeições registradas como "comi outra coisa" sobre as refeições do plano, nos dias com registro dos últimos 7 */
+const META_PLANO = 80;
+function foraDoPlano(n = 7) {
+  const D = SNAP.dieta || {}; let fora = 0, total = 0, hoje = 0, hojeT = 0;
+  for (let i = 0; i < n; i++) { const d = isoMenos(i), e = LS.get('dieta.' + d, null); if (!e) continue; const t = tipoDoDia(d), nr = ((D.refs || {})[t] || []).length; if (!nr) continue;
+    if (!(e.feitas[t] || []).length) continue;
+    const o = Object.values((e.outra || {})[t] || {}).filter(x => x && x.it && x.it.length).length;
+    fora += o; total += nr; if (i === 0) { hoje = o; hojeT = nr; } }
+  return { fora, total, hoje, hojeT, pc: total ? Math.round((1 - fora / total) * 100) : 100 };
+}
+function aderHTML() {
+  const A = foraDoPlano(); if (!A.fora) return '';
+  const ok = A.pc >= META_PLANO, lim = Math.floor(A.total * (100 - META_PLANO) / 100);
+  return `<div class="ader-t"><span>Refeições no plano nesta semana</span><b>${A.pc}%</b></div><div class="ader-b"><i style="width:${A.pc}%"></i><u style="left:${META_PLANO}%"></u></div>
+    <p>${ok ? `Dentro da meta de ${META_PLANO}%. ${A.fora} ${A.fora === 1 ? 'refeição fora' : 'refeições fora'} do plano em ${A.total}; o limite da semana é ${lim}.` : `<b>Abaixo da meta de ${META_PLANO}%.</b> ${A.fora} de ${A.total} refeições fora do plano. Nas próximas, volte ao planejamento: é ele que traz o resultado que combinamos.`}</p>`;
+}
 function resumoSemana() {
   const D = SNAP.dieta || {}, dias = [...Array(7)].map((_, i) => isoMenos(6 - i)), meta = +D.agua || 0;
   const L = dias.map(d => { const e = LS.get('dieta.' + d, null), t = tipoDoDia(d), al = (D.alvo || {})[t] || null; if (!e) return { d, al, reg: false, ag: 0 };
@@ -1690,6 +1724,7 @@ function resumoSemana() {
     ${n ? `<div class="sem-g">${card('Calorias por dia', 0, '')}${card('Proteína por dia', 1, ' g')}${card('Carboidrato por dia', 2, ' g')}${card('Gordura por dia', 3, ' g')}</div>
     <div class="sem-d" aria-label="Calorias de cada dia">${L.map(x => `<div title="${dataBR(x.d)}"><i class="${x.reg ? '' : 'vz'}" style="height:${x.reg ? Math.max(4, x.m[0] / mx * 100) : 4}%"></i><span>${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][dowISO(x.d)]}</span></div>`).join('')}</div>
     <p class="sem-n">Proteína na meta em <b>${pOk} de ${n}</b> dias. ${meta ? `Água: média de <b>${(Math.round(agM / 100) / 10).toString().replace('.', ',')} L</b>, meta batida em <b>${agOk} de 7</b> dias.` : ''}</p>` : '<p class="sem-n" style="margin-top:0">Marque as refeições e a água para ver aqui o resumo da sua semana.</p>'}
+    ${(A => `<p class="sem-n">Refeições no plano: <b>${A.pc}%</b> (meta: ${META_PLANO}% ou mais).</p>`)(foraDoPlano())}
     <p class="sem-n">Conta só os dias com registro neste celular. Refeição sem marcar conta como não comida.</p></div>`;
 }
 function guiaPorcoes() {
@@ -1733,6 +1768,7 @@ function pintarDieta() {
   document.querySelectorAll('.agua').forEach(el => { el.querySelector('.ag-v').textContent = (Math.round(ml / 100) / 10).toString().replace('.', ',') + ' L'; el.querySelector('.ag-q').textContent = qd;
     el.querySelector('.ag-m').textContent = meta ? `meta ${(Math.round(meta / 100) / 10).toString().replace('.', ',')} L${ml >= meta ? ' ✓' : ''}` : ''; el.querySelector('.ag-b i').style.width = (meta ? Math.min(100, ml / meta * 100) : Math.min(100, ml / 30)) + '%'; });
   document.querySelectorAll('.sem').forEach(el => { const op = el.open; el.innerHTML = resumoSemana(); el.open = op; });
+  { const h = aderHTML(), bx = h && foraDoPlano().pc < META_PLANO; document.querySelectorAll('.ader').forEach(el => { el.innerHTML = h; el.hidden = !h; el.classList.toggle('bx', !!bx); }); }
   document.querySelectorAll('.pesp').forEach(el => { el.querySelectorAll('.pesp-q').forEach(b => b.textContent = qd); el.querySelectorAll('[data-pp]').forEach(inp => { if (document.activeElement !== inp) inp.value = e[inp.dataset.pp] ? fmtPP(inp.dataset.pp, e[inp.dataset.pp]) : ''; }); });
   document.querySelectorAll('.oc-o').forEach(b => { const o = ((e.outra || {})[b.dataset.t] || {})[b.dataset.j]; b.textContent = o ? 'Editar o que comi' : 'Comi outra coisa'; });
   document.querySelectorAll('.pc-bt').forEach(b => { const pc = ((e.parc || {})[b.dataset.t] || {})[b.dataset.j], on = (e.feitas[b.dataset.t] || []).includes(+b.dataset.j); b.textContent = pc && on ? 'Editar quanto comi' : 'Comi só uma parte'; });

@@ -1,6 +1,16 @@
 {
  "itens": [
   {
+   "data": "2026-11-23",
+   "titulo": "O plano em primeiro lugar: a regra dos 80%",
+   "resumo": "O resultado vem do planejamento. Siga o plano em pelo menos 80% das refeições e use Comi outra coisa só em último caso.",
+   "texto": "O seu plano foi montado para o seu objetivo: calorias, proteína e horários pensados para você. É seguir ele com consistência que traz o resultado.<br><br><b>A meta</b>: pelo menos <b>80% das refeições da semana</b> dentro do plano. Com 5 refeições por dia, isso dá no máximo umas 7 por fora na semana inteira.<br><br><b>Antes de sair do plano</b>, veja as opções e trocas da própria refeição: usar uma delas conta como plano.<br><br><b>Comi outra coisa</b> fica para quando realmente não deu. Se usar, registre com sinceridade: a equipe ajusta melhor com a informação real.<br><br>Na aba Dieta, você acompanha quanto da sua semana ficou no plano.",
+   "acao": {
+    "rotulo": "Abrir a dieta",
+    "ir": "tb-d"
+   }
+  },
+  {
    "data": "2026-11-22",
    "seq": "b",
    "titulo": "Lembretes no celular, nos horários que você escolher",
@@ -26,7 +36,7 @@
    "data": "2026-11-22",
    "titulo": "Comeu outra coisa? Agora é só descrever ou fotografar",
    "resumo": "Na Dieta, em Comi outra coisa, escreva o que comeu ou mande uma foto do prato ou do rótulo. O app calcula as calorias e os macros para você.",
-   "texto": "<b>Descreva o que comeu</b>: em <b>Comi outra coisa</b>, escreva do seu jeito, por exemplo \"4 colheres de arroz, 1 concha de feijão e um bife médio\", e toque em <b>Calcular</b>. A inteligência artificial do app separa os alimentos e estima gramas, calorias, proteína, carboidrato e gordura.<br><br><b>Foto do prato ou do rótulo</b>: no mesmo lugar, toque em <b>Foto do prato ou do rótulo</b>. Com a foto da tabela nutricional da embalagem, os valores vêm direto do rótulo.<br><br><b>Você confere antes de salvar</b>: cada item calculado aparece com a marca <b>IA</b>. Toque em <b>ajustar</b> para mudar a quantidade; as calorias acompanham. A busca por alimento continua lá embaixo, se preferir.<br><br><b>Também novo</b>: <b>Comi só uma parte</b>, para marcar quanto você comeu de cada alimento da refeição, e <b>Fez outra atividade?</b>, no treino, para registrar trilha, luta, dança, esporte ou corrida fora do plano. Tudo entra no seu gasto e no seu balanço do dia.",
+   "texto": "<b>Descreva o que comeu</b>: em <b>Comi outra coisa</b>, escreva do seu jeito, por exemplo \"4 colheres de arroz, 1 concha de feijão e um bife médio\", e toque em <b>Calcular</b>. A inteligência artificial do app separa os alimentos e estima gramas, calorias, proteína, carboidrato e gordura.<br><br><b>Foto do prato ou do rótulo</b>: no mesmo lugar, toque em <b>Foto do prato ou do rótulo</b>. Com a foto da tabela nutricional da embalagem, os valores vêm direto do rótulo.<br><br><b>Você confere antes de salvar</b>: cada item calculado aparece com a marca <b>IA</b>. Toque em <b>ajustar</b> para mudar a quantidade; as calorias acompanham. A busca por alimento continua lá embaixo, se preferir.<br><br><b>Também novo</b>: <b>Comi só uma parte</b>, para marcar quanto você comeu de cada alimento da refeição, e <b>Fez outra atividade?</b>, no treino, para registrar trilha, luta, dança, esporte ou corrida fora do plano. Tudo entra no seu gasto e no seu balanço do dia.<br><br><b>Importante</b>: use só quando não der para seguir o plano. A meta é seguir o planejamento em pelo menos 80% das refeições.",
    "acao": {
     "rotulo": "Abrir a dieta",
     "ir": "tb-d"
