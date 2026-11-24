@@ -1860,6 +1860,7 @@ function iniciarDescanso(seg, tit, chave, row) {
   const el = $('tmr'); el.hidden = false; el.classList.remove('fim'); document.body.classList.add('tmr-on'); $('tmrN').textContent = tit; el.querySelector('.tmr-x').textContent = 'Pular';
   pintarTmr(); _tmI = setInterval(pintarTmr, 250);
   $('tmrPip').hidden = !pipPossivel(); if (document.hidden) notifDescanso('rodando');
+  descansoServidor();
 }
 function pintarTmr() {
   if (!_tm || _tm.ok) return; const r = Math.max(0, Math.ceil((_tm.fim - Date.now()) / 1000));
@@ -1870,7 +1871,7 @@ function pintarTmr() {
   if (document.hidden) notifDescanso('fim'); else fecharNotifDescanso(); desenharPip();
   _tmF = setTimeout(pararDescanso, 12000);
 }
-function pararDescanso() { clearInterval(_tmI); clearTimeout(_tmF); _tm = null; const el = $('tmr'); if (el) el.hidden = true; document.body.classList.remove('tmr-on'); fecharNotifDescanso(); desenharPip(); }
+function pararDescanso() { if (_tm && !_tm.ok) descansoServidor(true); clearInterval(_tmI); clearTimeout(_tmF); _tm = null; const el = $('tmr'); if (el) el.hidden = true; document.body.classList.remove('tmr-on'); fecharNotifDescanso(); desenharPip(); }
 /* ---------- descanso fora do app ----------
    1) ao sair do app durante o descanso, uma notificação mostra a hora em que ele acaba (e, no Android, avisa quando acaba);
    2) onde o celular permite, uma janela flutuante (picture-in-picture) com o cronômetro, que fica aberta durante o treino */
@@ -1919,7 +1920,21 @@ async function abrirPip() {
 $('tmrPip').addEventListener('click', e => { e.stopPropagation(); abrirPip(); });
 $('tmr').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.classList.contains('tmr-x')) return pararDescanso(); if (!_tm || _tm.ok) return;
   const d = +b.dataset.d, resta = (_tm.fim - Date.now()) / 1000; if (resta + d < 3) return pararDescanso();
-  _tm.fim += d * 1000; _tm.tot = Math.max(15, _tm.tot + d); _descAj[_tm.chave] = _tm.tot; telaAcesa(); pintarTmr(); });
+  _tm.fim += d * 1000; _tm.tot = Math.max(15, _tm.tot + d); _descAj[_tm.chave] = _tm.tot; telaAcesa(); pintarTmr();
+  clearTimeout(_tmAj); _tmAj = setTimeout(() => descansoServidor(), 1500); });
+/* aviso do fim do descanso pelo servidor (chega com o app fechado, inclusive no iPhone): só para quem ativou as notificações.
+   Com o app aberto na hora do fim, o próprio app cancela o aviso: a barra na tela já avisa. */
+let _tmAj = 0, _tmSv = 0;
+function descansoServidor(cancelar) {
+  try {
+    if (!(LS.get('push', null) || {}).on || !('Notification' in window) || Notification.permission !== 'granted' || !T || !PIN) return;
+    clearTimeout(_tmSv);
+    if (cancelar || !_tm) { fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, p: PIN, cancelar: true }), keepalive: true }).catch(() => {}); return; }
+    const rid = Math.random().toString(36).slice(2, 12); _tm.rid = rid;
+    fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, p: PIN, rid, fim: _tm.fim, prox: proxDesc() }) }).catch(() => {});
+    _tmSv = setTimeout(() => { if (_tm && _tm.rid === rid && !document.hidden) descansoServidor(true); }, Math.max(0, _tm.fim - Date.now() - 3500));
+  } catch (e) {}
+}
 
 /* ---------- 2.1: miniatura no topo do exercício e vídeo sem sair do app ---------- */
 function fecharVideo(viaVoltar) { const o = $('vov'); if (!o) return; const v = o.querySelector('video'); if (v) { try { v.pause(); } catch (e) {} } o.remove(); document.body.style.overflow = ''; if (!viaVoltar && history.state && history.state.vov) history.back(); }

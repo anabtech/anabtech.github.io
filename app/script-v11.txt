@@ -3,7 +3,7 @@
 // progresso e manda os avisos de registro (repositório privado __REPO__).
 const GITHUB_TOKEN = '__TOKEN__';
 const REPO = '__REPO__';
-const VERSAO = 10;
+const VERSAO = 11;
 
 // Rode uma vez pelo botão Executar, com "autorizar" escolhido ao lado de Depuração.
 // Libera o envio por e-mail, usado quando o ntfy não entrega o aviso.
@@ -22,6 +22,7 @@ function doPost(e) {
     if (d && d.acao === 'push') return json(pushAlunoSalvar(d));
     if (d && d.acao === 'pushTreinador') return json(pushTreinador(d));
     if (d && d.acao === 'pushAluno') return json(pushParaAluno(d));
+    if (d && d.acao === 'descanso') return json(descansoAvisar(d));
     if (raw.length > 150000) return resposta('invalido');
     if (d && d.acao === 'registro') return resposta(registrar(d));
     const pk = limpar(d);
@@ -301,6 +302,22 @@ function pushParaTreinador(titulo, texto, abre) {
   return r.ok;
 }
 // o app do treinador avisa um aluno: resposta a uma observação ou protocolo atualizado
+// ---------- descanso do treino: avisa quando acaba, mesmo com o app fechado (o iPhone pausa o app em segundo plano) ----------
+// o app chama no início do descanso; a execução espera até o fim e manda a notificação, a menos que o descanso tenha sido pulado ou mudado
+function descansoAvisar(d) {
+  const t = String(d.t || ''), r = conferir(t, d.p); if (r.erro) return { erro: r.erro };
+  const id = idAluno(t), C = CacheService.getScriptCache(), k = 'dsc_' + id, rid = String(d.rid || '').slice(0, 40);
+  if (d.cancelar) { C.put(k, 'x', 600); return { ok: true, cancelado: true }; }
+  const fim = Number(d.fim), espera = fim - Date.now();
+  if (!/^[a-z0-9]{4,40}$/.test(rid) || !(espera > 2000) || espera > 300500) return { erro: 'tempo' };
+  const s = lerProp('ps_' + id); if (!s || !s.tk || !s.tk.length) return { ok: true, sem: true };
+  C.put(k, rid, 900);
+  Utilities.sleep(Math.min(299000, Math.max(0, espera - 1200)));
+  if (C.get(k) !== rid) return { ok: true, cancelado: true };
+  const prox = String(d.prox || '').slice(0, 90);
+  const res = pushEnviar(s.tk, { t: 'Acabou o descanso', b: prox ? 'Agora: ' + prox : 'Volte para a próxima série.', u: linkAluno(t), g: 'anab-descanso' });
+  return { ok: true, enviado: res.ok };
+}
 function pushParaAluno(d) {
   if (!treinadorOk(d)) return { erro: 'auth' };
   const s = lerProp('ps_' + String(d.alvo || '')); if (!s || !s.tk || !s.tk.length) return { ok: true, sem: true };
