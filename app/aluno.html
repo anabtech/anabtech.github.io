@@ -1008,6 +1008,8 @@ async function montarNovidades(sec) {
   let L = [];
   try { const r = await fetch('novidades.json?v=' + Date.now(), { cache: 'no-store' }); L = (await r.json()).itens || []; } catch (e) { L = LS.get('nov', []); }
   if (L.length) LS.set('nov', L);
+  /* novidade que leva a uma aba que este aluno não tem (ex.: Dieta desligada) não aparece */
+  L = L.filter(n => !(n.acao && n.acao.ir && !document.getElementById(n.acao.ir)));
   L.sort((x, y) => String(y.data).localeCompare(String(x.data)));
   const nvK = n => String(n.data) + (n.seq || ''); const visto = LS.get('novVisto', '');
   const novas = L.filter(n => nvK(n) > visto);
