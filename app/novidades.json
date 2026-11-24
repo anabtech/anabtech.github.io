@@ -1,6 +1,16 @@
 {
  "itens": [
   {
+   "data": "2026-11-24",
+   "titulo": "O descanso avisa quando acaba, mesmo fora do app",
+   "resumo": "Respondendo mensagem no intervalo? Quando o descanso terminar, chega uma notificação com o próximo exercício.",
+   "texto": "Durante o treino, ao marcar uma série, o cronômetro de descanso começa. Agora você pode sair do app para responder uma mensagem: quando o descanso acabar, chega a notificação <b>Acabou o descanso</b>, com o que vem a seguir.<br><br><b>Para receber</b>: as notificações precisam estar ativadas neste celular. Toque no sino, em <b>Notificações</b>, e ative. No iPhone, o app precisa estar na tela de início.<br><br><b>Quer ver antes?</b> No sino, toque em <b>Testar o descanso</b> e saia do app: em 45 segundos chega o aviso.<br><br>Se você estiver com o app aberto, o aviso aparece na própria tela, sem notificação.",
+   "acao": {
+    "rotulo": "Abrir o treino",
+    "ir": "tb-t"
+   }
+  },
+  {
    "data": "2026-11-23",
    "titulo": "O plano em primeiro lugar: a regra dos 80%",
    "resumo": "O resultado vem do planejamento. Siga o plano em pelo menos 80% das refeições e use Comi outra coisa só em último caso.",
