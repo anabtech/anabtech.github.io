@@ -1888,7 +1888,8 @@ async function fecharNotifDescanso() { try { if (!navigator.serviceWorker) retur
 document.addEventListener('visibilitychange', () => { if (document.hidden) { if (_tm && !_tm.ok && !(_pip && _pip.on)) notifDescanso('rodando'); } else fecharNotifDescanso(); });
 let _pip = null, _pipI = 0;
 function pipPossivel() {
-  if (!HTMLCanvasElement.prototype.captureStream) return false; const v = document.createElement('video');
+  /* no iPhone com o app na tela inicial a janela flutuante não abre (limitação da Apple): o botão fica escondido */
+  if (ehIOS() || !HTMLCanvasElement.prototype.captureStream) return false; const v = document.createElement('video');
   return !!((document.pictureInPictureEnabled && v.requestPictureInPicture) || (typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture')));
 }
 function desenharPip() {
