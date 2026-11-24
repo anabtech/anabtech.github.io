@@ -149,6 +149,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .nt-aviso{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;margin-bottom:10px}.nt-aviso b{display:block;font-size:14px;color:#9a3412}.nt-aviso span{display:block;font-size:13px;line-height:1.45;color:#7c2d12;margin-top:2px}
 .nt-b{background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:12px;margin-top:10px}
 .nt-r{display:flex;align-items:flex-start;gap:12px}.nt-r>div{flex:1;min-width:0}.nt-r b{display:block;font-size:14.5px}.nt-r span{display:block;font-size:12.5px;line-height:1.45;color:var(--ink-3);margin-top:2px}
+.nt-tst{flex:none;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:2px}
 .nt-sw{flex:none;position:relative;width:46px;height:28px;border-radius:999px;border:0;background:var(--rule);cursor:pointer;margin-top:2px;transition:background .15s}.nt-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
 .nt-sw[aria-checked=true]{background:var(--ink)}.nt-sw[aria-checked=true] i{transform:translateX(18px)}
 .nt-hs{margin-top:10px;display:flex;flex-direction:column;gap:6px}
@@ -1170,11 +1171,14 @@ function abrirNotif() {
         <label class="nt-h" id="ntNh"${p.noite ? '' : ' hidden'}><span>Horário</span><input type="time" id="ntNt" value="${esc(p.noite || '21:30')}"></label></section>
       <section class="nt-b"><div class="nt-r"><div><b>Avisos da equipe</b><span>Quando a equipe responder uma observação sua ou atualizar o seu protocolo.</span></div>${sw('ntE', p.eq !== false, 'Avisos da equipe')}</div></section>
       ${SNAP.proprio ? '' : `<section class="nt-b"><div class="nt-r"><div><b>Feedback da semana</b><span>Na sexta, às 9h, se você ainda não tiver mandado.</span></div>${sw('ntF', p.fb !== false, 'Feedback da semana')}</div></section>`}
+      <section class="nt-b"><div class="nt-r"><div><b>Cronômetro de descanso fora do app</b><span>Teste sem mexer no seu treino: começa um descanso de 45 segundos, e nada é salvo.</span></div><button type="button" class="nt-tst" id="ntTd">Testar</button></div></section>
       <p class="nt-m" id="ntM"></p></div>
     <div class="ov-f">${on ? '<button type="button" id="ntOff">Desligar</button>' : '<button type="button" id="ntC">Agora não</button>'}<button type="button" class="pri" id="ntOk"${est === 'ok' ? '' : ' disabled'}>${on ? 'Salvar' : 'Ativar notificações'}</button></div></div></div>`);
   document.body.style.overflow = 'hidden';
   const ov = $('ovNt'), fechar = () => { ov.remove(); document.body.style.overflow = ''; pintarLemb(); primeirosPassos(); };
   ov.querySelector('.ov-x').onclick = fechar; ov.onclick = ev => { if (ev.target === ov) fechar(); };
+  $('ntTd').onclick = () => { fechar(); iniciarDescanso(45, 'Descanso de teste · a seguir: nada, é só um teste', 'teste|' + Date.now(), null);
+    aviso(pipPossivel() ? 'Toque no ícone da janela na barra preta e depois saia do app. Ou só saia do app para ver o aviso.' : 'Agora saia do app para ver o aviso do descanso.', 5000); };
   if ($('ntC')) $('ntC').onclick = () => { LS.set('pushNao', hojeISO()); fechar(); cardsMG(); };
   ov.querySelectorAll('.nt-sw').forEach(b => b.onclick = () => { const v = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', String(v));
     if (b.id === 'ntR') $('ntHs').hidden = !v; if (b.id === 'ntN') $('ntNh').hidden = !v; });
