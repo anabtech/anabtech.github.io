@@ -149,6 +149,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .nt-aviso{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;margin-bottom:10px}.nt-aviso b{display:block;font-size:14px;color:#9a3412}.nt-aviso span{display:block;font-size:13px;line-height:1.45;color:#7c2d12;margin-top:2px}
 .nt-b{background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:12px;margin-top:10px}
 .nt-r{display:flex;align-items:flex-start;gap:12px}.nt-r>div{flex:1;min-width:0}.nt-r b{display:block;font-size:14.5px}.nt-r span{display:block;font-size:12.5px;line-height:1.45;color:var(--ink-3);margin-top:2px}
+.nv-at{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}.nv-at button{text-align:left;border:1px solid var(--rule);background:var(--card);border-radius:14px;padding:13px 14px;font:inherit;color:var(--ink);cursor:pointer}.nv-at b{display:block;font-size:14px}.nv-at span{display:block;font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.35}
 .nt-tst{flex:none;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:2px}
 .nt-sw{flex:none;position:relative;width:46px;height:28px;border-radius:999px;border:0;background:var(--rule);cursor:pointer;margin-top:2px;transition:background .15s}.nt-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
 .nt-sw[aria-checked=true]{background:var(--ink)}.nt-sw[aria-checked=true] i{transform:translateX(18px)}
@@ -1015,8 +1016,12 @@ async function montarNovidades(sec) {
   L.sort((x, y) => String(y.data).localeCompare(String(x.data)));
   const nvK = n => String(n.data) + (n.seq || ''); const visto = LS.get('novVisto', '');
   const novas = L.filter(n => nvK(n) > visto);
-  sec.innerHTML = `<h2 class="nv-t">Novidades do app</h2><p class="nv-s">Tudo de novo que chega para você no app da AnabTech.</p>` +
+  sec.innerHTML = `<h2 class="nv-t">Novidades do app</h2><p class="nv-s">Tudo de novo que chega para você no app da AnabTech.</p>
+    <div class="nv-at"><button type="button" id="nvNt"><b>Notificações</b><span>Lembretes e avisos no celular</span></button><button type="button" id="nvTd"><b>Testar o descanso</b><span>Cronômetro fora do app, 45 s</span></button></div>` +
     (L.length ? L.map(n => `<article class="nv${nvK(n) > visto ? ' novo' : ''}">${n.img ? `<img src="${esc(n.img)}" alt="" loading="lazy">` : ''}<div class="nv-b"><span class="nv-d">${esc(dataBR(n.data))}${nvK(n) > visto ? ' · <b>novo</b>' : ''}</span><h3>${esc(n.titulo)}</h3><p>${n.texto}</p>${n.acao ? `<button type="button" class="nv-a" data-go="${esc(n.acao.ir || '')}">${esc(n.acao.rotulo)}</button>` : ''}</div></article>`).join('') : '<p class="nv-s">Nenhuma novidade por enquanto.</p>');
+  $('nvNt').onclick = () => abrirNotif();
+  $('nvTd').onclick = () => { iniciarDescanso(45, 'Descanso de teste · a seguir: nada, é só um teste', 'teste|' + Date.now(), null);
+    aviso(pipPossivel() ? 'Toque no ícone da janela na barra preta e depois saia do app. Ou só saia do app para ver o aviso.' : 'Agora saia do app para ver o aviso do descanso.', 5000); };
   sec.querySelectorAll('.nv-a').forEach(b => b.onclick = () => { const id = b.dataset.go; const r = id && document.getElementById(id); if (r) { r.checked = true; r.dispatchEvent(new Event('change')); window.scrollTo(0, 0); } });
   const marcar = () => { if (L.length) LS.set('novVisto', nvK(L[0])); $('nvDot').hidden = true; const c = $('nvAv'); if (c) c.remove(); sec.querySelectorAll('.nv.novo').forEach(x => x.classList.remove('novo')); };
   if (novas.length) {
