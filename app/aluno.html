@@ -1380,7 +1380,15 @@ function montarTreino(app) {
         if (!kg.value.trim() && kg.dataset.u) kg.value = kg.dataset.u; if (!rp.value.trim() && rp.dataset.u) rp.value = rp.dataset.u;
         if (!rp.value.trim()) { salvarRascunho(k); rp.focus(); aviso('Anote as repetições e toque no ✓ de novo.'); return; }
         row.classList.add('ok'); b.setAttribute('aria-pressed', 'true'); marcarInicio(k); salvarRascunho(k); art.classList.add('feito'); LS.set('okUsos', LS.get('okUsos', 0) + 1);
-        const d = descansoDaLinha(row); iniciarDescanso(d.seg, d.tit, x.uid + '|' + d.tipo, row); });
+        const rs = [...div.querySelectorAll('.lg-r')], blocoMeio = /^(Bloco|C\d)/.test(row.dataset.rot || '') && rs.indexOf(row) < rs.length - 1;
+        if (art.classList.contains('bi1') && !blocoMeio) { /* bi-set: sem descanso entre A1 e A2 — vai direto para o par (entre blocos de cluster, o descanso curto continua) */
+          const par = art.nextElementSibling, n = par && par.classList.contains('bi2') ? curtoN((par.querySelector('.ex-name') || {}).textContent || '') : '';
+          if (_tm && !_tm.ok) pararDescanso(); aviso(n ? 'Sem pausa: agora ' + n : 'Sem pausa: vá para o próximo do bi-set', 2500);
+          if (par) { const alvo = [...par.querySelectorAll('.lg-r')].find(r => !r.classList.contains('ok')) || par; setTimeout(() => alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250); }
+          return; }
+        const d = descansoDaLinha(row); iniciarDescanso(d.seg, d.tit, x.uid + '|' + d.tipo, row);
+        if (art.classList.contains('bi2')) { const a1 = art.previousElementSibling; if (a1 && a1.classList.contains('bi1')) { const pend = [...a1.querySelectorAll('.lg-r')].find(r => !r.classList.contains('ok'));
+          if (pend) { const n1 = curtoN((a1.querySelector('.ex-name') || {}).textContent || ''), t = $('tmrN'); if (t) { const ro = pend.dataset.rot || ''; t.textContent = 'Descanso · a seguir: ' + n1 + (ro ? ', ' + (/^\d+$/.test(ro) ? 'série ' + ro : ro.toLowerCase()) : ''); } } } } });
       div.addEventListener('input', ev => { telaAcesa(); if (ev.target.classList.contains('aq-alvo')) { ev.target.dataset.mexeu = '1'; pintarAq(div); const sc = div.querySelector('.aq-src'); if (sc) sc.textContent = (/dumbbell/.test(div.querySelector('.lg-aq').dataset.eq) ? 'em cada halter · ' : '') + 'você ajustou'; } else marcarInicio(k); salvarRascunho(k); });
       if (r0.rir !== undefined && r0.rir !== '') div.dataset.rir = String(r0.rir);
       div.querySelectorAll('.lg-rir button').forEach(b => b.onclick = () => { div.dataset.rir = div.dataset.rir === b.dataset.r ? '' : b.dataset.r; div.querySelectorAll('.lg-rir button').forEach(o => o.classList.toggle('on', o.dataset.r === div.dataset.rir)); salvarRascunho(k); });
@@ -1820,9 +1828,10 @@ async function telaAcesa() {
 function soltarTela() { _wlAte = 0; clearTimeout(_wlT); const w = _wl; _wl = null; if (w) { try { w.release(); } catch (e) {} } }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; if (Date.now() < _wlAte) telaAcesa(); pintarTmr(); });
 function segDesc(txt) {
-  const t = String(txt || '').replace(',', '.'); let m = t.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)\s*(min|s)/);
-  if (m) return Math.round((+m[1] + +m[2]) / 2 * (m[3] === 'min' ? 60 : 1));
-  let s = 0; m = t.match(/(\d+(?:\.\d+)?)\s*min/); if (m) s += +m[1] * 60; m = t.match(/(\d+)\s*s(?![a-zà-ú])/i); if (m) s += +m[1]; return Math.round(s);
+  const t = String(txt || '').replace(',', '.'); let m = t.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)\s*(min|s)/i);
+  if (m) return Math.round((+m[1] + +m[2]) / 2 * (m[3].toLowerCase() === 'min' ? 60 : 1));
+  /* aceita "90 s", "90 seg" e "90 segundos" */
+  let s = 0; m = t.match(/(\d+(?:\.\d+)?)\s*min/i); if (m) s += +m[1] * 60; m = t.match(/(\d+)\s*(?:s|seg|segundos?)(?![a-zà-ú])/i); if (m) s += +m[1]; return Math.round(s);
 }
 /* descanso prescrito na tabela do exercício; "30–40 s antes" (backoff) vale para a pausa que vem antes daquela série */
 function descansoDaLinha(row) {
@@ -1878,7 +1887,12 @@ function ligarVideos(app) {
 }
 
 /* ---------- 2.2: começar treino e modo foco (um exercício por vez) ---------- */
-const passosDe = sess => [...sess.children].filter(e => !e.matches('.head,.fc-h,.fc-nav'));
+/* cada passo do modo foco é um grupo de elementos: o bi-set (A1 + A2) aparece junto, na mesma página */
+const passosDe = sess => { const E = [...sess.children].filter(e => !e.matches('.head,.fc-h,.fc-nav')), G = [];
+  for (let j = 0; j < E.length; j++) { if (E[j].classList.contains('bi1') && E[j + 1] && E[j + 1].classList.contains('bi2')) { G.push([E[j], E[j + 1]]); j++; } else G.push([E[j]]); }
+  return G; };
+const gTem = (g, c) => g.some(e => e.classList.contains(c)), gFeito = g => g.every(e => e.classList.contains('feito')), gLinhas = g => g.flatMap(e => [...e.querySelectorAll('.lg:not(.cdlg) .lg-r')]);
+const gNome = g => g.map(e => curtoN((e.querySelector('.ex-name') || {}).textContent || '')).filter(Boolean).join(' + ');
 function progDe(sess) { const R = [...sess.querySelectorAll('.lg:not(.cdlg) .lg-r')]; return [R.filter(r => r.classList.contains('ok') || r.querySelector('.rp').value.trim()).length, R.length]; }
 function pintarProg(k) {
   const sess = document.querySelector('.sess.s-' + k); if (!sess) return; const [f, t] = progDe(sess), go = sess.querySelector('.go');
@@ -1895,7 +1909,7 @@ function montarGo(sess, k) {
 }
 function entrarFoco(k, i, quieto) {
   const sess = document.querySelector('.sess.s-' + k); if (!sess) return; const P = passosDe(sess); if (!P.length) return;
-  if (i == null) { i = P.findIndex(p => !p.classList.contains('lg-fim') && [...p.querySelectorAll('.lg-r')].some(r => !r.classList.contains('ok') && !r.querySelector('.rp').value.trim())); if (i < 0) i = P.findIndex(p => !p.classList.contains('feito')); if (i < 0) i = P.length - 1; }
+  if (i == null) { i = P.findIndex(p => !gTem(p, 'lg-fim') && p.flatMap(e => [...e.querySelectorAll('.lg-r')]).some(r => !r.classList.contains('ok') && !r.querySelector('.rp').value.trim())); if (i < 0) i = P.findIndex(p => !gFeito(p)); if (i < 0) i = P.length - 1; }
   i = Math.max(0, Math.min(P.length - 1, i));
   sess.classList.add('foco'); document.body.classList.add('em-foco'); sess.dataset.i = i; LS.set('foco', { d: dataReg(), k, i });
   if (!sess.querySelector('.fc-h')) {
@@ -1910,18 +1924,18 @@ function entrarFoco(k, i, quieto) {
 }
 function pintarFoco(sess) {
   const P = passosDe(sess), i = Math.min(+sess.dataset.i || 0, P.length - 1), ult = i === P.length - 1, prox = P[i + 1];
-  P.forEach((p, j) => p.classList.toggle('cur', j === i));
-  const sig = P.map((p, j) => (j === i ? 'o' : '') + (p.classList.contains('feito') ? 'k' : '')).join(','), fs = sess.querySelector('.fc-s');
-  if (fs.dataset.sig !== sig) { fs.dataset.sig = sig; fs.innerHTML = P.map((p, j) => `<i data-i="${j}" class="${j === i ? 'on' : ''}${p.classList.contains('feito') ? ' ok' : ''}"></i>`).join(''); }
+  P.forEach((p, j) => p.forEach(e => e.classList.toggle('cur', j === i)));
+  const sig = P.map((p, j) => (j === i ? 'o' : '') + (gFeito(p) ? 'k' : '')).join(','), fs = sess.querySelector('.fc-s');
+  if (fs.dataset.sig !== sig) { fs.dataset.sig = sig; fs.innerHTML = P.map((p, j) => `<i data-i="${j}" class="${j === i ? 'on' : ''}${gFeito(p) ? ' ok' : ''}"></i>`).join(''); }
   sess.querySelector('.fc-c').textContent = ult ? 'Fim' : `${i + 1} de ${P.length - 1}`;
   sess.querySelector('.fc-a').disabled = i === 0;
-  const bp = sess.querySelector('.fc-p'), nome = prox && !prox.classList.contains('lg-fim') ? ((prox.querySelector('.ex-name') || {}).textContent || 'próximo') : '';
-  bp.hidden = ult; bp.textContent = nome ? 'Próximo: ' + curtoN(nome) : 'Finalizar treino';
-  const R = [...P[i].querySelectorAll('.lg:not(.cdlg) .lg-r')]; bp.classList.toggle('vai', R.length > 0 && R.every(r => r.classList.contains('ok')));
+  const bp = sess.querySelector('.fc-p'), nome = prox && !gTem(prox, 'lg-fim') ? (gNome(prox) || 'próximo') : '';
+  bp.hidden = ult; bp.textContent = nome ? 'Próximo: ' + nome : 'Finalizar treino';
+  const R = gLinhas(P[i]); bp.classList.toggle('vai', R.length > 0 && R.every(r => r.classList.contains('ok')));
 }
 function sairFoco(k, quieto) {
   const sess = document.querySelector('.sess.s-' + k); LS.del('foco'); document.body.classList.remove('em-foco'); if (!sess || !sess.classList.contains('foco')) return;
-  sess.classList.remove('foco'); passosDe(sess).forEach(p => p.classList.remove('cur')); if (!quieto) window.scrollTo(0, 0);
+  sess.classList.remove('foco'); passosDe(sess).forEach(p => p.forEach(e => e.classList.remove('cur'))); if (!quieto) window.scrollTo(0, 0);
 }
 
 /* ---------- 2.2: resumo do treino, recordes e card para compartilhar ---------- */
