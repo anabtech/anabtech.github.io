@@ -1911,6 +1911,8 @@ function entrarFoco(k, i, quieto) {
   const sess = document.querySelector('.sess.s-' + k); if (!sess) return; const P = passosDe(sess); if (!P.length) return;
   if (i == null) { i = P.findIndex(p => !gTem(p, 'lg-fim') && p.flatMap(e => [...e.querySelectorAll('.lg-r')]).some(r => !r.classList.contains('ok') && !r.querySelector('.rp').value.trim())); if (i < 0) i = P.findIndex(p => !gFeito(p)); if (i < 0) i = P.length - 1; }
   i = Math.max(0, Math.min(P.length - 1, i));
+  /* o treino em andamento pode ser de outro dia da semana (ex.: treino de segunda feito na terça): mostra esse dia */
+  const rd = document.getElementById('d-' + k); if (rd && !rd.checked) { rd.checked = true; rd.dispatchEvent(new Event('change', { bubbles: true })); }
   sess.classList.add('foco'); document.body.classList.add('em-foco'); sess.dataset.i = i; LS.set('foco', { d: dataReg(), k, i });
   if (!sess.querySelector('.fc-h')) {
     sess.insertAdjacentHTML('afterbegin', '<div class="fc-h"><button type="button" class="fc-x">‹ Lista</button><div class="fc-s" role="group" aria-label="Exercícios do treino"></div><b class="fc-c"></b></div>');
