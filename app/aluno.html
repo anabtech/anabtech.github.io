@@ -552,9 +552,12 @@ function aviso(t, ms = 2600) { const el = $('st'); el.textContent = t; el.classL
 
 /* ---------- link e código ---------- */
 /* ---------- veio do endereço antigo (mgcoach.github.io): traz o que estava guardado no celular ---------- */
+/* treinador dono desta página: vem no link (#t=…&c=…) e fica guardado junto com ele. Sem "c", é a AnabTech */
+const C_URL = (() => { try { const c = new URLSearchParams(location.hash.slice(1)).get('c') || new URLSearchParams(location.search).get('c') || ''; return /^[a-z0-9]{4,12}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
+const hashT = t => (t ? '#t=' + t + (C_URL ? '&c=' + C_URL : '') : '');
 let MIGROU = false;
 let ABRIR_REL = /[#&]rel=1(?:&|$)/.test(location.hash);   /* link do relatório que o treinador mandou */
-if (ABRIR_REL) { const t0 = new URLSearchParams(location.hash.slice(1)).get('t'); try { history.replaceState(null, '', location.pathname + location.search + (t0 ? '#t=' + t0 : '')); } catch (e) {} }
+if (ABRIR_REL) { const t0 = new URLSearchParams(location.hash.slice(1)).get('t'); try { history.replaceState(null, '', location.pathname + location.search + hashT(t0)); } catch (e) {} }
 (function () {
   const m = location.hash.match(/[#&]mig=([^&]+)/); if (!m) return;
   try {
@@ -568,34 +571,52 @@ if (ABRIR_REL) { const t0 = new URLSearchParams(location.hash.slice(1)).get('t')
     }
   } catch (e) {}
   const t = new URLSearchParams(location.hash.slice(1)).get('t');
-  try { history.replaceState(null, '', location.pathname + location.search + (t ? '#t=' + t : '')); } catch (e) {}
+  try { history.replaceState(null, '', location.pathname + location.search + hashT(t)); } catch (e) {}
 })();
 function tokenDaUrl() { const h = new URLSearchParams(location.hash.slice(1)); return h.get('t') || new URLSearchParams(location.search).get('t') || ''; }
 let T = tokenDaUrl();
-if (T && T !== LS.get('t', '')) { ['pin', 'snap'].forEach(LS.del); LS.set('t', T); }
+if (T && T !== LS.get('t', '')) { ['pin', 'snap', 'c', 'mkNome'].forEach(LS.del); LS.set('t', T); }
+if (T && C_URL !== LS.get('c', '')) { if (C_URL) LS.set('c', C_URL); else LS.del('c'); LS.del('mkNome'); }
+const CT = T ? C_URL : LS.get('c', '');   /* id do treinador em toda chamada ao servidor */
 T = T || LS.get('t', '');
-if (T && !tokenDaUrl()) { try { history.replaceState(null, '', location.pathname + '#t=' + T); } catch (e) {} }
+if (T && !tokenDaUrl()) { try { history.replaceState(null, '', location.pathname + '#t=' + T + (CT ? '&c=' + CT : '')); } catch (e) {} }
 let PIN = LS.get('pin', ''), SNAP = LS.get('snap', null);
+/* marca: AnabTech, ou o nome da consultoria do treinador dono da página (vem na página publicada; antes do código, do servidor) */
+function marcaAl() { return CT ? String((SNAP && SNAP.marca) || LS.get('mkNome', '') || '') : ''; }
+const marcaTxt = () => marcaAl() || (CT ? 'seu coach' : 'AnabTech');
+const mkHTML = () => (CT ? esc(marcaAl()) : 'anab<b>tech</b>');
+const mkTroca = s => (CT ? String(s == null ? '' : s).replace(/\bd[ao] AnabTech\b/g, m => (m[1] === 'a' ? 'da ' : 'do ') + (marcaAl() || 'sua consultoria')).replace(/@anab\.tech/g, marcaAl()).replace(/AnabTech/g, marcaAl() || 'sua consultoria') : s);
+const SYM_AL = '<svg class="sym" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 82 L50 38 L76 82" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 66 H63" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="18" r="8" fill="currentColor"/></svg>';
+const symHTML = () => (CT ? `<span class="sym" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;padding:0;font:700 14px 'Space Grotesk',sans-serif">${esc((marcaAl() || 'C').trim().charAt(0).toUpperCase())}</span>` : SYM_AL);
+/* ícone e nome do app na tela inicial com a marca do treinador */
+function iconeMarca() {
+  if (!CT) return; const nome = marcaAl(); if (!nome) return;
+  try { document.title = nome + ' · Minha página'; const mt = document.querySelector('meta[name=apple-mobile-web-app-title]'); if (mt) mt.content = nome.slice(0, 14);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 360; const g = cv.getContext('2d');
+    g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 360, 360); g.fillStyle = '#c8ff3d'; g.font = '700 210px "Space Grotesk", Inter, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nome.trim().charAt(0).toUpperCase(), 180, 192);
+    const u = cv.toDataURL('image/png'); document.querySelectorAll('link[rel=apple-touch-icon],link[rel=icon]').forEach(l => l.setAttribute('href', u)); } catch (e) {}
+}
+if (CT && !marcaAl()) fetch(API + '?acao=marca&c=' + CT, { cache: 'no-store' }).then(r => r.json()).then(j => { if (j && j.ok && j.nome) { LS.set('mkNome', String(j.nome).slice(0, 40)); iconeMarca(); document.querySelectorAll('.tela .mk').forEach(el => { el.innerHTML = mkHTML(); }); } }).catch(() => {});
 /* perfil próprio do treinador: ícone com fundo preto para não confundir com o app da consultoria (verde) na tela inicial */
-function iconePerfil() { const pr = !!(SNAP && SNAP.proprio), sfx = pr ? '-preto' : '';
+function iconePerfil() { if (CT) return iconeMarca(); const pr = !!(SNAP && SNAP.proprio), sfx = pr ? '-preto' : '';
   const at = document.querySelector('link[rel=apple-touch-icon]'), fv = document.querySelector('link[rel=icon]');
   if (at && at.getAttribute('href') !== 'apple-touch-icon' + sfx + '.png') at.setAttribute('href', 'apple-touch-icon' + sfx + '.png');
   if (fv && fv.getAttribute('href') !== 'favicon' + sfx + '.png') fv.setAttribute('href', 'favicon' + sfx + '.png'); }
 iconePerfil();
 
 async function buscar(pin) {
-  const r = await fetch(`${API}?acao=aluno&t=${encodeURIComponent(T)}&p=${encodeURIComponent(pin)}`, { cache: 'no-store' });
+  const r = await fetch(`${API}?acao=aluno&t=${encodeURIComponent(T)}&p=${encodeURIComponent(pin)}${CT ? '&c=' + CT : ''}`, { cache: 'no-store' });
   return r.json();
 }
 function telaSemLink() {
-  $('app').innerHTML = `<div class="tela"><span class="mk">anab<b>tech</b></span><h1>Link incompleto</h1><p>Abra de novo o link que seu coach mandou pelo WhatsApp.</p></div>`;
+  $('app').innerHTML = `<div class="tela"><span class="mk">${mkHTML()}</span><h1>Link incompleto</h1><p>Abra de novo o link que seu coach mandou pelo WhatsApp.</p></div>`;
 }
 function telaInativa() {
   ['pin', 'snap'].forEach(LS.del);
-  $('app').innerHTML = `<div class="tela"><span class="mk">anab<b>tech</b></span><h1>Página indisponível</h1><p>Esta página não está ativa no momento. Fale com seu coach pelo WhatsApp.</p></div>`;
+  $('app').innerHTML = `<div class="tela"><span class="mk">${mkHTML()}</span><h1>Página indisponível</h1><p>Esta página não está ativa no momento. Fale com seu coach pelo WhatsApp.</p></div>`;
 }
 function telaPin(msg) {
-  $('app').innerHTML = `<div class="tela"><span class="mk">anab<b>tech</b></span><h1>Sua página</h1><p>Digite o código de 4 números que seu coach mandou junto com o link.</p>
+  $('app').innerHTML = `<div class="tela"><span class="mk">${mkHTML()}</span><h1>Sua página</h1><p>Digite o código de 4 números que seu coach mandou junto com o link.</p>
     <form id="pf"><div class="pin">${[0, 1, 2, 3].map(i => `<input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Número ${i + 1}" data-i="${i}">`).join('')}</div>
     <p class="erro" id="pe">${esc(msg || '')}</p><button class="bt" id="pb" type="submit" style="margin-top:12px">Entrar</button></form></div>`;
   const ins = [...document.querySelectorAll('.pin input')];
@@ -629,7 +650,7 @@ async function enviarFila() {
   try {
     for (const reg of fila()) {
       let r = '';
-      try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'registro', t: T, p: PIN, reg }) }); r = (await res.text()).trim(); }
+      try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'registro', t: T, c: CT || undefined, p: PIN, reg }) }); r = (await res.text()).trim(); }
       catch (e) { break; }
       if (r === 'ok' || r === 'invalido') { LS.set('fila', fila().filter(x => !(x.id === reg.id && x.tipo === reg.tipo && x._v === reg._v))); enviados++; }
       else if (r === 'codigo' || r === 'link') { LS.del('pin'); PIN = ''; return r === 'link' ? telaInativa() : telaPin('O código mudou. Peça o código novo ao seu coach.'); }
@@ -656,7 +677,7 @@ function montar() { iconePerfil();
   doc.querySelectorAll('.vlink img').forEach(i => i.setAttribute('loading', 'lazy'));
   $('app').innerHTML = doc.body.innerHTML;
   const app = $('app');
-  { const mk = app.querySelector('.bar .mark'); if (mk) mk.innerHTML = '<svg class="sym" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 82 L50 38 L76 82" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 66 H63" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="18" r="8" fill="currentColor"/></svg><span>' + mk.innerHTML + '</span>'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.content = '#0b0c0e'; }
+  { const mk = app.querySelector('.bar .mark'); if (mk) mk.innerHTML = symHTML() + '<span>' + (CT ? mkHTML() || mk.innerHTML : mk.innerHTML) + '</span>'; const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.content = '#0b0c0e'; }
   /* aba Feedback */
   const radios = app.querySelectorAll('input.rd[name=tab]'); const ult = radios[radios.length - 1];
   ult.insertAdjacentHTML('afterend', '<input type="radio" class="rd" name="tab" id="tb-f">');
@@ -1022,11 +1043,12 @@ async function montarNovidades(sec) {
   try { const r = await fetch('novidades.json?v=' + Date.now(), { cache: 'no-store' }); L = (await r.json()).itens || []; } catch (e) { L = LS.get('nov', []); }
   if (L.length) LS.set('nov', L);
   /* novidade que leva a uma aba que este aluno não tem (ex.: Dieta desligada) não aparece */
+  if (CT) L = L.map(n => ({ ...n, titulo: mkTroca(n.titulo), resumo: mkTroca(n.resumo), texto: mkTroca(n.texto) }));
   L = L.filter(n => !(n.acao && n.acao.ir && !document.getElementById(n.acao.ir)));
   L.sort((x, y) => String(y.data).localeCompare(String(x.data)));
   const nvK = n => String(n.data) + (n.seq || ''); const visto = LS.get('novVisto', '');
   const novas = L.filter(n => nvK(n) > visto);
-  sec.innerHTML = `<h2 class="nv-t">Novidades do app</h2><p class="nv-s">Tudo de novo que chega para você no app da AnabTech.</p>
+  sec.innerHTML = `<h2 class="nv-t">Novidades do app</h2><p class="nv-s">${esc(mkTroca('Tudo de novo que chega para você no app da AnabTech.'))}</p>
     <div class="nv-at"><button type="button" id="nvNt"><b>Notificações</b><span>Lembretes e avisos no celular</span></button><button type="button" id="nvTd"><b>Testar o descanso</b><span>Cronômetro fora do app, 45 s</span></button></div>` +
     (L.length ? L.map(n => `<article class="nv${nvK(n) > visto ? ' novo' : ''}">${n.img ? `<img src="${esc(n.img)}" alt="" loading="lazy">` : ''}<div class="nv-b"><span class="nv-d">${esc(dataBR(n.data))}${nvK(n) > visto ? ' · <b>novo</b>' : ''}</span><h3>${esc(n.titulo)}</h3><p>${n.texto}</p>${n.acao ? `<button type="button" class="nv-a" data-go="${esc(n.acao.ir || '')}">${esc(n.acao.rotulo)}</button>` : ''}</div></article>`).join('') : '<p class="nv-s">Nenhuma novidade por enquanto.</p>');
   $('nvNt').onclick = () => abrirNotif();
@@ -1151,7 +1173,7 @@ function pushPrefs() {
 function diasDeTreino() { const T = SNAP.treino || {}; return Object.keys(T).filter(k => ((T[k].ex || []).length || (T[k].cardio || []).length)).map(k => DIAS_JS.indexOf(k)).filter(x => x >= 0); }
 async function pushEnviarPrefs(tk, teste) {
   const p = pushPrefs(), refs = refsDoDia();
-  const corpo = { acao: 'push', t: T, p: PIN, tk, on: true, teste: !!teste, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Bahia'), pp: !!SNAP.proprio, refs, td: diasDeTreino(),
+  const corpo = { acao: 'push', t: T, c: CT || undefined, p: PIN, tk, on: true, teste: !!teste, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Bahia'), pp: !!SNAP.proprio, refs, td: diasDeTreino(),
     pr: { rOn: !!p.rOn, ref: refs.map(n => ({ n, h: p.ref[n] || '' })), noite: p.noite || '', eq: p.eq !== false, fb: p.fb !== false && !SNAP.proprio } };
   const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) }).then(x => x.json());
   if (!r || !r.ok) throw new Error((r && r.erro) || 'falhou');
@@ -1174,7 +1196,7 @@ function abrirNotif() {
   const sw = (id, v, lbl) => `<button type="button" class="nt-sw" role="switch" id="${id}" aria-checked="${v ? 'true' : 'false'}" aria-label="${esc(lbl)}"><i></i></button>`;
   const bloqueio = est === 'ios' ? `<div class="nt-aviso"><b>No iPhone, as notificações só funcionam pelo ícone do app na tela inicial.</b><span>No Safari, toque em Compartilhar e em Adicionar à Tela de Início. Se aparecer a opção Abrir como App Web, deixe ligada. Depois feche o Safari, abra o app pelo ícone e ative aqui. O AnabTech só aparece em Ajustes, Notificações, depois que você permite por esse caminho.</span><span style="display:block;margin-top:6px">Se você já tem o ícone e mesmo assim está vendo este aviso, ele foi salvo como atalho do Safari: apague o ícone e adicione de novo com Abrir como App Web ligado.</span></div>`
     : est === 'iosVelho' ? `<div class="nt-aviso"><b>Este iPhone precisa de atualização para receber notificações do app.</b><span>As notificações funcionam a partir do iOS 16.4. Atualize em Ajustes, Geral, Atualização de Software e abra o app de novo pelo ícone.</span></div>`
-    : est === 'negado' ? `<div class="nt-aviso"><b>As notificações estão bloqueadas para o app.</b><span>${ehIOS() ? 'Libere em Ajustes, Notificações, AnabTech e volte aqui.' : 'Libere nos ajustes do celular (Notificações) ou nas permissões do site no navegador e volte aqui.'}</span></div>`
+    : est === 'negado' ? `<div class="nt-aviso"><b>As notificações estão bloqueadas para o app.</b><span>${ehIOS() ? `Libere em Ajustes, Notificações, ${marcaTxt()} e volte aqui.` : 'Libere nos ajustes do celular (Notificações) ou nas permissões do site no navegador e volte aqui.'}</span></div>`
     : est === 'sem' ? `<div class="nt-aviso"><b>Este navegador não recebe notificações.</b><span>Abra o app no Chrome (Android) ou pela tela inicial (iPhone).</span></div>`
     : est === 'off' ? `<div class="nt-aviso"><b>As notificações ainda não estão ativas no app.</b><span>Em breve.</span></div>` : '';
   document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovNt" role="dialog" aria-modal="true" aria-labelledby="ntT"><div class="ov-c">
@@ -1213,7 +1235,7 @@ function abrirNotif() {
     }
   };
   if ($('ntOff')) $('ntOff').onclick = async () => { const P2 = LS.get('push', null) || {};
-    try { await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'push', t: T, p: PIN, tk: P2.tk || '', on: false }) }); } catch (e) {}
+    try { await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'push', t: T, c: CT || undefined, p: PIN, tk: P2.tk || '', on: false }) }); } catch (e) {}
     LS.set('push', { on: false }); fechar(); aviso('Notificações desligadas neste celular'); };
 }
 /* linha na aba Dieta: mostra como estão os lembretes e abre as configurações */
@@ -1303,7 +1325,7 @@ function mostrarLembrete() {
 /* lembrete diário no calendário do celular (arquivo .ics com alarme todo dia) */
 function blocoCalendario() {
   const hs = [['7', '7h'], ['12', '12h'], ['19', '19h'], ['20', '20h'], ['21', '21h'], ['22', '22h']];
-  return `<div class="lcal"><h3>Lembrete diário para registrar</h3><p>Escolha um horário. O celular abre o calendário e cria um lembrete todo dia: "Registrar treino e refeições no app AnabTech".</p>
+  return `<div class="lcal"><h3>Lembrete diário para registrar</h3><p>Escolha um horário. O celular abre o calendário e cria um lembrete todo dia: "Registrar treino e refeições no app".</p>
     <div class="lh">${hs.map(h => `<a href="lembrete/${h[0]}h.ics" target="_blank" rel="noopener">${h[1]}</a>`).join('')}</div>
     <small>No iPhone, toque em "Adicionar tudo". No Android, abra o arquivo baixado com o app de calendário. Para tirar, é só apagar o evento.</small></div>`;
 }
@@ -1653,7 +1675,7 @@ function ditar(ta, bt, mudou) {
   try { r.start(); } catch (e) { fim(); }
 }
 function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em < 6 * 3600e3) return Promise.resolve(!!c.v);
-  return fetch(API + '?acao=versao', { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
+  return fetch(API + '?acao=versao' + (CT ? '&c=' + CT : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
 function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
 /* com "opt", a mesma tela serve só para escolher alimentos (troca de um item, algo além da refeição, fora das refeições) e devolve a lista em opt.ok */
 function abrirOutra(t, j, opt) {
@@ -1733,7 +1755,7 @@ function abrirOutra(t, j, opt) {
       iaTxt = ta.value.trim(); if (!iaTxt && !iaImg) { iaMsg = 'Escreva o que comeu ou escolha uma foto.'; desenhar(); setTimeout(() => { const t2 = $('ocIaT'); if (t2) t2.focus(); }, 30); return; }
       if (!navigator.onLine) { iaMsg = 'Sem internet agora. Use a busca abaixo ou tente daqui a pouco.'; desenhar(); return; }
       iaVai = true; iaMsg = ''; desenhar();
-      let r = null; try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'ia', t: T, p: PIN, txt: iaTxt, img: iaImg ? iaImg.b64 : '', ref: nome }) }); r = await res.json(); } catch (e) { r = null; }
+      let r = null; try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'ia', t: T, c: CT || undefined, p: PIN, txt: iaTxt, img: iaImg ? iaImg.b64 : '', ref: nome }) }); r = await res.json(); } catch (e) { r = null; }
       iaVai = false;
       if (r && r.ok) {
         const novos = (r.itens || []).map(x => ({ n: x.n, q: x.q, un: x.un, g: x.g, m: [x.kcal, x.p, x.c, x.gord], ia: 1 }));
@@ -1991,9 +2013,9 @@ function descansoServidor(cancelar) {
   try {
     if (!(LS.get('push', null) || {}).on || !('Notification' in window) || Notification.permission !== 'granted' || !T || !PIN) return;
     clearTimeout(_tmSv);
-    if (cancelar || !_tm) { fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, p: PIN, cancelar: true }), keepalive: true }).catch(() => {}); return; }
+    if (cancelar || !_tm) { fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, c: CT || undefined, p: PIN, cancelar: true }), keepalive: true }).catch(() => {}); return; }
     const rid = Math.random().toString(36).slice(2, 12); _tm.rid = rid;
-    fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, p: PIN, rid, fim: _tm.fim, prox: proxDesc() }) }).catch(() => {});
+    fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'descanso', t: T, c: CT || undefined, p: PIN, rid, fim: _tm.fim, prox: proxDesc() }) }).catch(() => {});
     _tmSv = setTimeout(() => { if (_tm && _tm.rid === rid && !document.hidden) descansoServidor(true); }, Math.max(0, _tm.fim - Date.now() - 3500));
   } catch (e) {}
 }
@@ -2137,7 +2159,7 @@ function abrirResumo(reg, k) {
   const R = contaResumo(reg), o = document.createElement('div'), sx = document.querySelector('.sess.s-' + k), pg = sx ? progDe(sx) : [0, 0], parcial = pg[1] > 0 && pg[0] < pg[1]; o.className = 'rs'; o.id = 'rs'; const ant = $('rs'); if (ant) ant.remove();
   const dia = DSEM[dowISO(R.data)] + ', ' + dataBR(R.data);
   const cel = [R.min ? [R.min, 'minutos'] : null, R.series ? [R.series, R.series === 1 ? 'série' : 'séries'] : null, R.vol ? [fmtN(R.vol), 'kg levantados'] : null, !R.vol && R.cardio ? [fmtN(R.cardio), 'min de cardio'] : null].filter(Boolean).slice(0, 3);
-  o.innerHTML = `<div class="rs-c" role="dialog" aria-modal="true" aria-label="Resumo do treino"><div class="rs-top"><span class="rs-mk"><svg class="sym" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 82 L50 38 L76 82" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 66 H63" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="18" r="8" fill="currentColor"/></svg><span>anab<b>tech</b></span></span><button type="button" class="rs-x" aria-label="Fechar">✕</button></div>
+  o.innerHTML = `<div class="rs-c" role="dialog" aria-modal="true" aria-label="Resumo do treino"><div class="rs-top"><span class="rs-mk">${symHTML()}<span>${mkHTML()}</span></span><button type="button" class="rs-x" aria-label="Fechar">✕</button></div>
     <p class="rs-k">Treino salvo</p><h2>${esc(R.nome)}</h2><p class="rs-d">${esc(dia)}</p>
     ${cel.length ? `<div class="rs-g" style="grid-template-columns:repeat(${cel.length},1fr)">${cel.map(c => `<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join('')}</div>` : ''}
     ${R.dv != null ? `<p class="rs-cmp">${R.dv > 1 ? `Você levantou <b>${R.dv}% a mais</b> que na última vez nos mesmos exercícios.` : R.dv < -1 && parcial ? `Treino parcial: <b>${pg[0]} de ${pg[1]}</b> séries marcadas. Se ainda vai fazer o resto, anote e salve de novo.` : R.dv < -1 ? `Volume <b>${-R.dv}% abaixo</b> da última vez. Acontece: sono, comida e cansaço mudam o dia.` : 'Mesmo volume da última vez. Constância é o que constrói.'}</p>` : '<p class="rs-cmp">Primeiro registro destes exercícios. No próximo treino você vê aqui a comparação e os seus recordes.</p>'}
@@ -2148,7 +2170,7 @@ function abrirResumo(reg, k) {
   const fechar = () => { o.remove(); document.body.style.overflow = ''; };
   o.querySelector('.rs-x').onclick = fechar; o.querySelector('.rs-ok').onclick = fechar;
   o.querySelector('.rs-sh').onclick = async ev => { const b = ev.currentTarget; b.disabled = true; b.textContent = 'Preparando a imagem…';
-    try { const blob = await cardTreino(R, dia), f = new File([blob], 'treino-anabtech.png', { type: 'image/png' });
+    try { const blob = await cardTreino(R, dia), f = new File([blob], (CT ? 'treino.png' : 'treino-anabtech.png'), { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] });
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); aviso('Imagem salva. Agora é só postar.'); }
     } catch (e) { if (!e || e.name !== 'AbortError') aviso('Não deu para gerar a imagem agora.'); }
@@ -2162,8 +2184,10 @@ async function cardTreino(R, dia) {
   const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
   /* marca */
   g.fillStyle = L; rr(M, 150, 92, 92, 22); g.fill();
+  if (CT) { g.fillStyle = '#0b0c0e'; g.font = '700 58px "Space Grotesk", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((marcaAl() || 'C').trim().charAt(0).toUpperCase(), M + 46, 199); g.textAlign = 'left';
+    g.textBaseline = 'alphabetic'; g.font = '700 54px "Space Grotesk", sans-serif'; g.fillStyle = '#fff'; g.fillText(marcaAl(), M + 116, 214); } else {
   g.save(); g.translate(M + 11, 161); g.scale(0.7, 0.7); g.strokeStyle = '#0b0c0e'; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 12; g.stroke(new Path2D('M24 82 L50 38 L76 82')); g.lineWidth = 9; g.stroke(new Path2D('M37 66 H63')); g.fillStyle = '#0b0c0e'; g.beginPath(); g.arc(50, 18, 8, 0, 7); g.fill(); g.restore();
-  g.textBaseline = 'alphabetic'; g.font = '700 54px "Space Grotesk", sans-serif'; g.fillStyle = '#fff'; g.fillText('anab', M + 116, 214); const wa = g.measureText('anab').width; g.font = '500 54px "Space Grotesk", sans-serif'; g.fillStyle = L; g.fillText('tech', M + 116 + wa, 214);
+  g.textBaseline = 'alphabetic'; g.font = '700 54px "Space Grotesk", sans-serif'; g.fillStyle = '#fff'; g.fillText('anab', M + 116, 214); const wa = g.measureText('anab').width; g.font = '500 54px "Space Grotesk", sans-serif'; g.fillStyle = L; g.fillText('tech', M + 116 + wa, 214); }
   /* título */
   g.fillStyle = L; g.font = '600 40px Inter, sans-serif'; g.fillText(R.k || 'Treino concluído', M, 600);
   let fs = 170; g.fillStyle = '#fff'; do { g.font = `700 ${fs}px "Space Grotesk", sans-serif`; fs -= 6; } while (g.measureText(R.nome).width > W - 2 * M && fs > 60); g.fillText(R.nome, M - 4, 600 + fs + 40);
@@ -2180,7 +2204,7 @@ async function cardTreino(R, dia) {
   R.PR.slice(0, 3).forEach(p => { if (y + 196 > H - 200) return; g.fillStyle = L; rr(M, y, W - 2 * M, 196, 34); g.fill(); g.fillStyle = '#0b0c0e'; g.font = '700 30px Inter, sans-serif'; g.fillText(R.prLab || 'Recorde pessoal', M + 40, y + 58);
     g.font = '700 46px "Space Grotesk", sans-serif'; g.fillText(corta(p.n, W - 2 * M - 80), M + 40, y + 114); g.font = '500 36px Inter, sans-serif'; g.fillText(`${kgTxt(p.kg)} kg × ${p.r}   ·   1RM estimado ${fmtN(p.e, 1)} kg`, M + 40, y + 164); y += 220; });
   /* rodapé */
-  g.fillStyle = '#fff'; g.font = '700 40px "Space Grotesk", sans-serif'; g.fillText('@anab.tech', M, H - 150); g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '500 34px Inter, sans-serif'; g.fillText('Consultoria on-line de hipertrofia', M, H - 96);
+  g.fillStyle = '#fff'; g.font = '700 40px "Space Grotesk", sans-serif'; g.fillText(CT ? marcaAl() : '@anab.tech', M, H - 150); g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '500 34px Inter, sans-serif'; g.fillText(CT ? 'Consultoria on-line' : 'Consultoria on-line de hipertrofia', M, H - 96);
   return await new Promise((ok, no) => c.toBlob(b => b ? ok(b) : no(new Error('img')), 'image/png'));
 }
 
@@ -2210,7 +2234,7 @@ function abrirMes() {
   const per = `${dataBR(isoMenos(29))} a ${dataBR(hojeISO())}`, sem = fmtN(R.treinos / 30 * 7, 1);
   const cel = [[String(R.treinos), R.treinos === 1 ? 'treino' : 'treinos'], R.vol ? [fmtN(R.vol), 'kg levantados'] : null, [String(R.PR.length), R.PR.length === 1 ? 'recorde' : 'recordes']].filter(Boolean);
   const li = [['Média por semana', `${sem} ${sem === '1' ? 'treino' : 'treinos'}`], R.cmin ? ['Cardio', fmtN(R.cmin) + ' min'] : null, R.peso ? ['Peso', `${fmtN(R.peso[0], 1)} → ${fmtN(R.peso[1], 1)} kg`] : null, R.dpc != null ? ['Dieta', `${R.dreg} ${R.dreg === 1 ? 'dia marcado' : 'dias marcados'} · ${R.dpc}% das refeições`] : null].filter(Boolean);
-  o.innerHTML = `<div class="rs-c" role="dialog" aria-modal="true" aria-label="Relatório dos últimos 30 dias"><div class="rs-top"><span class="rs-mk"><svg class="sym" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 82 L50 38 L76 82" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 66 H63" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="18" r="8" fill="currentColor"/></svg><span>anab<b>tech</b></span></span><button type="button" class="rs-x" aria-label="Fechar">✕</button></div>
+  o.innerHTML = `<div class="rs-c" role="dialog" aria-modal="true" aria-label="Relatório dos últimos 30 dias"><div class="rs-top"><span class="rs-mk">${symHTML()}<span>${mkHTML()}</span></span><button type="button" class="rs-x" aria-label="Fechar">✕</button></div>
     <p class="rs-k">Seus últimos 30 dias</p><h2 style="font-size:clamp(30px,9vw,42px)">${esc(per)}</h2>
     <div class="rs-g" style="grid-template-columns:repeat(${cel.length},1fr)">${cel.map(c => `<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join('')}</div>
     <div class="rs-li">${li.map(x => `<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>
@@ -2361,7 +2385,7 @@ function montarFotos(sec) {
       const k = L[i], ft = FOTOS[k], lab = box.querySelector(`.ft-s[data-pos="${k}"]`);
       bt.textContent = `Enviando ${i + 1} de ${L.length}…`; lab.classList.add('indo');
       let r = '';
-      try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'foto', t: T, p: PIN, foto: { id: ft.id, data: hojeISO(), pos: k, img: ft.b64 } }) }); r = (await res.text()).trim(); }
+      try { const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ acao: 'foto', t: T, c: CT || undefined, p: PIN, foto: { id: ft.id, data: hojeISO(), pos: k, img: ft.b64 } }) }); r = (await res.text()).trim(); }
       catch (e) { r = 'rede'; }
       lab.classList.remove('indo');
       if (r === 'ok') { await guardarFotoLocal(hojeISO(), k, ft.b64); ft.ok = true; ft.b64 = ''; lab.classList.add('ok'); ok++; continue; }

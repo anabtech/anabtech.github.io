@@ -1,5 +1,5 @@
 // Anamnese AnabTech - Service Worker
-const CACHE_NAME = 'anabtech-anamnese-v1';
+const CACHE_NAME = 'anabtech-anamnese-v2';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {

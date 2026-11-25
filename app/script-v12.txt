@@ -1,9 +1,101 @@
-// AnabTech · script do Google, versão 10
+// AnabTech · script do Google, versão 12
 // Recebe a anamnese e manda direto para o app, serve a página de cada aluno, recebe as fotos de
 // progresso e manda os avisos de registro (repositório privado __REPO__).
 const GITHUB_TOKEN = '__TOKEN__';
 const REPO = '__REPO__';
-const VERSAO = 11;
+const VERSAO = 12;
+
+// ---------- treinadores: cada um com o próprio repositório, a própria chave e os próprios alunos ----------
+// TN = treinador desta chamada. Vazio = o dono deste script (repositório e chave das linhas acima).
+// Os outros ficam nas Propriedades do script (tn_<id>), criados pelo app do dono em Backup, Treinadores.
+var TN = null;
+function tnLer(id) { return new RegExp('^[a-z0-9]{4,12}$').test(String(id || '')) ? lerProp('tn_' + id) : null; }
+function tnUsar(c) { const t = tnLer(c); if (!t || t.on === false || !t.repo || !t.token) return false; TN = t; return true; }
+function repoDe() { return TN ? TN.repo : REPO; }
+function chaveDe() { return TN ? TN.token : GITHUB_TOKEN; }
+function ch(k) { return TN ? k + '~' + TN.id : k; } // nome de propriedade ou de cache separado por treinador
+function marcaDe() { return TN ? String(TN.nome || 'Consultoria') : 'AnabTech'; }
+function hex(s) { return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s), Utilities.Charset.UTF_8).map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join(''); }
+const COD_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function codNovo() { const b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, Utilities.getUuid() + ':' + Utilities.getUuid() + ':' + Date.now(), Utilities.Charset.UTF_8); let x = ''; for (let i = 0; i < 12; i++) x += COD_ABC.charAt((b[i] & 255) % 32); return x.slice(0, 4) + '-' + x.slice(4, 8) + '-' + x.slice(8); }
+function codLimpo(c) { return String(c || '').toUpperCase().split('').filter(function (x) { return COD_ABC.indexOf(x) >= 0; }).join(''); }
+function lerGit(caminho, repo, chave) {
+  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + repo + '/contents/' + caminho, { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + chave, Accept: 'application/vnd.github.raw', 'X-GitHub-Api-Version': '2022-11-28' } });
+  if (r.getResponseCode() !== 200) return null;
+  try { return JSON.parse(r.getContentText('UTF-8')); } catch (err) { return null; }
+}
+function listarGit(pasta, repo, chave) {
+  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + repo + '/contents/' + pasta, { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + chave, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } });
+  if (r.getResponseCode() !== 200) return [];
+  try { const L = JSON.parse(r.getContentText('UTF-8')); return Array.isArray(L) ? L.filter(function (x) { return x && x.type === 'file' && new RegExp('[.]json$').test(x.name); }).map(function (x) { return x.path; }) : []; } catch (err) { return []; }
+}
+// o treinador entra no app com o código de acesso que o dono gerou: recebe o endereço e a chave do repositório dele
+function entrar(d) {
+  const c = CacheService.getScriptCache(), f = Number(c.get('ent_f') || 0);
+  if (f >= 12) return { erro: 'bloqueado' };
+  const cod = codLimpo(d.cod), falha = function () { c.put('ent_f', String(f + 1), 900); return { erro: 'codigo' }; };
+  if (cod.length !== 12) return falha();
+  const h = hex('cod:' + cod), P = PropertiesService.getScriptProperties().getProperties();
+  let t = null;
+  Object.keys(P).forEach(function (k) { if (k.indexOf('tn_') !== 0) return; try { const x = JSON.parse(P[k]); if (x && x.h === h) t = x; } catch (err) {} });
+  if (!t || t.on === false) return falha();
+  t.ult = new Date().toISOString(); gravarProp('tn_' + t.id, t);
+  return { ok: true, c: t.id, repo: t.repo, token: t.token, nome: t.nome, coach: t.coach || '' };
+}
+// cópia inicial para o treinador novo: os modelos de treino, a biblioteca e os padrões de dieta do dono. Nenhum aluno vai junto.
+function semente(d) {
+  if (!TN || !treinadorOk(d)) return { erro: 'auth' };
+  const ler = function (pasta) { return listarGit(pasta, REPO, GITHUB_TOKEN).slice(0, 40).map(function (p) { return lerGit(p, REPO, GITHUB_TOKEN); }).filter(function (x) { return x && x.id; }); };
+  const cfg = lerGit('config.json', REPO, GITHUB_TOKEN) || {};
+  return { ok: true, modelos: ler('modelos'), bib: ler('biblioteca'), sugDieta: cfg.sugDieta || null, sugBase: cfg.sugBase || null };
+}
+// nome que aparece para os alunos do treinador (página do aluno e anamnese): vem do config.json dele
+function marcaPublica() {
+  if (!TN) return { ok: true, dono: true };
+  const c = CacheService.getScriptCache(); let v = c.get(ch('mk'));
+  if (!v) { const j = lerGit('config.json', TN.repo, TN.token) || {};
+    v = JSON.stringify({ nome: String(j.marca || TN.nome || 'Consultoria').slice(0, 40), coach: String(j.coach || TN.coach || '').slice(0, 60), wa: String(j.wa || '').split('').filter(function (x) { return x >= '0' && x <= '9'; }).join('').slice(0, 15) });
+    c.put(ch('mk'), v, 300); }
+  const o = JSON.parse(v); o.ok = true; return o;
+}
+// só o dono: criar, listar e mudar os treinadores
+function tnCriar(d) {
+  if (TN || !treinadorOk(d)) return { erro: 'auth' };
+  const nome = String(d.nome || '').trim().slice(0, 40), coach = String(d.coach || '').trim().slice(0, 60), repo = String(d.repo || '').trim(), chave = String(d.chave || '').trim();
+  if (!nome) return { erro: 'nome' };
+  if (!new RegExp('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$').test(repo) || repo.toLowerCase() === REPO.toLowerCase()) return { erro: 'repo' };
+  if (chave.length < 20 || chave === GITHUB_TOKEN) return { erro: 'chave' };
+  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + repo, { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + chave, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } });
+  if (r.getResponseCode() !== 200) return { erro: 'acesso', cod: r.getResponseCode() };
+  let info = {}; try { info = JSON.parse(r.getContentText()); } catch (err) {}
+  if (!info.private) return { erro: 'publico' };
+  if (info.permissions && !info.permissions.push) return { erro: 'escrita' };
+  const P = PropertiesService.getScriptProperties().getProperties();
+  if (Object.keys(P).some(function (k) { if (k.indexOf('tn_') !== 0) return false; try { return String(JSON.parse(P[k]).repo).toLowerCase() === repo.toLowerCase(); } catch (err) { return false; } })) return { erro: 'repetido' };
+  let id = ''; do { id = 't' + hex(Utilities.getUuid()).slice(0, 5); } while (P['tn_' + id]);
+  const cod = codNovo();
+  gravarProp('tn_' + id, { id: id, nome: nome, coach: coach, repo: repo, token: chave, h: hex('cod:' + codLimpo(cod)), ia: d.ia !== false, on: true, em: new Date().toISOString() });
+  return { ok: true, id: id, cod: cod };
+}
+function tnListar(d) {
+  if (TN || !treinadorOk(d)) return { erro: 'auth' };
+  const P = PropertiesService.getScriptProperties().getProperties(), L = [];
+  Object.keys(P).forEach(function (k) { if (k.indexOf('tn_') !== 0) return; try { const t = JSON.parse(P[k]); L.push({ id: t.id, nome: t.nome, coach: t.coach || '', repo: t.repo, ia: t.ia !== false, on: t.on !== false, em: t.em || '', ult: t.ult || '' }); } catch (err) {} });
+  L.sort(function (a, b) { return String(a.em).localeCompare(String(b.em)); });
+  return { ok: true, lista: L };
+}
+function tnMudar(d) {
+  if (TN || !treinadorOk(d)) return { erro: 'auth' };
+  const t = tnLer(d.id); if (!t) return { erro: 'id' };
+  if (d.apagar === true) { gravarProp('tn_' + t.id, null); return { ok: true, apagado: true }; }
+  if (typeof d.on === 'boolean') t.on = d.on;
+  if (typeof d.ia === 'boolean') t.ia = d.ia;
+  if (d.nome) t.nome = String(d.nome).trim().slice(0, 40);
+  let cod = '';
+  if (d.novoCod === true) { cod = codNovo(); t.h = hex('cod:' + codLimpo(cod)); }
+  gravarProp('tn_' + t.id, t);
+  return cod ? { ok: true, cod: cod } : { ok: true };
+}
 
 // Rode uma vez pelo botão Executar, com "autorizar" escolhido ao lado de Depuração.
 // Libera o envio por e-mail, usado quando o ntfy não entrega o aviso.
@@ -16,6 +108,12 @@ function doPost(e) {
     const raw = (e && e.postData && e.postData.contents) || '';
     if (!raw || raw.length > 2200000) return resposta('invalido');
     const d = JSON.parse(raw);
+    if (d && d.c && !tnUsar(d.c)) return (!d.acao || d.acao === 'foto' || d.acao === 'registro') ? resposta('link') : json({ erro: 'link' });
+    if (d && d.acao === 'entrar') return json(entrar(d));
+    if (d && d.acao === 'semente') return json(semente(d));
+    if (d && d.acao === 'tnCriar') return json(tnCriar(d));
+    if (d && d.acao === 'tnListar') return json(tnListar(d));
+    if (d && d.acao === 'tnMudar') return json(tnMudar(d));
     if (d && d.acao === 'foto') return resposta(receberFoto(d));
     if (d && d.acao === 'ia') return json(estimarRefeicao(d));
     if (d && d.acao === 'resumo') return json(resumirSemana(d));
@@ -34,7 +132,9 @@ function doPost(e) {
 }
 function doGet(e) {
   const q = (e && e.parameter) || {};
-  if (q.acao === 'versao') return json({ versao: VERSAO, ia: !!iaChave(), push: !!fcmConta(), aviso: JSON.parse(CacheService.getScriptCache().get('ultAviso') || 'null') });
+  if (q.c && !tnUsar(q.c)) return json({ erro: 'link' });
+  if (q.acao === 'versao') return json({ versao: VERSAO, ia: !!iaChave(), push: !!fcmConta(), aviso: JSON.parse(CacheService.getScriptCache().get(ch('ultAviso')) || 'null') });
+  if (q.acao === 'marca') return json(marcaPublica());
   if (q.acao === 'testeaviso') return json(testeAviso());
   if (q.acao === 'aluno') return json(abrirPagina(q.t, q.p));
   return resposta('AnabTech: funcionando');
@@ -74,14 +174,14 @@ const IA_INSTR = [
   'n = nome do alimento em português; q e un = quantidade na medida que faz sentido para o aluno; g = gramas totais; kcal, p (proteína g), c (carboidrato g), gord (gordura g) = valores totais daquele item.',
   'obs: até 140 caracteres, só se houver uma incerteza importante (ex.: tamanho do prato). Se não houver comida na descrição nem na foto, devolva {"itens":[],"obs":"Não identifiquei alimentos."}.'
 ].join('\n');
-function iaChave() { return PropertiesService.getScriptProperties().getProperty('ANTHROPIC_KEY') || ''; }
+function iaChave() { if (TN && TN.ia === false) return ''; return PropertiesService.getScriptProperties().getProperty('ANTHROPIC_KEY') || ''; }
 function iaContar(t, max) {
   const P = PropertiesService.getScriptProperties(), dia = Utilities.formatDate(new Date(), 'America/Bahia', 'yyyyMMdd');
   const lk = LockService.getScriptLock(); lk.waitLock(5000);
   try {
     let C = {}; try { C = JSON.parse(P.getProperty('iaUso') || '{}'); } catch (err) {}
     if (C.d !== dia) C = { d: dia, tot: 0, al: {} };
-    const k = t === 'treinador' ? t : idAluno(t);
+    const k = t === 'treinador' ? ch(t) : idAluno(t);
     if ((C.al[k] || 0) >= (max || 20)) return 'aluno';
     if (C.tot >= 400) return 'total';
     C.al[k] = (C.al[k] || 0) + 1; C.tot++;
@@ -130,8 +230,7 @@ const RESUMO_INSTR = [
 ].join('\n');
 function treinadorOk(d) {
   const ts = Number(d.ts || 0); if (!ts || Math.abs(Date.now() - ts) > 15 * 60e3) return false;
-  const h = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, GITHUB_TOKEN + ':' + ts, Utilities.Charset.UTF_8).map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
-  return h === String(d.sig || '');
+  return hex(chaveDe() + ':' + ts) === String(d.sig || '');
 }
 function resumirSemana(d) {
   const chave = iaChave(); if (!chave) return { erro: 'desligado' };
@@ -182,7 +281,7 @@ function pushEnviar(tokens, m) {
   const ac = fcmAcesso(sa); if (!ac) return { ok: 0, validos: tokens, erro: 'token' };
   const url = 'https://fcm.googleapis.com/v1/projects/' + sa.project_id + '/messages:send', validos = []; let ok = 0;
   tokens.forEach(function (tk) {
-    const dados = { t: String(m.t || 'AnabTech').slice(0, 80), b: String(m.b || '').slice(0, 220), u: String(m.u || ''), g: String(m.g || ''), ic: String(m.ic || '') };
+    const dados = { t: String(m.t || marcaDe()).slice(0, 80), b: String(m.b || '').slice(0, 220), u: String(m.u || ''), g: String(m.g || ''), ic: String(m.ic || (TN ? 'icon-neutro-192.png' : '')) };
     const r = UrlFetchApp.fetch(url, { method: 'post', contentType: 'application/json', muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + ac },
       payload: JSON.stringify({ message: { token: tk, data: dados, webpush: { headers: { Urgency: 'high', TTL: '43200' }, data: dados } } }) });
     const cod = r.getResponseCode();
@@ -195,7 +294,7 @@ function pushEnviar(tokens, m) {
 function lerProp(k) { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty(k) || 'null'); } catch (err) { return null; } }
 function gravarProp(k, v) { const P = PropertiesService.getScriptProperties(); if (v == null) P.deleteProperty(k); else P.setProperty(k, JSON.stringify(v)); }
 function horaOk(h) { return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(String(h || '')) ? String(h) : ''; }
-function linkAluno(t) { return 'https://anabtech.github.io/app/aluno.html#t=' + t; }
+function linkAluno(t, c) { if (c === undefined) c = TN ? TN.id : ''; return 'https://anabtech.github.io/app/aluno.html#t=' + t + (c ? '&c=' + c : ''); }
 // o aluno liga, muda ou desliga as notificações deste aparelho
 function pushAlunoSalvar(d) {
   const t = String(d.t || ''), r = conferir(t, d.p); if (r.erro) return { erro: r.erro };
@@ -208,7 +307,7 @@ function pushAlunoSalvar(d) {
     if (!/^[A-Za-z0-9_:\-]{40,400}$/.test(tk)) return { erro: 'token' };
     s.tk.unshift(tk); s.tk = s.tk.slice(0, 3);
     const pr = d.pr || {};
-    s.t = t; s.nm = String(CacheService.getScriptCache().get('nm_' + t) || '').split(' ')[0];
+    s.t = t; s.c = TN ? TN.id : ''; s.nm = String(CacheService.getScriptCache().get('nm_' + t) || '').split(' ')[0];
     s.tz = /^[A-Za-z_]+\/[A-Za-z_\/]+$/.test(String(d.tz || '')) ? String(d.tz) : PUSH_TZ;
     s.pp = !!d.pp;
     s.refs = (Array.isArray(d.refs) ? d.refs : []).slice(0, 12).map(function (x) { return String(x).slice(0, 40); });
@@ -264,7 +363,7 @@ function lembretes() {
     }
     if (msgs.length) {
       let validos = s.tk;
-      msgs.slice(0, 2).forEach(function (m) { m.u = linkAluno(s.t); const r = pushEnviar(validos, m); validos = r.validos; });
+      msgs.slice(0, 2).forEach(function (m) { m.u = linkAluno(s.t, s.c || ''); const r = pushEnviar(validos, m); validos = r.validos; });
       if (validos.length !== s.tk.length) { s.tk = validos; P.setProperty(k, JSON.stringify(s)); }
     }
     // grava só o que mudou e relê antes, para não apagar uma refeição marcada enquanto este laço rodava
@@ -289,16 +388,16 @@ function testarPush() {
 function pushTreinador(d) {
   if (!treinadorOk(d)) return { erro: 'auth' };
   const tk = String(d.tk || '').slice(0, 400); if (!/^[A-Za-z0-9_:\-]{40,400}$/.test(tk)) return { erro: 'token' };
-  let L = (lerProp('pt') || []).filter(function (x) { return x !== tk; });
+  let L = (lerProp(ch('pt')) || []).filter(function (x) { return x !== tk; });
   if (d.on !== false) L.unshift(tk);
-  gravarProp('pt', L.slice(0, 4));
+  gravarProp(ch('pt'), L.slice(0, 4));
   if (d.on !== false && !d.quieto) { const r = pushEnviar([tk], { t: 'Notificações ativadas', b: 'Os registros dos alunos vão chegar aqui.', u: 'https://anabtech.github.io/app/', g: 'teste' }); return { ok: true, enviado: r.ok }; }
   return { ok: true };
 }
 function pushParaTreinador(titulo, texto, abre) {
-  const L = lerProp('pt') || []; if (!L.length) return 0;
+  const L = lerProp(ch('pt')) || []; if (!L.length) return 0;
   const r = pushEnviar(L, { t: titulo, b: texto, u: abre, g: '' });
-  if (r.validos.length !== L.length) gravarProp('pt', r.validos);
+  if (r.validos.length !== L.length) gravarProp(ch('pt'), r.validos);
   return r.ok;
 }
 // o app do treinador avisa um aluno: resposta a uma observação ou protocolo atualizado
@@ -320,11 +419,11 @@ function descansoAvisar(d) {
 }
 function pushParaAluno(d) {
   if (!treinadorOk(d)) return { erro: 'auth' };
-  const s = lerProp('ps_' + String(d.alvo || '')); if (!s || !s.tk || !s.tk.length) return { ok: true, sem: true };
+  const s = lerProp('ps_' + String(d.alvo || '')); if (!s || !s.tk || !s.tk.length || (s.c || '') !== (TN ? TN.id : '')) return { ok: true, sem: true };
   if (s.pr && s.pr.eq === false) return { ok: true, desligado: true };
   const T = { resp: ['A equipe respondeu sua observação', 'Toque para ler a resposta.'], prot: ['Seu protocolo foi atualizado', 'Toque para ver o que mudou.'] }[d.tipo];
   if (!T) return { erro: 'tipo' };
-  const r = pushEnviar(s.tk, { t: T[0], b: T[1], u: linkAluno(s.t), g: d.tipo });
+  const r = pushEnviar(s.tk, { t: T[0], b: T[1], u: linkAluno(s.t, s.c || ''), g: d.tipo });
   if (r.validos.length !== s.tk.length) { s.tk = r.validos; gravarProp('ps_' + String(d.alvo), s); }
   return { ok: true, enviado: r.ok };
 }
@@ -332,10 +431,7 @@ function pushParaAluno(d) {
 // ---------- página do aluno ----------
 function lerPagina(t) {
   if (!/^[a-f0-9]{32}$/.test(String(t || ''))) return null;
-  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + REPO + '/contents/portal/' + t + '.json', {
-    muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + GITHUB_TOKEN, Accept: 'application/vnd.github.raw', 'X-GitHub-Api-Version': '2022-11-28' } });
-  if (r.getResponseCode() !== 200) return null;
-  try { return JSON.parse(r.getContentText('UTF-8')); } catch (err) { return null; }
+  return lerGit('portal/' + t + '.json', repoDe(), chaveDe());
 }
 function codigoHash(t, p) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, t + ':' + p, Utilities.Charset.UTF_8)
@@ -440,20 +536,19 @@ function receberFoto(d) {
 // O canal fica em config.json, no campo ntfy. Quem liga e desliga é o app, na aba Backup.
 function testeAviso() {
   const c = CacheService.getScriptCache();
-  if (c.get('tav')) return { espera: true };
-  c.put('tav', '1', 20); c.remove('avcfg');
-  return avisar('', 'AnabTech', 'Teste pelo script do Google: é por este caminho que chegam os avisos dos alunos.', 'Evento de teste', 'Aluno de teste', '', '');
+  if (c.get(ch('tav'))) return { espera: true };
+  c.put(ch('tav'), '1', 20); c.remove(ch('avcfg'));
+  return avisar('', marcaDe(), 'Teste pelo script do Google: é por este caminho que chegam os avisos dos alunos.', 'Evento de teste', 'Aluno de teste', '', '');
 }
 // O canal do ntfy, o e-mail extra, a cópia no Gmail e os tipos de aviso ligados ficam em config.json
 // (ntfy, avisoEmail, avisoGmail, avisoTipos). Quem muda é o app, na aba Backup.
 function lerAvisos(c) {
-  let v = c.get('avcfg');
+  let v = c.get(ch('avcfg'));
   if (v === null) {
     v = '{}';
-    const r = UrlFetchApp.fetch('https://api.github.com/repos/' + REPO + '/contents/config.json', {
-      muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + GITHUB_TOKEN, Accept: 'application/vnd.github.raw', 'X-GitHub-Api-Version': '2022-11-28' } });
-    if (r.getResponseCode() === 200) { try { const j = JSON.parse(r.getContentText('UTF-8')); v = JSON.stringify({ ntfy: String(j.ntfy || ''), email: String(j.avisoEmail || ''), gmail: j.avisoGmail !== false, tipos: (j.avisoTipos && typeof j.avisoTipos === 'object') ? j.avisoTipos : {}, mudos: Array.isArray(j.avisoMudos) ? j.avisoMudos.map(String) : [] }); } catch (err) {} }
-    c.put('avcfg', v, 300);
+    const j = lerGit('config.json', repoDe(), chaveDe());
+    if (j) { try { v = JSON.stringify({ ntfy: String(j.ntfy || ''), email: String(j.avisoEmail || ''), gmail: j.avisoGmail !== false, tipos: (j.avisoTipos && typeof j.avisoTipos === 'object') ? j.avisoTipos : {}, mudos: Array.isArray(j.avisoMudos) ? j.avisoMudos.map(String) : [] }); } catch (err) {} }
+    c.put(ch('avcfg'), v, 300);
   }
   return JSON.parse(v);
 }
@@ -469,9 +564,10 @@ function avisar(chave, titulo, texto, tipo, aluno, cat, alvo) {
   try {
     const c = CacheService.getScriptCache(), cfg = lerAvisos(c);
     const canal = /^[A-Za-z0-9_-]{12,64}$/.test(cfg.ntfy) ? cfg.ntfy : '';
-    const extra = /^[^ @,;]+@[^ @,;]+[.][^ @,;]+$/.test(cfg.email) ? cfg.email : '';
-    const gmail = cfg.gmail !== false;
-    const temPush = (lerProp('pt') || []).length > 0;
+    // os e-mails saem da conta do dono do script: para os outros treinadores o aviso vai só por notificação e ntfy
+    const extra = !TN && /^[^ @,;]+@[^ @,;]+[.][^ @,;]+$/.test(cfg.email) ? cfg.email : '';
+    const gmail = !TN && cfg.gmail !== false;
+    const temPush = (lerProp(ch('pt')) || []).length > 0;
     if (!canal && !extra && !gmail && !temPush) return { desligado: true };
     if (cat && cfg.tipos && cfg.tipos[cat] === false) return { desligado: true };
     if (alvo && Array.isArray(cfg.mudos) && cfg.mudos.indexOf(alvo) >= 0) return { desligado: true }; // perfil próprio do treinador: sem aviso
@@ -511,7 +607,7 @@ function avisar(chave, titulo, texto, tipo, aluno, cat, alvo) {
       }
     }
     try { res.cota = MailApp.getRemainingDailyQuota(); } catch (err) {}
-    c.put('ultAviso', JSON.stringify(res), 21600);
+    c.put(ch('ultAviso'), JSON.stringify(res), 21600);
   } catch (err) { res.erro = String(err).slice(0, 160); }
   return res;
 }
@@ -519,9 +615,9 @@ function avisar(chave, titulo, texto, tipo, aluno, cat, alvo) {
 // ---------- GitHub ----------
 function salvar(caminho, obj, mensagem) { return enviar(caminho, Utilities.base64Encode(JSON.stringify(obj), Utilities.Charset.UTF_8), mensagem); }
 function enviar(caminho, base64, mensagem) {
-  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + REPO + '/contents/' + caminho, {
+  const r = UrlFetchApp.fetch('https://api.github.com/repos/' + repoDe() + '/contents/' + caminho, {
     method: 'put', contentType: 'application/json', muteHttpExceptions: true,
-    headers: { Authorization: 'Bearer ' + GITHUB_TOKEN, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    headers: { Authorization: 'Bearer ' + chaveDe(), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
     payload: JSON.stringify({ message: mensagem, content: base64 })
   });
   return r.getResponseCode();

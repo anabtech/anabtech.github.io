@@ -600,6 +600,7 @@ input[type="number"] { -moz-appearance: textfield; }
   animation: fadeIn 0.3s;
 }
 
+html.mk-esp .header-brand, html.mk-esp .welcome .logo-big, html.mk-esp .welcome > h1, html.mk-esp .welcome .tagline, html.mk-esp #mkAviso, html.mk-esp #mkEquipe{visibility:hidden}
 </style>
 </head>
 <body>
@@ -638,7 +639,7 @@ input[type="number"] { -moz-appearance: textfield; }
         <div class="tagline">Fundamento · Tecnologia · Equipe</div>
         
         <h2>Vamos começar sua jornada</h2>
-        <p>Com estas respostas, a nossa equipe (nutricionista e educador físico) monta o melhor plano de treino e dieta pra <strong>você</strong>.</p>
+        <p id="mkEquipe">Com estas respostas, a nossa equipe (nutricionista e educador físico) monta o melhor plano de treino e dieta pra <strong>você</strong>.</p>
         <p style="font-size: 0.85rem; color: var(--text-3);">⏱️ Leva cerca de 8 a 10 minutos · Suas respostas ficam salvas se precisar parar</p>
         
         <div class="features">
@@ -1363,7 +1364,7 @@ input[type="number"] { -moz-appearance: textfield; }
       <div class="field-group" style="background: rgba(110,150,0,.08); border: 1px solid rgba(110,150,0,.3); border-radius: 12px; padding: 16px; margin-top: 24px;">
         <label style="color: var(--gold); font-size: 0.9rem; margin-bottom: 8px;">📌 Importante</label>
         <p style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5; margin: 0;">
-          Ao enviar, suas respostas chegam direto para a equipe <strong>AnabTech</strong>. O Matheus entra em contato pelo WhatsApp em até 24h para começar a montar o seu plano.
+          <span id="mkAviso">Ao enviar, suas respostas chegam direto para a equipe <strong>AnabTech</strong>. O Matheus entra em contato pelo WhatsApp em até 24h para começar a montar o seu plano.</span>
         </p>
       </div>
     </div>
@@ -1432,7 +1433,36 @@ input[type="number"] { -moz-appearance: textfield; }
 // ============================================================
 // CONFIG
 // ============================================================
-const WHATSAPP_COACH = '5571992241609'; // Coach Matheus
+let WHATSAPP_COACH = '5571992241609'; // Coach Matheus
+
+// ============================================================
+// TREINADOR DESTA ANAMNESE
+// O link pode trazer ?c=<id>: outro treinador usa o mesmo sistema na consultoria dele, com a marca dele.
+// As respostas dele vão só para o app dele (nada por e-mail). Sem "c", é a AnabTech.
+// ============================================================
+const C_AN = (() => { try { const c = new URLSearchParams(location.search).get('c') || ''; return /^[a-z0-9]{4,12}$/.test(c) ? c : ''; } catch (e) { return ''; } })();
+let MK = { nome: 'AnabTech', quem: 'O Matheus', wa: WHATSAPP_COACH };
+if (C_AN) { MK = { nome: '', quem: 'A equipe', wa: '' }; WHATSAPP_COACH = ''; document.documentElement.classList.add('mk-esp');
+  try { const g = JSON.parse(localStorage.getItem('anam_mk_' + C_AN) || 'null'); if (g && g.nome) MK = g; } catch (e) {} }
+function esconderHTML(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+function aplicarMarcaAnamnese() {
+  if (!C_AN) return;
+  const nome = MK.nome || 'Consultoria', ini = nome.trim().charAt(0).toUpperCase();
+  WHATSAPP_COACH = MK.wa || '';
+  document.title = 'Anamnese · ' + nome;
+  document.querySelectorAll('.brand-text h1, .welcome > h1').forEach(h => { h.textContent = nome; });
+  document.querySelectorAll('.logo-mark, .logo-big').forEach(l => { l.innerHTML = '<b style="font:700 ' + (l.classList.contains('logo-big') ? '44px' : '18px') + '/1 Space Grotesk,Inter,Arial,sans-serif;color:#0b0c0e">' + esconderHTML(ini) + '</b>'; });
+  const tg = document.querySelector('.welcome .tagline'); if (tg) tg.textContent = 'Consultoria on-line';
+  const av = document.getElementById('mkAviso'); if (av) av.innerHTML = 'Ao enviar, suas respostas chegam direto para a equipe <strong>' + esconderHTML(nome) + '</strong>. ' + esconderHTML(MK.quem) + ' entra em contato pelo WhatsApp em até 24h para começar a montar o seu plano.';
+  const eq = document.getElementById('mkEquipe'); if (eq) eq.innerHTML = 'Com estas respostas, montamos o melhor plano pra <strong>você</strong>.';
+  const bw = document.getElementById('blocoWhatsappSecundario'); if (bw && !WHATSAPP_COACH) bw.style.display = 'none';
+  document.querySelectorAll('link[rel=manifest], link[rel=apple-touch-icon]').forEach(l => l.remove());
+  document.documentElement.classList.remove('mk-esp');
+}
+if (C_AN) {
+  document.addEventListener('DOMContentLoaded', () => { if (MK.nome) aplicarMarcaAnamnese(); });
+  setTimeout(() => { if (document.documentElement.classList.contains('mk-esp')) aplicarMarcaAnamnese(); }, 5000);
+}
 const STORAGE_KEY = 'mgcoach_anamnese_draft';
 const TOTAL_STEPS = 12; // Sem contar boas-vindas (0) e sucesso (13)
 
@@ -1718,7 +1748,7 @@ function construirMensagemWA() {
   const nome = r.q_nome || 'Sem nome';
   const data = new Date().toLocaleDateString('pt-BR');
   
-  let msg = `🏋️ *ANAMNESE ANABTECH*\n_Recebida em ${data}_\n\n`;
+  let msg = `🏋️ *ANAMNESE ${(MK.nome || 'CONSULTORIA').toUpperCase()}*\n_Recebida em ${data}_\n\n`;
   
   // 1. Dados pessoais
   msg += `👤 *DADOS PESSOAIS*\n`;
@@ -1832,7 +1862,7 @@ function construirMensagemWA() {
     msg += '\n';
   }
   
-  msg += `_— Enviado pela anamnese AnabTech_`;
+  msg += `_— Enviado pela anamnese ${MK.nome || ''}_`;
   return msg;
 }
 
@@ -1842,7 +1872,7 @@ function construirMensagemWA() {
 function construirResumoFinal() {
   const nome = (respostas.q_nome || '').split(' ')[0] || 'paciente';
   $('successTitle').textContent = `Pronto, ${nome}!`;
-  $('successText').textContent = 'Ao clicar no botão abaixo, sua anamnese é enviada direto pra equipe por e-mail — funciona em qualquer navegador, inclusive no Instagram. Em até 24h o Matheus retorna o contato.';
+  $('successText').textContent = 'Ao clicar no botão abaixo, sua anamnese é enviada direto pra equipe por e-mail — funciona em qualquer navegador, inclusive no Instagram. Em até 24h ' + (C_AN ? MK.quem.replace(/^A equipe$/, 'a equipe') : 'o Matheus') + ' retorna o contato.';
   
   // Resumo curto
   const r = respostas;
@@ -1913,7 +1943,7 @@ function gerarPDFAnamnese() {
     setText(PDF_COLORS.text3);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('AnabTech · Anamnese', MARGIN, rodapeY);
+    doc.text((MK.nome || 'Consultoria') + ' · Anamnese', MARGIN, rodapeY);
     doc.text(`Página ${pageNum}${totalPages ? ' de ' + totalPages : ''}`, PAGE_W - MARGIN, rodapeY, { align: 'right' });
   }
   
@@ -1949,6 +1979,12 @@ function gerarPDFAnamnese() {
     doc.roundedRect(logoX, logoY, logoSize, logoSize, 3.4, 3.4, 'F');
     const u = v => v / 100 * logoSize * 0.78, ox = logoX + logoSize * 0.11, oy = logoY + logoSize * 0.11;
     setDraw([11, 12, 14]); setFill([11, 12, 14]);
+    if (C_AN) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(22); setText([11, 12, 14]);
+      doc.text((MK.nome || 'C').trim().charAt(0).toUpperCase(), logoX + logoSize / 2, logoY + logoSize / 2 + 2.9, { align: 'center' });
+      setText(PDF_COLORS.text); doc.text(MK.nome || 'Consultoria', logoX + logoSize + 5, logoY + 7);
+      setText(PDF_COLORS.text3); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text('CONSULTORIA ON-LINE', logoX + logoSize + 5, logoY + 11);
+    } else {
     doc.setLineCap('round'); doc.setLineJoin('round');
     doc.setLineWidth(u(12));
     doc.lines([[u(26), -u(44)], [u(26), u(44)]], ox + u(24), oy + u(82), [1, 1], 'S', false);
@@ -1973,6 +2009,7 @@ function gerarPDFAnamnese() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.text('FUNDAMENTO · TECNOLOGIA · EQUIPE', logoX + logoSize + 5, brandY + 4);
+    }
     
     // Data e título à direita
     const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -2293,7 +2330,7 @@ function gerarPDFAnamnese() {
     setText(PDF_COLORS.text3);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('AnabTech · Anamnese', MARGIN, PAGE_H - 6);
+    doc.text((MK.nome || 'Consultoria') + ' · Anamnese', MARGIN, PAGE_H - 6);
     doc.text(`Página ${i} de ${total}`, PAGE_W - MARGIN, PAGE_H - 6, { align: 'right' });
   }
   
@@ -2701,12 +2738,14 @@ function enviarParaApp() {
       if (Array.isArray(v) ? v.length : String(v == null ? '' : v).trim()) limpas[k] = v;
     });
     const pacote = { tipo: 'mgcoach_anamnese_v2', id: idDoEnvio(), enviadaEm: new Date().toISOString(), respostas: limpas, secoes: montarSecoesAnamnese() };
+    if (C_AN) { pacote.c = C_AN;
+      return fetch(APP_INBOX_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(pacote) }).then(r => r.text()).then(t => { t = String(t).trim(); if (t !== '201' && t !== '422') throw new Error('app ' + t); return true; }); }
     fetch(APP_INBOX_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(pacote) }).catch(() => {});
-  } catch (e) { /* o e-mail segue normalmente */ }
+  } catch (e) { if (C_AN) return Promise.reject(e); /* o e-mail segue normalmente */ }
 }
 
 async function handleEnviarEmail() {
-  enviarParaApp();
+  const noApp = enviarParaApp();
   const btn = $('btnEnviarEmail');
   const htmlOriginal = btn.innerHTML;
   btn.disabled = true;
@@ -2715,7 +2754,7 @@ async function handleEnviarEmail() {
   esconderErroEnvio();
 
   try {
-    await enviarPorEmail();
+    if (C_AN) await noApp; else await enviarPorEmail();   /* outro treinador: as respostas vão só para o app dele */
     limparRascunho();
     mostrarTelaEnviado();
   } catch (e) {
@@ -2730,7 +2769,7 @@ async function handleEnviarEmail() {
 function mostrarTelaEnviado() {
   const nome = (respostas.q_nome || '').split(' ')[0] || '';
   $('successTitle').textContent = nome ? `Recebido, ${nome}! ✅` : 'Recebido! ✅';
-  $('successText').textContent = 'Sua anamnese chegou direto pra equipe AnabTech. O Matheus vai te chamar no WhatsApp em até 24h pra começar a montar o seu plano.';
+  $('successText').textContent = 'Sua anamnese chegou direto pra equipe ' + (MK.nome || '') + '. ' + MK.quem + ' vai te chamar no WhatsApp em até 24h pra começar a montar o seu plano.';
 
   const card = $('summaryCard');
   if (card) card.style.display = 'none';
@@ -2801,7 +2840,7 @@ async function enviarWhatsApp() {
       // Tenta compartilhar com arquivo + texto
       const dadosShare = {
         files: [arquivo],
-        title: 'Anamnese AnabTech',
+        title: 'Anamnese ' + (MK.nome || ''),
         text: msg
       };
       
@@ -2956,7 +2995,7 @@ function init() {
     }
   }, 800);
   
-  console.log('✅ Anamnese AnabTech carregada');
+  console.log('✅ Anamnese carregada');
 }
 
 // Banner sutil no topo se estiver no Instagram
@@ -2982,6 +3021,12 @@ function mostrarBannerInApp(nomeApp) {
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
+if (C_AN) fetch(APP_INBOX_URL + '?acao=marca&c=' + C_AN, { cache: 'no-store' }).then(r => r.json()).then(j => {
+  if (j && j.ok && j.nome) { const p = String(j.coach || '').trim().split(/\s+/)[0]; let wa = String(j.wa || '').replace(/\D/g, ''); if (wa.length === 10 || wa.length === 11) wa = '55' + wa;
+    MK = { nome: String(j.nome).slice(0, 40), quem: p || 'A equipe', wa }; try { localStorage.setItem('anam_mk_' + C_AN, JSON.stringify(MK)); } catch (e) {} }
+  else if (j && j.erro) { MK = { nome: 'Link indisponível', quem: 'A equipe', wa: '' }; }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicarMarcaAnamnese); else aplicarMarcaAnamnese();
+}).catch(() => { if (document.readyState !== 'loading') aplicarMarcaAnamnese(); });
 } else {
   init();
 }
