@@ -118,6 +118,16 @@ button,input,textarea,select{font:inherit;color:inherit}
 .atv-k{margin-top:10px;font-size:13.5px;background:var(--accent-soft,#eefad0);border-radius:10px;padding:8px 10px}
 .pc-it{background:var(--card,#fff);border:1px solid var(--rule);border-radius:14px;padding:11px 12px;margin-top:8px}
 .pc-it b{display:block;font-size:14.5px}.pc-it small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:1px}
+.pc-tr{display:block;margin-top:8px;padding:2px 0;border:0;background:none;font:inherit;font-size:12.5px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.pc-sub{margin-top:9px;background:var(--accent-soft,#eefad0);border-radius:10px;padding:9px 10px;font-size:13px;line-height:1.45;color:var(--ink)}
+.pc-sub span{display:block;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--accent-ink,#4f6b00);margin-bottom:2px}
+.pc-sub div{display:flex;gap:14px;margin-top:6px}.pc-sub button{border:0;background:none;padding:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.pc-it.tr>b{color:var(--ink-3);text-decoration:line-through;font-weight:500}
+.pc-ex{margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)}.pc-ex>b{display:block;font-size:14.5px}.pc-ex>small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:1px}
+.pc-ex .oc-its{margin-top:8px}.pc-ex .oc-bt{width:100%;margin:8px 0 0}
+.av{margin:14px 15px 0}.av button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:10px 14px;border:1px dashed var(--rule);border-radius:12px;background:transparent;color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.av button b{display:block;font-size:14px}.av button small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:1px}.av button i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.av.on button{border-style:solid;background:var(--card,#fff)}
 .pc-fr{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:9px}
 .pc-fr button{min-height:40px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);font-size:12.5px;font-weight:600;cursor:pointer;padding:0 2px}
 .pc-fr button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -1496,13 +1506,18 @@ function montarDieta(app) {
     const sm = document.createElement('details'); sm.className = 'sem'; ag.insertAdjacentElement('afterend', sm);
     ag.insertAdjacentElement('afterend', pp);
     const nt = document.createElement('label'); nt.className = 'dnota'; nt.innerHTML = '<span>Observação sobre a alimentação <b class="dn-d"></b></span><textarea rows="2" maxlength="1000" placeholder="Ex.: não deu para jantar, troquei o arroz por batata, senti muita fome à noite…"></textarea><small>A equipe lê e pode te responder aqui no app.</small>';
+    const av = document.createElement('div'); av.className = 'av'; av.innerHTML = '<button type="button"><span><b></b><small></small></span><i></i></button>'; pl.appendChild(av);
+    av.querySelector('button').onclick = () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} });
+      abrirOutra(null, null, { nome: 'Fora das refeições', tit: 'O que você comeu fora das refeições?', btn: 'Salvar', ini: (e.av || {}).it || [],
+        plan: 'Registre o que comeu <b>fora das refeições do plano</b>: belisco, lanche da madrugada, bebida. Entra na soma do dia e a equipe vê para ajustar o plano à sua rotina.',
+        ok: L => { const e2 = LS.get('dieta.' + d, { feitas: {} }); if (L.length) e2.av = { it: L }; else delete e2.av; LS.set('dieta.' + d, e2); pintarDieta(); agendarDieta(tipoDoDia(d), d); aviso(L.length ? 'Registrado fora das refeições' : 'Pronto'); } }); };
     pl.appendChild(nt);
     let ntT; nt.querySelector('textarea').addEventListener('input', ev => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }); e.nota = ev.target.value; LS.set('dieta.' + d, e);
       clearTimeout(ntT); ntT = setTimeout(() => { const k = t + '|' + d, go = () => enviarDieta(t, d); if (_dietaT[k]) clearTimeout(_dietaT[k][0]); _dietaT[k] = [setTimeout(() => { delete _dietaT[k]; go(); }, 1500), go]; }, 600); });
     arts.forEach((art, j) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'ck'; b.dataset.t = t; b.dataset.j = j;
       art.appendChild(b);
-      const pc = document.createElement('button'); pc.type = 'button'; pc.className = 'oc-bt pc-bt'; pc.dataset.t = t; pc.dataset.j = j; pc.textContent = 'Comi só uma parte'; pc.onclick = () => abrirParcial(t, j, art); art.appendChild(pc);
+      const pc = document.createElement('button'); pc.type = 'button'; pc.className = 'oc-bt pc-bt'; pc.dataset.t = t; pc.dataset.j = j; pc.textContent = 'Ajustar: comi menos, troquei ou comi a mais'; pc.onclick = () => abrirParcial(t, j, art); art.appendChild(pc);
       const oc = document.createElement('button'); oc.type = 'button'; oc.className = 'oc-bt oc-o'; oc.dataset.t = t; oc.dataset.j = j; oc.textContent = 'Comi outra coisa'; oc.onclick = () => abrirOutra(t, j); art.appendChild(oc);
       const agenda = d => { const k = t + '|' + d, go = () => enviarDieta(t, d); if (_dietaT[k]) clearTimeout(_dietaT[k][0]); _dietaT[k] = [setTimeout(() => { delete _dietaT[k]; go(); mostrarLembrete(); }, 2500), go]; };
       b.onclick = () => { const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} }); const f = new Set(e.feitas[t] || []);
@@ -1514,7 +1529,7 @@ function montarDieta(app) {
       art.addEventListener('change', ev => { if (!ev.target.matches('input.rd')) return; const d = dataReg(), e = LS.get('dieta.' + d, { feitas: {} });
         if (!(e.feitas[t] || []).includes(j)) return; e.esc = e.esc || {}; e.esc[t] = e.esc[t] || {}; e.esc[t][j] = escolhaRef(art);
         /* trocou a opção de uma refeição marcada como parcial: as quantidades eram da opção antiga */
-        if (((e.parc || {})[t] || {})[j]) { delete e.parc[t][j]; aviso('Você trocou a opção. Se comeu só uma parte, marque de novo.', 4500); }
+        if (((e.parc || {})[t] || {})[j]) { delete e.parc[t][j]; aviso('Você trocou a opção. Se teve ajuste nesta refeição, marque de novo.', 4500); }
         LS.set('dieta.' + d, e); pintarDieta(); agenda(d); });
     });
   });
@@ -1535,7 +1550,7 @@ const normTxt = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').to
 const PRIO = { N: 0, T: 1, I: 2, M: 3 };
 function buscarAlim(A, q) {
   const w = normTxt(q).split(/[^a-z0-9]+/).filter(x => x.length > 1); if (!w.length) return [];
-  return A.filter(a => w.every(x => a.nn.includes(x))).map(a => ({ a, sc: (a.nn.startsWith(w[0]) ? 0 : 20) + (PRIO[a.s] || 4) * 3 + a.n.length / 12 })).sort((x, y) => x.sc - y.sc).slice(0, 25).map(x => x.a);
+  return A.filter(a => w.every(x => a.nn.includes(x))).map(a => ({ a, sc: (a.nn.startsWith(w[0]) ? 0 : 20) + (a.nn.split(/[^a-z0-9]+/).includes(w[0]) ? 0 : 8) + (PRIO[a.s] || 4) * 3 + a.n.length / 12 })).sort((x, y) => x.sc - y.sc).slice(0, 25).map(x => x.a);
 }
 function unidadesDe(a) { const U = []; if (a.u > 0 && a.un) U.push([a.un, a.u]); (a.ms || []).forEach(m => { if (!U.some(x => x[0] === m[0])) U.push(m); }); U.push(['gramas', 1]); return U; }
 const macAlim = (a, g) => [a.k, a.p, a.c, a.g].map(v => v * g / 100);
@@ -1559,41 +1574,67 @@ function itensRef(t, j, c) {
   op.tr.forEach((alts, ti) => { const x = alts[((c && c.s) || [])[ti] || 0] || alts[0]; L.push({ n: x.n, q: x.q || '', m: x.m }); });
   return L;
 }
-function abrirParcial(t, j, art) {
+/* descrição curta de um alimento registrado: "Maçã: 1 unidade (130 g)" */
+const descIt = x => `${x.n}: ${fmtQ(x.q)} ${plurUn(x.q, x.un)}${x.un !== 'gramas' ? ` (${Math.round(x.g)} g)` : ''}${x.ia ? ' · estimado pela IA' : ''}`;
+const difK = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Math.round(v)) + ' kcal';
+/* ajuste da refeição do plano: quanto comeu de cada alimento, troca de um alimento por outro e o que comeu além.
+   st: estado para reabrir a tela depois de escolher os alimentos de uma troca ou de um extra */
+function abrirParcial(t, j, art, st) {
   const D = SNAP.dieta || {}, d = dataReg(), e0 = LS.get('dieta.' + d, { feitas: {} }), nome = ((D.refs || {})[t] || [])[j] || 'Refeição';
-  const ant = ((e0.parc || {})[t] || {})[j], c = ant ? { o: ant.o, s: ant.s } : (art ? escolhaRef(art) : (((e0.esc || {})[t] || {})[j] || { o: 0, s: [] }));
+  const ant = ((e0.parc || {})[t] || {})[j], c = st ? st.c : ant ? { o: ant.o, s: ant.s } : (art ? escolhaRef(art) : (((e0.esc || {})[t] || {})[j] || { o: 0, s: [] }));
   const itens = itensRef(t, j, c); if (!itens.length) return aviso('Esta refeição ainda não tem os alimentos detalhados. Use "Comi outra coisa".', 4000);
-  let fr = itens.map((x, i) => ant && ant.fr && ant.fr[i] != null ? +ant.fr[i] : 1);
+  let fr = st ? st.fr : itens.map((x, i) => ant && ant.fr && ant.fr[i] != null ? +ant.fr[i] : 1);
+  const tr = st ? st.tr : JSON.parse(JSON.stringify((ant && ant.tr) || {})), ex = st ? st.ex : JSON.parse(JSON.stringify((ant && ant.ex) || []));
   const qd = d === hojeISO() ? 'hoje' : d === isoMenos(1) ? 'ontem' : dataBR(d), plano = itens.reduce((s, x) => s + x.m[0], 0);
   document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovOc" role="dialog" aria-modal="true" aria-labelledby="ocT"><div class="ov-c">
-    <div class="ov-h"><div><small>${esc(nome)} · ${esc(qd)}</small><h3 id="ocT">Quanto você comeu?</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
+    <div class="ov-h"><div><small>${esc(nome)} · ${esc(qd)}</small><h3 id="ocT">Ajustar o que comi</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
     <div class="ov-b" id="ocB"></div><div class="ov-f" id="ocF"></div></div></div>`);
   document.body.style.overflow = 'hidden';
   const ov = $('ovOc'), B = $('ocB'), F = $('ocF');
   ov.querySelector('.ov-x').onclick = fecharOv; ov.onclick = ev => { if (ev.target === ov) fecharOv(); };
-  const soma = () => itens.reduce((s, x, i) => s.map((v, k) => v + x.m[k] * fr[i]), [0, 0, 0, 0]);
+  const tem = i => tr[i] && tr[i].length;
+  const soma = () => { const m = itens.reduce((s, x, i) => tem(i) ? s.map((v, k) => v + somaM(tr[i])[k]) : s.map((v, k) => v + x.m[k] * fr[i]), [0, 0, 0, 0]), me = somaM(ex); return m.map((v, k) => v + me[k]); };
   const total = () => { const m = soma(), el = $('pcTot'); if (el) el.innerHTML = ['kcal', 'proteína', 'carbo', 'gordura'].map((n, i) => `<div><span>${n}</span><b>${Math.round(m[i])}${i ? ' g' : ''}</b></div>`).join('');
     const p = $('pcPct'); if (p) p.textContent = plano > 0 ? `${Math.round(m[0] / plano * 100)}% das calorias previstas para esta refeição` : ''; };
+  const voltar = () => abrirParcial(t, j, art, { c, fr, tr, ex });
   const desenhar = () => {
-    B.innerHTML = `<p class="oc-plan">Marque quanto comeu de cada alimento. O que você não tocar fica como "Tudo".</p>
+    const sc = B.scrollTop;
+    B.innerHTML = `<p class="oc-plan">Ajuste só o que foi diferente do plano: comeu menos, trocou um alimento ou comeu algo a mais. O que você não tocar fica como "Tudo".</p>
       <div class="pc-at"><button type="button" data-all="0.5">Metade de tudo</button><button type="button" data-all="1">Tudo</button></div>
-      ${itens.map((x, i) => `<div class="pc-it"><b>${esc(x.n)}</b>${x.q ? `<small>${esc(x.q)} · ${Math.round(x.m[0])} kcal</small>` : `<small>${Math.round(x.m[0])} kcal</small>`}
-        <div class="pc-fr" role="group" aria-label="Quanto comeu de ${esc(x.n)}">${FRAC.map(([f, r]) => `<button type="button" data-i="${i}" data-f="${f}" aria-pressed="${fr[i] === f}">${r}</button>`).join('')}</div></div>`).join('')}
+      ${itens.map((x, i) => tem(i) ? `<div class="pc-it tr"><b>${esc(x.n)}</b><small>${x.q ? esc(x.q) + ' · ' : ''}${Math.round(x.m[0])} kcal no plano</small>
+          <div class="pc-sub"><span>Você comeu no lugar</span>${tr[i].map(y => esc(descIt(y))).join('<br>')}<br><b>${Math.round(somaM(tr[i])[0])} kcal</b> (${difK(somaM(tr[i])[0] - x.m[0])} em relação ao plano)
+          <div><button type="button" data-tr="${i}">Editar a troca</button><button type="button" data-untr="${i}">Desfazer</button></div></div></div>`
+        : `<div class="pc-it"><b>${esc(x.n)}</b>${x.q ? `<small>${esc(x.q)} · ${Math.round(x.m[0])} kcal</small>` : `<small>${Math.round(x.m[0])} kcal</small>`}
+        <div class="pc-fr" role="group" aria-label="Quanto comeu de ${esc(x.n)}">${FRAC.map(([f, r]) => `<button type="button" data-i="${i}" data-f="${f}" aria-pressed="${fr[i] === f}">${r}</button>`).join('')}</div>
+        <button type="button" class="pc-tr" data-tr="${i}">Troquei por outro alimento</button></div>`).join('')}
+      <div class="pc-ex"><b>Comeu algo além do plano nesta refeição?</b><small>Entra na soma da refeição e do dia. A equipe vê para ajustar o plano à sua fome.</small>
+        ${ex.length ? `<div class="oc-its">${ex.map((y, i) => `<div class="oc-it"><div><b>${esc(y.n)}</b><span>${esc(fmtQ(y.q))} ${esc(plurUn(y.q, y.un))}${y.un !== 'gramas' ? ` · ${Math.round(y.g)} g` : ''}</span></div><em>${Math.round(y.m[0])} kcal</em><button type="button" data-delx="${i}" aria-label="Tirar ${esc(y.n)}">✕</button></div>`).join('')}</div>` : ''}
+        <button type="button" class="oc-bt" id="pcEx">${ex.length ? 'Adicionar ou editar o que comi além' : 'Adicionar o que comi além'}</button></div>
       <div class="oc-tot" id="pcTot"></div><p class="oc-plan" id="pcPct" style="margin-top:8px;text-align:center"></p>`;
-    total();
+    total(); B.scrollTop = sc;
   };
-  B.onclick = ev => { const b = ev.target.closest('[data-f]'), al = ev.target.closest('[data-all]');
+  B.onclick = ev => { const b = ev.target.closest('[data-f]'), al = ev.target.closest('[data-all]'), bt = ev.target.closest('[data-tr]'), un = ev.target.closest('[data-untr]'), dx = ev.target.closest('[data-delx]');
     if (al) { fr = fr.map(() => +al.dataset.all); desenhar(); return; }
+    if (un) { delete tr[+un.dataset.untr]; desenhar(); return; }
+    if (dx) { ex.splice(+dx.dataset.delx, 1); desenhar(); return; }
+    if (bt) { const i = +bt.dataset.tr, x = itens[i]; fecharOv();
+      abrirOutra(t, j, { nome, tit: 'Trocou por qual alimento?', btn: 'Confirmar a troca', ini: tr[i] || [],
+        plan: `No plano: <b>${esc(x.n)}</b>${x.q ? ' · ' + esc(x.q) : ''} · ${Math.round(x.m[0])} kcal. Coloque abaixo o que você comeu <b>no lugar dele</b>. O resto da refeição continua igual.`,
+        ok: L => { if (L.length) { tr[i] = L; fr[i] = 1; } else delete tr[i]; voltar(); }, cancel: voltar }); return; }
+    if (ev.target.closest('#pcEx')) { fecharOv();
+      abrirOutra(t, j, { nome, tit: 'O que você comeu além?', btn: 'Confirmar', ini: ex,
+        plan: 'Coloque só o que comeu <b>a mais</b> nesta refeição. Os alimentos do plano continuam contando.',
+        ok: L => { ex.length = 0; ex.push(...L); voltar(); }, cancel: voltar }); return; }
     if (!b) return; const i = +b.dataset.i; fr[i] = +b.dataset.f; b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); total(); };
   const salvar = () => { const e = LS.get('dieta.' + d, { feitas: {} }), f = new Set(e.feitas[t] || []); e.parc = e.parc || {}; e.parc[t] = e.parc[t] || {};
-    const tudo = fr.every(v => v === 1), nada = fr.every(v => v === 0);
+    const nTr = Object.keys(tr).filter(i => tem(i)).length, mexeu = nTr || ex.length, tudo = fr.every(v => v === 1) && !mexeu, nada = fr.every((v, i) => v === 0 && !tem(i)) && !ex.length;
     if (nada) { delete e.parc[t][j]; f.delete(j); }
     else { f.add(j); e.esc = e.esc || {}; e.esc[t] = e.esc[t] || {}; e.esc[t][j] = { o: c.o || 0, s: c.s || [] }; if (e.outra && e.outra[t]) delete e.outra[t][j];
-      if (tudo) delete e.parc[t][j]; else e.parc[t][j] = { o: c.o || 0, s: c.s || [], fr }; }
+      if (tudo) delete e.parc[t][j]; else { const p = { o: c.o || 0, s: c.s || [], fr }; if (nTr) { p.tr = {}; Object.keys(tr).forEach(i => { if (tem(i)) p.tr[i] = tr[i]; }); } if (ex.length) p.ex = ex; e.parc[t][j] = p; } }
     e.feitas[t] = [...f]; LS.set('dieta.' + d, e); fecharOv(); pintarDieta(); agendarDieta(t, d);
-    aviso(nada ? 'Refeição desmarcada: você não comeu nada dela' : tudo ? 'Refeição completa registrada' : 'Refeição parcial registrada'); };
+    aviso(nada ? 'Refeição desmarcada: você não comeu nada dela' : tudo ? 'Refeição completa registrada' : 'Refeição registrada com o ajuste'); };
   F.innerHTML = `<button type="button" id="pcC">${ant ? 'Voltar a completa' : 'Cancelar'}</button><button type="button" class="pri" id="pcS">Salvar</button>`;
-  $('pcC').onclick = () => { if (!ant) return fecharOv(); fr = fr.map(() => 1); salvar(); };
+  $('pcC').onclick = () => { if (!ant) return fecharOv(); fr = fr.map(() => 1); Object.keys(tr).forEach(k => delete tr[k]); ex.length = 0; salvar(); };
   $('pcS').onclick = salvar;
   desenhar();
 }
@@ -1614,19 +1655,22 @@ function ditar(ta, bt, mudou) {
 function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em < 6 * 3600e3) return Promise.resolve(!!c.v);
   return fetch(API + '?acao=versao', { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
 function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
-function abrirOutra(t, j) {
-  const D = SNAP.dieta || {}, d = dataReg(), e0 = LS.get('dieta.' + d, { feitas: {} }), nome = ((D.refs || {})[t] || [])[j] || 'Refeição';
-  let itens = JSON.parse(JSON.stringify((((e0.outra || {})[t] || {})[j] || {}).it || [])), sel = null, A = null, guia = false, aviso80 = !itens.length;
+/* com "opt", a mesma tela serve só para escolher alimentos (troca de um item, algo além da refeição, fora das refeições) e devolve a lista em opt.ok */
+function abrirOutra(t, j, opt) {
+  const D = SNAP.dieta || {}, d = dataReg(), e0 = LS.get('dieta.' + d, { feitas: {} }), nome = opt ? opt.nome : ((D.refs || {})[t] || [])[j] || 'Refeição';
+  let itens = JSON.parse(JSON.stringify(opt ? (opt.ini || []) : ((((e0.outra || {})[t] || {})[j] || {}).it || []))), sel = null, A = null, guia = false, aviso80 = !opt && !itens.length;
   let iaOn = !!(LS.get('iaOk', null) || {}).v, iaTxt = '', iaImg = null, iaMsg = '', iaVai = false, iaEd = -1;
   iaDisp().then(v => { if (v !== iaOn && $('ovOc')) { iaOn = v; if (!guia && !sel) desenhar(); } });
-  const pl = planoRef(t, j), qd = d === hojeISO() ? 'hoje' : d === isoMenos(1) ? 'ontem' : dataBR(d);
+  const pl = opt ? null : planoRef(t, j), qd = d === hojeISO() ? 'hoje' : d === isoMenos(1) ? 'ontem' : dataBR(d);
   document.body.insertAdjacentHTML('beforeend', `<div class="ov" id="ovOc" role="dialog" aria-modal="true" aria-labelledby="ocT"><div class="ov-c">
-    <div class="ov-h"><div><small>${esc(nome)} · ${esc(qd)}</small><h3 id="ocT">O que você comeu?</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
+    <div class="ov-h"><div><small>${esc(nome)} · ${esc(qd)}</small><h3 id="ocT">${opt ? esc(opt.tit) : 'O que você comeu?'}</h3></div><button class="ov-x" type="button" aria-label="Fechar">×</button></div>
     <div class="ov-b" id="ocB"></div><div class="ov-f" id="ocF"></div></div></div>`);
   document.body.style.overflow = 'hidden';
   const ov = $('ovOc'), B = $('ocB'), F = $('ocF');
-  ov.querySelector('.ov-x').onclick = fecharOv; ov.onclick = ev => { if (ev.target === ov) fecharOv(); };
-  const salvar = () => { const e = LS.get('dieta.' + d, { feitas: {} }), f = new Set(e.feitas[t] || []); e.outra = e.outra || {}; e.outra[t] = e.outra[t] || {};
+  const sair = () => { fecharOv(); if (opt && opt.cancel) opt.cancel(); };
+  ov.querySelector('.ov-x').onclick = sair; ov.onclick = ev => { if (ev.target === ov) sair(); };
+  const salvar = () => { if (opt) { const L = itens; fecharOv(); opt.ok(L); return; }
+    const e = LS.get('dieta.' + d, { feitas: {} }), f = new Set(e.feitas[t] || []); e.outra = e.outra || {}; e.outra[t] = e.outra[t] || {};
     if (itens.length) { e.outra[t][j] = { it: itens }; f.add(j); if (e.esc && e.esc[t]) delete e.esc[t][j]; if (e.parc && e.parc[t]) delete e.parc[t][j]; } else { delete e.outra[t][j]; }
     e.feitas[t] = [...f]; LS.set('dieta.' + d, e); fecharOv(); pintarDieta(); agendarDieta(t, d); aviso(itens.length ? 'Refeição registrada' : 'Pronto'); };
   const voltarPlano = () => { const e = LS.get('dieta.' + d, { feitas: {} }); if (e.outra && e.outra[t]) delete e.outra[t][j]; e.feitas[t] = (e.feitas[t] || []).filter(x => x !== j); LS.set('dieta.' + d, e); fecharOv(); pintarDieta(); agendarDieta(t, d); aviso('Voltou para a refeição do plano'); };
@@ -1638,11 +1682,13 @@ function abrirOutra(t, j) {
         <p>O resultado vem do planejamento que a equipe montou para você. A meta é seguir o plano em <b>pelo menos ${META_PLANO}% das refeições</b>; sair dele com frequência atrasa a evolução.</p>
         ${nOps > 1 || alts.length ? `<p>${nOps > 1 ? `Esta refeição tem <b>${nOps} opções</b> no plano` : `Esta refeição tem trocas no plano (${esc(alts.join(', '))})`}. Usar uma delas conta como plano e é sempre melhor do que uma refeição por fora.</p>` : ''}
         ${A.total ? `<div class="oc-80n"><span>Nesta semana</span><b>${A.pc}% no plano</b><small>${A.fora} de ${A.total} refeições fora${A.fora >= lim ? ' · limite da semana atingido' : ` · limite ${lim}`}</small></div>` : ''}
-        <p class="oc-80s">Se realmente comeu outra coisa, registre com sinceridade: a equipe ajusta melhor com a informação real.</p></div>`;
+        <p class="oc-80s">Se realmente comeu outra coisa, registre com sinceridade: a equipe ajusta melhor com a informação real.</p>
+        ${itensRef(t, j, ((e0.esc || {})[t] || {})[j] || { o: 0, s: [] }).length ? '<button class="oc-gbt" type="button" id="ocAj"><span>Trocou só um alimento ou comeu algo a mais? <u>Ajuste a refeição do plano</u>, sem trocar ela inteira.</span></button>' : ''}</div>`;
       F.innerHTML = '<button type="button" id="ocSeg">Comi mesmo assim</button><button type="button" class="pri" id="ocVp">Voltar ao plano</button>';
+      if ($('ocAj')) $('ocAj').onclick = () => { fecharOv(); abrirParcial(t, j); };
       $('ocVp').onclick = fecharOv; $('ocSeg').onclick = () => { aviso80 = false; desenhar(); }; B.scrollTop = 0; return; }
     if (guia) { B.innerHTML = guiaPorcoes(); F.innerHTML = '<button type="button" class="pri" id="ocGv">Entendi, voltar</button>'; $('ocGv').onclick = () => { guia = false; desenhar(); }; B.scrollTop = 0; return; }
-    B.innerHTML = `${pl ? `<p class="oc-plan">No plano, esta refeição tinha <b>${Math.round(pl[0])} kcal</b> · P ${Math.round(pl[1])} g · C ${Math.round(pl[2])} g · G ${Math.round(pl[3])} g. Coloque abaixo o que você comeu de verdade.</p>` : ''}
+    B.innerHTML = `${opt && opt.plan ? `<p class="oc-plan">${opt.plan}</p>` : ''}${pl ? `<p class="oc-plan">No plano, esta refeição tinha <b>${Math.round(pl[0])} kcal</b> · P ${Math.round(pl[1])} g · C ${Math.round(pl[2])} g · G ${Math.round(pl[3])} g. Coloque abaixo o que você comeu de verdade.</p>` : ''}
       <button class="oc-gbt" type="button" id="ocG"><span>Não sabe a quantidade? <u>Veja como estimar com a mão e medidas caseiras</u></span></button>
       ${iaOn ? `<div class="oc-ia"><label for="ocIaT"><b>Descreva o que comeu</b><span>A IA estima as quantidades e as calorias. Confira antes de salvar.</span></label>
         <div class="oc-ia-tx"><textarea id="ocIaT" rows="2" maxlength="600" placeholder="Ex.: 4 colheres de arroz, 1 concha de feijão, 1 bife médio e salada">${esc(iaTxt)}</textarea>${VOZ ? `<button type="button" class="oc-mic" id="ocMic" aria-label="Falar em vez de digitar" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>` : ''}</div>
@@ -1652,7 +1698,8 @@ function abrirOutra(t, j) {
       ${iaOn ? '<p class="oc-ou">ou busque cada alimento</p>' : ''}
       <label class="oc-busca"><input id="ocQ" type="search" placeholder="${itens.length ? 'Adicionar mais um alimento' : 'Buscar alimento: pão, ovo, atum…'}" autocomplete="off" enterkeyhint="search" aria-label="Buscar alimento"></label>
       <div class="oc-res" id="ocR"></div><div id="ocE"></div>`;
-    F.innerHTML = `${(((e0.outra || {})[t] || {})[j]) ? '<button type="button" id="ocV">Voltar ao plano</button>' : '<button type="button" id="ocC">Cancelar</button>'}<button type="button" class="pri" id="ocS"${itens.length ? '' : ' disabled'}>Salvar refeição</button>`;
+    F.innerHTML = opt ? `<button type="button" id="ocC">Voltar</button><button type="button" class="pri" id="ocS"${itens.length || (opt.ini || []).length ? '' : ' disabled'}>${esc(opt.btn || 'Confirmar')}</button>`
+      : `${(((e0.outra || {})[t] || {})[j]) ? '<button type="button" id="ocV">Voltar ao plano</button>' : '<button type="button" id="ocC">Cancelar</button>'}<button type="button" class="pri" id="ocS"${itens.length ? '' : ' disabled'}>Salvar refeição</button>`;
     $('ocG').onclick = () => { guia = true; desenhar(); };
     B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { itens.splice(+b.dataset.del, 1); iaEd = -1; desenhar(); });
     B.querySelectorAll('[data-aj]').forEach(b => b.onclick = () => { iaEd = iaEd === +b.dataset.aj ? -1 : +b.dataset.aj; desenhar(); });
@@ -1662,7 +1709,7 @@ function abrirOutra(t, j) {
     q.oninput = () => { sel = null; $('ocE').innerHTML = ''; if (!A) { R.innerHTML = '<p class="oc-vazio" style="margin:0">Carregando alimentos…</p>'; return; } const L = buscarAlim(A, q.value);
       R.innerHTML = q.value.trim().length < 2 ? '' : L.length ? L.map((a, i) => `<button type="button" data-i="${i}"><span>${esc(a.n)}</span><small>${Math.round(a.k)} kcal/100 g</small></button>`).join('') : '<p class="oc-vazio" style="margin:0">Nada encontrado. Tente outra palavra (ex.: “pão” em vez de “pãozinho”).</p>';
       R.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { sel = { a: L[+b.dataset.i] }; R.innerHTML = ''; editor(); }); };
-    if ($('ocC')) $('ocC').onclick = fecharOv; if ($('ocV')) $('ocV').onclick = voltarPlano;
+    if ($('ocC')) $('ocC').onclick = sair; if ($('ocV')) $('ocV').onclick = voltarPlano;
     $('ocS').onclick = salvar;
     if (!A) carregarAlimentos().then(x => { A = x; if (q.value) q.oninput(); }).catch(() => { R.innerHTML = '<p class="oc-vazio" style="margin:0">Sem internet para buscar os alimentos agora. Tente de novo em instantes.</p>'; });
   }
@@ -1720,7 +1767,8 @@ function foraDoPlano(n = 7) {
   const D = SNAP.dieta || {}; let fora = 0, total = 0, hoje = 0, hojeT = 0;
   for (let i = 0; i < n; i++) { const d = isoMenos(i), e = LS.get('dieta.' + d, null); if (!e) continue; const t = tipoDoDia(d), nr = ((D.refs || {})[t] || []).length; if (!nr) continue;
     if (!(e.feitas[t] || []).length) continue;
-    const o = Object.values((e.outra || {})[t] || {}).filter(x => x && x.it && x.it.length).length;
+    const o = Object.values((e.outra || {})[t] || {}).filter(x => x && x.it && x.it.length).length
+      + Object.entries((e.parc || {})[t] || {}).filter(([j, p]) => p && p.tr && (e.feitas[t] || []).includes(+j) && (detParcial(t, +j, p) || {}).fp).length;
     fora += o; total += nr; if (i === 0) { hoje = o; hojeT = nr; } }
   return { fora, total, hoje, hojeT, pc: total ? Math.round((1 - fora / total) * 100) : 100 };
 }
@@ -1733,7 +1781,7 @@ function aderHTML() {
 function resumoSemana() {
   const D = SNAP.dieta || {}, dias = [...Array(7)].map((_, i) => isoMenos(6 - i)), meta = +D.agua || 0;
   const L = dias.map(d => { const e = LS.get('dieta.' + d, null), t = tipoDoDia(d), al = (D.alvo || {})[t] || null; if (!e) return { d, al, reg: false, ag: 0 };
-    const det = detDia(t, e), m = det.reduce((s, x) => x.m ? s.map((v, i) => v + x.m[i]) : s, [0, 0, 0, 0]); return { d, al, reg: det.length > 0, m, ag: +e.agua || 0 }; });
+    const det = detDia(t, e), fo = foraDia(e), m = det.reduce((s, x) => x.m ? s.map((v, i) => v + x.m[i]) : s, fo ? fo.m.slice() : [0, 0, 0, 0]); return { d, al, reg: det.length > 0 || !!fo, m, ag: +e.agua || 0 }; });
   const R = L.filter(x => x.reg), n = R.length, med = i => n ? R.reduce((s, x) => s + x.m[i], 0) / n : 0, alv = i => { const A = R.filter(x => x.al); return A.length ? A.reduce((s, x) => s + x.al[i], 0) / A.length : 0; };
   const cl = p => p >= 90 && p <= 110 ? 'ok' : p >= 75 && p <= 125 ? 'md' : 'bx';
   const card = (lb, i, u) => { const v = med(i), a = alv(i), p = a ? Math.round(v / a * 100) : null; return `<div class="${p === null ? '' : i === 1 ? (p >= 90 ? 'ok' : p >= 75 ? 'md' : 'bx') : cl(p)}"><span>${lb}</span><b>${Math.round(v)}${u}</b>${a ? `<small>meta ${Math.round(a)}${u} · ${p}%</small>` : ''}</div>`; };
@@ -1783,7 +1831,7 @@ function pintarDieta() {
   document.querySelectorAll('.ck').forEach(b => { const on = (e.feitas[b.dataset.t] || []).includes(+b.dataset.j), o = ((e.outra || {})[b.dataset.t] || {})[b.dataset.j];
     const pcl = ((e.parc || {})[b.dataset.t] || {})[b.dataset.j], pk = on && !o && pcl ? detParcial(b.dataset.t, +b.dataset.j, pcl) : null;
     b.classList.toggle('on', on); b.classList.toggle('troca', !!(on && o)); b.classList.toggle('parc', !!pk);
-    b.textContent = on && o ? `✓ Comi outra coisa · ${Math.round(somaM(o.it)[0])} kcal` : pk ? `◐ Comi só uma parte · ${pk.m[0]} kcal${pk.pc != null ? ` (${pk.pc}%)` : ''}` : on ? '✓ Refeição feita ' + qd : 'Marcar como feita ' + qd; });
+    b.textContent = on && o ? `✓ Comi outra coisa · ${Math.round(somaM(o.it)[0])} kcal` : pk ? (pk.menos ? `◐ Comi só uma parte · ${pk.m[0]} kcal${pk.pc != null ? ` (${pk.pc}%)` : ''}` : `✓ Feita com ajuste · ${pk.m[0]} kcal`) : on ? '✓ Refeição feita ' + qd : 'Marcar como feita ' + qd; });
   const meta = +D.agua || 0, ml = +e.agua || 0;
   document.querySelectorAll('.agua').forEach(el => { el.querySelector('.ag-v').textContent = (Math.round(ml / 100) / 10).toString().replace('.', ',') + ' L'; el.querySelector('.ag-q').textContent = qd;
     el.querySelector('.ag-m').textContent = meta ? `meta ${(Math.round(meta / 100) / 10).toString().replace('.', ',')} L${ml >= meta ? ' ✓' : ''}` : ''; el.querySelector('.ag-b i').style.width = (meta ? Math.min(100, ml / meta * 100) : Math.min(100, ml / 30)) + '%'; });
@@ -1791,7 +1839,9 @@ function pintarDieta() {
   { const h = aderHTML(), bx = h && foraDoPlano().pc < META_PLANO; document.querySelectorAll('.ader').forEach(el => { el.innerHTML = h; el.hidden = !h; el.classList.toggle('bx', !!bx); }); }
   document.querySelectorAll('.pesp').forEach(el => { el.querySelectorAll('.pesp-q').forEach(b => b.textContent = qd); el.querySelectorAll('[data-pp]').forEach(inp => { if (document.activeElement !== inp) inp.value = e[inp.dataset.pp] ? fmtPP(inp.dataset.pp, e[inp.dataset.pp]) : ''; }); });
   document.querySelectorAll('.oc-o').forEach(b => { const o = ((e.outra || {})[b.dataset.t] || {})[b.dataset.j]; b.textContent = o ? 'Editar o que comi' : 'Comi outra coisa'; });
-  document.querySelectorAll('.pc-bt').forEach(b => { const pc = ((e.parc || {})[b.dataset.t] || {})[b.dataset.j], on = (e.feitas[b.dataset.t] || []).includes(+b.dataset.j); b.textContent = pc && on ? 'Editar quanto comi' : 'Comi só uma parte'; });
+  document.querySelectorAll('.pc-bt').forEach(b => { const pc = ((e.parc || {})[b.dataset.t] || {})[b.dataset.j], on = (e.feitas[b.dataset.t] || []).includes(+b.dataset.j); b.textContent = pc && on ? 'Editar o ajuste' : 'Ajustar: comi menos, troquei ou comi a mais'; });
+  document.querySelectorAll('.av').forEach(el => { const fo = foraDia(e); el.classList.toggle('on', !!fo); el.querySelector('b').textContent = fo ? `Fora das refeições ${qd}: ${fo.m[0]} kcal` : 'Comi algo fora das refeições';
+    el.querySelector('small').textContent = fo ? fo.it.map(x => x.split(':')[0]).join(', ') : 'Belisco, lanche da madrugada, bebida: entra na soma do dia.'; el.querySelector('i').textContent = fo ? 'Editar' : 'Registrar'; });
   document.querySelectorAll('.dnota').forEach(el => { el.querySelector('.dn-d').textContent = qd; const ta = el.querySelector('textarea'); if (document.activeElement !== ta) ta.value = e.nota || ''; });
   document.querySelectorAll('.dhoje').forEach(el => { const t = el.dataset.t, tot = ((D.refs || {})[t] || []).length, n = (e.feitas[t] || []).length;
     el.innerHTML = `<div style="flex:1"><div>${Qd} você fez <b>${n} de ${tot}</b> refeições</div><div class="barra"><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></div></div>`; });
@@ -1799,18 +1849,30 @@ function pintarDieta() {
 /* refeição parcial: macros só do que foi comido e a lista do que ficou de fora */
 function detParcial(t, j, pc) {
   const itens = itensRef(t, j, pc); if (!itens.length) return null;
-  const fr = itens.map((x, i) => pc.fr && pc.fr[i] != null ? Math.max(0, Math.min(1, +pc.fr[i])) : 1), m = [0, 0, 0, 0]; let plano = 0;
-  itens.forEach((x, i) => { plano += x.m[0]; x.m.forEach((v, k) => { m[k] += v * fr[i]; }); });
+  const TR = pc.tr || {}, EX = Array.isArray(pc.ex) ? pc.ex : [], tem = i => Array.isArray(TR[i]) && TR[i].length;
+  const fr = itens.map((x, i) => tem(i) ? 1 : pc.fr && pc.fr[i] != null ? Math.max(0, Math.min(1, +pc.fr[i])) : 1), m = [0, 0, 0, 0]; let plano = 0, dTroca = 0;
+  const sub = [], sb = [];
+  itens.forEach((x, i) => { plano += x.m[0];
+    if (tem(i)) { const mt = somaM(TR[i]); mt.forEach((v, k) => { m[k] += v; }); dTroca += mt[0] - x.m[0]; sub.push(`${x.n} → ${TR[i].map(descIt).join(' + ')} · ${difK(mt[0] - x.m[0])}`); sb.push([x.n, TR[i].map(y => y.n).join(' + ')]); }
+    else x.m.forEach((v, k) => { m[k] += v * fr[i]; }); });
+  const base = m[0], me = somaM(EX); me.forEach((v, k) => { m[k] += v; });
   const rot = f => (FRAC.find(z => z[0] === f) || [0, '', Math.round(f * 100) + '%'])[2];
-  return { m: m.map(v => Math.round(v)), pc: plano > 0 ? Math.round(m[0] / plano * 100) : null, it: itens.map((x, i) => `${x.n}${x.q ? ` · ${x.q}` : ''}: ${rot(fr[i])}`).slice(0, 12) };
+  /* troca que muda as calorias da refeição em mais de 15% conta como refeição fora do plano */
+  return { m: m.map(v => Math.round(v)), pc: plano > 0 ? Math.round(base / plano * 100) : null, menos: fr.some(v => v < 1),
+    it: itens.map((x, i) => tem(i) ? `${x.n}: trocou` : `${x.n}${x.q ? ` · ${x.q}` : ''}: ${rot(fr[i])}`).slice(0, 12),
+    sub: sub.slice(0, 8), sb: sb.slice(0, 8), ex: EX.slice(0, 12).map(descIt), exK: Math.round(me[0]), fp: plano > 0 && Math.abs(dTroca) / plano > 0.15 };
 }
+/* o que foi comido fora das refeições do plano no dia */
+function foraDia(e) { const L = (e && e.av && Array.isArray(e.av.it)) ? e.av.it : []; return L.length ? { it: L.slice(0, 12).map(descIt), m: somaM(L).map(v => Math.round(v)) } : null; }
 function detDia(t, e) {
   const D = SNAP.dieta || {}, nomes = (D.refs || {})[t] || [], f = (e.feitas[t] || []).slice().sort((a, b) => a - b);
   return f.map(j => { const n = nomes[j] || ('Refeição ' + (j + 1)), R = ((D.det || {})[t] || [])[j], c = ((e.esc || {})[t] || {})[j] || { o: 0, s: [] };
     const ou = ((e.outra || {})[t] || {})[j];
-    if (ou && ou.it && ou.it.length) return { n, troca: 1, it: ou.it.slice(0, 12).map(x => `${x.n}: ${fmtQ(x.q)} ${plurUn(x.q, x.un)}${x.un !== 'gramas' ? ` (${Math.round(x.g)} g)` : ''}${x.ia ? ' · estimado pela IA' : ''}`), m: somaM(ou.it).map(v => Math.round(v)), ia: ou.it.some(x => x.ia) ? 1 : undefined };
+    if (ou && ou.it && ou.it.length) return { n, troca: 1, it: ou.it.slice(0, 12).map(descIt), m: somaM(ou.it).map(v => Math.round(v)), ia: ou.it.some(x => x.ia) ? 1 : undefined };
     const pc = ((e.parc || {})[t] || {})[j], pk = pc ? detParcial(t, j, pc) : null;
-    if (pk) { const r = { n, parc: 1, it: pk.it, m: pk.m }; if (pk.pc != null) r.pc = pk.pc; const opP = R && (R.ops[pc.o] || R.ops[0]); if (R && R.ops.length > 1 && opP) r.op = opP.nome; return r; }
+    if (pk) { const r = { n, m: pk.m }; if (pk.menos) { r.parc = 1; r.it = pk.it; if (pk.pc != null) r.pc = pk.pc; }
+      if (pk.sub.length) { r.sub = pk.sub; r.sb = pk.sb; } if (pk.ex.length) { r.ex = pk.ex; r.exK = pk.exK; } if (pk.fp) r.fp = 1;
+      const opP = R && (R.ops[pc.o] || R.ops[0]); if (R && R.ops.length > 1 && opP) r.op = opP.nome; return r; }
     if (!R) return { n }; const op = R.ops[c.o] || R.ops[0], m = op.base.slice(), esc = [];
     op.tr.forEach((alts, ti) => { const x = alts[(c.s || [])[ti] || 0] || alts[0]; x.m.forEach((v, i) => { m[i] += v; }); esc.push(x.n); });
     const o = { n, m, esc }; if (R.ops.length > 1) o.op = op.nome; return o; });
@@ -1820,8 +1882,8 @@ function fmtPP(k, v) { return k === 'peso' ? String(v).replace('.', ',') : Numbe
 function enviarDieta(t, hoje) {
   const D = SNAP.dieta || {}; hoje = hoje || dataReg(); t = t || tipoDoDia(hoje); const e = LS.get('dieta.' + hoje, { feitas: {} });
   const nomes = (D.refs || {})[t] || []; const f = (e.feitas[t] || []).slice().sort((a, b) => a - b);
-  const det = detDia(t, e);
-  enfileirar({ tipo: 'dieta', id: 'dieta-' + hoje, _v: Date.now(), data: hoje, plano: t, feitas: f.map(j => nomes[j] || ('Refeição ' + (j + 1))), total: nomes.length, det, refs: nomes, alvo: (D.alvo || {})[t] || null, nota: String(e.nota || '').trim().slice(0, 1000), agua: Math.max(0, Math.min(10000, Math.round(+e.agua || 0))), peso: +e.peso > 0 ? +e.peso : 0, passos: +e.passos > 0 ? Math.round(+e.passos) : 0 });
+  const det = detDia(t, e), fora = foraDia(e);
+  enfileirar({ tipo: 'dieta', id: 'dieta-' + hoje, _v: Date.now(), data: hoje, plano: t, fora, feitas: f.map(j => nomes[j] || ('Refeição ' + (j + 1))), total: nomes.length, det, refs: nomes, alvo: (D.alvo || {})[t] || null, nota: String(e.nota || '').trim().slice(0, 1000), agua: Math.max(0, Math.min(10000, Math.round(+e.agua || 0))), peso: +e.peso > 0 ? +e.peso : 0, passos: +e.passos > 0 ? Math.round(+e.passos) : 0 });
 }
 
 

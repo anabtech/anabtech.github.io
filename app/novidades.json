@@ -1,6 +1,16 @@
 {
  "itens": [
   {
+   "data": "2026-11-25",
+   "titulo": "Trocou um alimento ou comeu a mais? Agora dá para registrar",
+   "resumo": "Ajuste a refeição do plano sem trocar ela inteira: troque só um alimento, some o que comeu além e registre o que comeu fora das refeições.",
+   "texto": "Na aba Dieta, cada refeição tem o botão <b>Ajustar: comi menos, troquei ou comi a mais</b>.<br><br><b>Troquei por outro alimento</b>: comeu maçã no lugar da uva? Toque no alimento, escolha o que comeu no lugar e pronto. O resto da refeição continua igual.<br><br><b>Comeu algo além</b>: no fim da mesma tela, adicione o que comeu a mais naquela refeição.<br><br><b>Fora das refeições</b>: belisco ou lanche da madrugada tem um lugar próprio, logo depois da última refeição.<br><br>Registre com sinceridade. Troca parecida continua contando como plano, e é vendo o que você come de verdade que a equipe ajusta o plano à sua rotina e à sua fome.",
+   "acao": {
+    "rotulo": "Abrir a dieta",
+    "ir": "tb-d"
+   }
+  },
+  {
    "data": "2026-11-24",
    "titulo": "O descanso avisa quando acaba, mesmo fora do app",
    "resumo": "Respondendo mensagem no intervalo? Quando o descanso terminar, chega uma notificação com o próximo exercício.",
