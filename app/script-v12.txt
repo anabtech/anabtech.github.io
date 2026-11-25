@@ -132,7 +132,8 @@ function doPost(e) {
 }
 function doGet(e) {
   const q = (e && e.parameter) || {};
-  if (q.c && !tnUsar(q.c)) return json({ erro: 'link' });
+  // na URL o treinador vem em "tr": o Google reserva os parâmetros "c" e "sid" nos apps da web
+  if (q.tr && !tnUsar(q.tr)) return json({ erro: 'link' });
   if (q.acao === 'versao') return json({ versao: VERSAO, ia: !!iaChave(), push: !!fcmConta(), aviso: JSON.parse(CacheService.getScriptCache().get(ch('ultAviso')) || 'null') });
   if (q.acao === 'marca') return json(marcaPublica());
   if (q.acao === 'testeaviso') return json(testeAviso());

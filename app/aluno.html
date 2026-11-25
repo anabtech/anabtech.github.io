@@ -596,7 +596,7 @@ function iconeMarca() {
     g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 360, 360); g.fillStyle = '#c8ff3d'; g.font = '700 210px "Space Grotesk", Inter, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nome.trim().charAt(0).toUpperCase(), 180, 192);
     const u = cv.toDataURL('image/png'); document.querySelectorAll('link[rel=apple-touch-icon],link[rel=icon]').forEach(l => l.setAttribute('href', u)); } catch (e) {}
 }
-if (CT && !marcaAl()) fetch(API + '?acao=marca&c=' + CT, { cache: 'no-store' }).then(r => r.json()).then(j => { if (j && j.ok && j.nome) { LS.set('mkNome', String(j.nome).slice(0, 40)); iconeMarca(); document.querySelectorAll('.tela .mk').forEach(el => { el.innerHTML = mkHTML(); }); } }).catch(() => {});
+if (CT && !marcaAl()) fetch(API + '?acao=marca&tr=' + CT, { cache: 'no-store' }).then(r => r.json()).then(j => { if (j && j.ok && j.nome) { LS.set('mkNome', String(j.nome).slice(0, 40)); iconeMarca(); document.querySelectorAll('.tela .mk').forEach(el => { el.innerHTML = mkHTML(); }); } }).catch(() => {});
 /* perfil próprio do treinador: ícone com fundo preto para não confundir com o app da consultoria (verde) na tela inicial */
 function iconePerfil() { if (CT) return iconeMarca(); const pr = !!(SNAP && SNAP.proprio), sfx = pr ? '-preto' : '';
   const at = document.querySelector('link[rel=apple-touch-icon]'), fv = document.querySelector('link[rel=icon]');
@@ -605,7 +605,7 @@ function iconePerfil() { if (CT) return iconeMarca(); const pr = !!(SNAP && SNAP
 iconePerfil();
 
 async function buscar(pin) {
-  const r = await fetch(`${API}?acao=aluno&t=${encodeURIComponent(T)}&p=${encodeURIComponent(pin)}${CT ? '&c=' + CT : ''}`, { cache: 'no-store' });
+  const r = await fetch(`${API}?acao=aluno&t=${encodeURIComponent(T)}&p=${encodeURIComponent(pin)}${CT ? '&tr=' + CT : ''}`, { cache: 'no-store' });
   return r.json();
 }
 function telaSemLink() {
@@ -1675,7 +1675,7 @@ function ditar(ta, bt, mudou) {
   try { r.start(); } catch (e) { fim(); }
 }
 function iaDisp() { const c = LS.get('iaOk', null); if (c && Date.now() - c.em < 6 * 3600e3) return Promise.resolve(!!c.v);
-  return fetch(API + '?acao=versao' + (CT ? '&c=' + CT : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
+  return fetch(API + '?acao=versao' + (CT ? '&tr=' + CT : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { const v = !!(j && j.ia); LS.set('iaOk', { v, em: Date.now() }); return v; }).catch(() => !!(c && c.v)); }
 function iaRotulo(e) { return { desligado: 'O cálculo com IA ainda não está ativo. Use a busca abaixo.', limite: 'Você chegou ao limite de cálculos de hoje. Use a busca abaixo.', codigo: 'Seu acesso mudou. Feche e abra a página de novo.', link: 'Seu acesso mudou. Feche e abra a página de novo.', bloqueado: 'Acesso bloqueado por alguns minutos. Tente mais tarde.' }[e] || 'Não deu para calcular agora. Tente de novo ou use a busca abaixo.'; }
 /* com "opt", a mesma tela serve só para escolher alimentos (troca de um item, algo além da refeição, fora das refeições) e devolve a lista em opt.ok */
 function abrirOutra(t, j, opt) {
