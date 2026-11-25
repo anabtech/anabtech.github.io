@@ -227,7 +227,18 @@ footer{text-align:center;color:var(--ink-3);font-size:13px;padding:22px 0 max(30
   function os(k) { document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.os === k); }); document.querySelectorAll('.passos').forEach(function (p) { p.hidden = p.dataset.p !== k; }); }
   document.querySelectorAll('.tabs button').forEach(function (b) { b.onclick = function () { os(b.dataset.os); }; });
   os(and ? 'and' : 'ios');
-  try { var t = localStorage.getItem('mgal.t'); if (t) document.getElementById('voltar').href = 'aluno.html#t=' + JSON.parse(t); } catch (e) {}
+  var c = '', mk = '';
+  try { c = JSON.parse(localStorage.getItem('mgal.c') || '""') || ''; mk = JSON.parse(localStorage.getItem('mgal.mkNome') || '""') || ''; } catch (e) {}
+  try { var t = localStorage.getItem('mgal.t'); if (t) document.getElementById('voltar').href = 'aluno.html#t=' + JSON.parse(t) + (c ? '&c=' + encodeURIComponent(c) : ''); } catch (e) {}
+  /* aluno de outro treinador: a marca é a dele */
+  if (c) {
+    var nome = mk || 'sua consultoria';
+    var el = document.querySelector('.hero .mk'); if (el) el.textContent = mk || 'Guia do aluno';
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), n, L = [];
+    while ((n = w.nextNode())) if (/AnabTech/.test(n.nodeValue) && !/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) L.push(n);
+    L.forEach(function (x) { x.nodeValue = x.nodeValue.replace(/pelo ícone AnabTech/g, 'pelo ícone do app').replace(/AnabTech · consultoria on-line de hipertrofia/g, mk || '').replace(/AnabTech/g, nome); });
+    document.title = 'Guia do aluno' + (mk ? ' · ' + mk : '');
+  }
 })();
 </script>
 </body>

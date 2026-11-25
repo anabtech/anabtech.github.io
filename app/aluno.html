@@ -591,6 +591,7 @@ const symHTML = () => (CT ? `<span class="sym" aria-hidden="true" style="display
 /* ícone e nome do app na tela inicial com a marca do treinador */
 function iconeMarca() {
   if (!CT) return; const nome = marcaAl(); if (!nome) return;
+  if (LS.get('mkNome', '') !== nome) LS.set('mkNome', String(nome).slice(0, 40));   /* o guia do aluno lê daqui */
   try { document.title = nome + ' · Minha página'; const mt = document.querySelector('meta[name=apple-mobile-web-app-title]'); if (mt) mt.content = nome.slice(0, 14);
     const cv = document.createElement('canvas'); cv.width = cv.height = 360; const g = cv.getContext('2d');
     g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 360, 360); g.fillStyle = '#c8ff3d'; g.font = '700 210px "Space Grotesk", Inter, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nome.trim().charAt(0).toUpperCase(), 180, 192);
@@ -1043,7 +1044,7 @@ async function montarNovidades(sec) {
   try { const r = await fetch('novidades.json?v=' + Date.now(), { cache: 'no-store' }); L = (await r.json()).itens || []; } catch (e) { L = LS.get('nov', []); }
   if (L.length) LS.set('nov', L);
   /* novidade que leva a uma aba que este aluno não tem (ex.: Dieta desligada) não aparece */
-  if (CT) L = L.map(n => ({ ...n, titulo: mkTroca(n.titulo), resumo: mkTroca(n.resumo), texto: mkTroca(n.texto) }));
+  if (CT) L = L.filter(n => !n.dono).map(n => ({ ...n, titulo: mkTroca(n.titulo), resumo: mkTroca(n.resumo), texto: mkTroca(n.texto) }));
   L = L.filter(n => !(n.acao && n.acao.ir && !document.getElementById(n.acao.ir)));
   L.sort((x, y) => String(y.data).localeCompare(String(x.data)));
   const nvK = n => String(n.data) + (n.seq || ''); const visto = LS.get('novVisto', '');
