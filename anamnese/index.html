@@ -545,6 +545,14 @@ textarea { min-height: 100px; resize: vertical; line-height: 1.5; }
 }
 .hint-box strong { color: var(--text); font-weight: 600; }
 
+.anx-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px 16px; border: 1.5px dashed var(--border-2); border-radius: 12px; background: var(--bg-2); color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+.anx-btn:hover { border-color: var(--gold); }
+.anx-l { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.anx-l:empty { display: none; }
+.anx-f { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); font-size: 0.9rem; }
+.anx-f span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text); }
+.anx-f small { color: var(--text-3); font-weight: 500; white-space: nowrap; }
+.anx-f button { border: 0; background: var(--bg-3); color: var(--text-2); width: 30px; height: 30px; border-radius: 8px; font-size: 18px; line-height: 1; cursor: pointer; }
 .subsection-title {
   font-size: 1.02rem;
   font-weight: 700;
@@ -1059,6 +1067,17 @@ html.mk-esp .header-brand, html.mk-esp .welcome .logo-big, html.mk-esp .welcome 
             Se ficar em dúvida, marque "Não sei calcular" — a gente descobre com você depois.
           </div>
         </div>
+      </div>
+      <div class="divider" style="margin: 28px 0 24px;"></div>
+      <div class="subsection-title">📎 Seu plano atual (opcional)</div>
+      <div class="field-group">
+        <label>Vem de outra consultoria, nutricionista ou personal?</label>
+        <div class="hint" style="margin: -4px 0 12px;">Envie o treino e a dieta que você segue hoje: o PDF ou prints da tela do app (MFit, Prime Coach, app do nutricionista…). A equipe usa como ponto de partida.</div>
+        <label class="anx-btn" for="anxIn">Escolher PDF ou prints</label>
+        <input type="file" id="anxIn" accept="application/pdf,image/*" multiple hidden>
+        <div class="anx-l" id="anxL"></div>
+        <textarea id="anxTxt" rows="3" placeholder="Ou cole aqui o texto do seu treino ou da sua dieta" style="margin-top:12px"></textarea>
+        <div class="hint">Até 6 arquivos, de até 15 MB cada. Eles vão junto quando você enviar a anamnese, no final.</div>
       </div>
     </div>
 
@@ -2728,30 +2747,91 @@ function montarSecoesAnamnese() {
   }
   return secoes;
 }
+/* ---------- plano atual: PDF, prints ou texto do treino e da dieta que a pessoa segue ---------- */
+const ANX = [];
+function anxTam(b) { return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+function anxDesenha() {
+  const L = $('anxL'); if (!L) return;
+  L.innerHTML = ANX.map((f, i) => `<div class="anx-f"><span></span><small>${anxTam(f.size)}</small><button type="button" data-i="${i}" aria-label="Tirar arquivo">×</button></div>`).join('');
+  L.querySelectorAll('.anx-f span').forEach((s, i) => { s.textContent = ANX[i].name; });
+}
+(function () {
+  const inp = $('anxIn'), L = $('anxL'); if (!inp) return;
+  inp.addEventListener('change', () => {
+    for (const f of inp.files) {
+      if (ANX.length >= 6) { alert('Até 6 arquivos.'); break; }
+      if (!/pdf|image/.test(f.type) && !/\.pdf$/i.test(f.name)) { alert(f.name + ': envie PDF ou imagem.'); continue; }
+      if (f.size > 15e6) { alert(f.name + ' passa de 15 MB.'); continue; }
+      ANX.push(f);
+    }
+    inp.value = ''; anxDesenha();
+  });
+  L.addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { ANX.splice(+b.dataset.i, 1); anxDesenha(); } });
+})();
+function anxB64(buf) { const by = new Uint8Array(buf); let s = ''; for (let i = 0; i < by.length; i += 0x8000) s += String.fromCharCode.apply(null, by.subarray(i, i + 0x8000)); return btoa(s); }
+async function anxJpeg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const s = Math.min(1, 2000 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+    c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.86).split(',')[1];
+  } finally { URL.revokeObjectURL(url); }
+}
+/* manda cada arquivo para o script, que guarda no repositório; devolve os que chegaram */
+async function enviarAnexos(id, aviso) {
+  const ok = [], falhou = [];
+  for (let i = 0; i < ANX.length; i++) {
+    const f = ANX[i]; aviso && aviso(i + 1, ANX.length);
+    try {
+      const pdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+      const b64 = pdf ? anxB64(await f.arrayBuffer()) : await anxJpeg(f);
+      const corpo = Object.assign({ acao: 'anexo' }, C_AN ? { c: C_AN } : {}, { id, i, tipo: pdf ? 'application/pdf' : 'image/jpeg', b64 });
+      const r = await fetch(APP_INBOX_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) }).then(x => x.json());
+      if (r && r.ok && r.p) ok.push({ p: r.p, nome: String(f.name).slice(0, 80), tipo: pdf ? 'pdf' : 'jpg', kb: Math.round(b64.length * 0.75 / 1024) }); else falhou.push(f.name);
+    } catch (e) { falhou.push(f.name); }
+  }
+  return { ok, falhou };
+}
+let ANX_ENVIADOS = null;
 function enviarParaApp() {
   if (!APP_INBOX_URL) return;
   try {
     coletarRespostasParciais();
+    const txAnx = (($('anxTxt') || {}).value || '').trim();
+    if (ANX_ENVIADOS || txAnx) {
+      const E = ANX_ENVIADOS || { ok: [], falhou: [] };
+      respostas.q_planoAnterior = [E.ok.length ? 'Enviou ' + (E.ok.length === 1 ? '1 arquivo' : E.ok.length + ' arquivos') + ': ' + E.ok.map(f => f.nome).join(', ') : '', E.falhou.length ? 'Não chegaram: ' + E.falhou.join(', ') : '', txAnx ? 'Colou o texto do plano (' + txAnx.length + ' caracteres)' : ''].filter(Boolean).join('. ');
+    }
     const limpas = {};
     Object.keys(respostas).forEach(k => {
       const v = respostas[k];
       if (Array.isArray(v) ? v.length : String(v == null ? '' : v).trim()) limpas[k] = v;
     });
     const pacote = { tipo: 'mgcoach_anamnese_v2', id: idDoEnvio(), enviadaEm: new Date().toISOString(), respostas: limpas, secoes: montarSecoesAnamnese() };
+    if (ANX_ENVIADOS && ANX_ENVIADOS.ok.length) pacote.anexos = ANX_ENVIADOS.ok;
+    if (txAnx) pacote.planoTxt = txAnx.slice(0, 30000);
     if (C_AN) { pacote.c = C_AN;
       return fetch(APP_INBOX_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(pacote) }).then(r => r.text()).then(t => { t = String(t).trim(); if (t !== '201' && t !== '422') throw new Error('app ' + t); return true; }); }
-    fetch(APP_INBOX_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(pacote) }).catch(() => {});
+    const corpoApp = JSON.stringify(pacote);   /* keepalive só aceita até 64 KB: com texto do plano colado, vai sem ele */
+    fetch(APP_INBOX_URL, { method: 'POST', mode: 'no-cors', keepalive: corpoApp.length < 60000, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: corpoApp }).catch(() => {});
   } catch (e) { if (C_AN) return Promise.reject(e); /* o e-mail segue normalmente */ }
 }
 
 async function handleEnviarEmail() {
-  const noApp = enviarParaApp();
   const btn = $('btnEnviarEmail');
   const htmlOriginal = btn.innerHTML;
   btn.disabled = true;
   btn.style.opacity = '0.7';
-  btn.innerHTML = '⏳ Enviando...';
   esconderErroEnvio();
+  /* os arquivos do plano atual sobem antes; se algum falhar, a anamnese segue e avisa a equipe */
+  if (ANX.length && APP_INBOX_URL && !ANX_ENVIADOS) {
+    btn.innerHTML = '⏳ Enviando arquivos...';
+    ANX_ENVIADOS = await enviarAnexos(idDoEnvio(), (i, n) => { btn.innerHTML = n > 1 ? `⏳ Enviando arquivo ${i} de ${n}...` : '⏳ Enviando arquivo...'; });
+  }
+  btn.innerHTML = '⏳ Enviando...';
+  const noApp = enviarParaApp();
 
   try {
     if (C_AN) await noApp; else await enviarPorEmail();   /* outro treinador: as respostas vão só para o app dele */
