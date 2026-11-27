@@ -2153,7 +2153,14 @@ function gastoTreino(reg, k) {
   (reg.cardio || []).forEach(c => { const p = plano.find(x => x.id === c.id) || {}, min = numBR(c.min || 0) || +p.min || 0; if (!(min > 0)) return; cmin += min;
     const met = c.mod === 'ativ' ? (+c.met || +p.met || 1) : p.iv ? ((+c.zona || 4) >= 4 ? 8.8 : 7.0) : Z[Math.max(1, Math.min(5, +c.zona || 2)) - 1];
     kcal += Math.max(0, met - 1) * peso * min / 60; });
-  if ((reg.exs || []).length && reg.min > 0) { const p = +reg.pse, met = p >= 9 ? 6.0 : p >= 7 ? 5.0 : 3.5; kcal += (met - 1) * peso * Math.max(10, reg.min - cmin) / 60; }
+  /* musculação pelo que foi feito: cada série ~40 s de esforço + o descanso prescrito (até 4 min) como recuperação;
+     tempo parado além disso (conversa, fila) não conta. Numa sessão típica a média fica em ~3,5 MET. */
+  if ((reg.exs || []).length) {
+    const p = +reg.pse, W = p >= 9 ? 9.0 : p >= 7 ? 7.5 : 6.0, R = p >= 9 ? 3.5 : p >= 7 ? 3.0 : 2.5, PL = ((SNAP.treino || {})[k] || {}).ex || [];
+    let n = 0, desc = 0;
+    reg.exs.forEach(x => { const pp = PL.find(y => y.uid === x.uid) || {}, d = Math.min(240, segDesc(pp.desc) || 90), c = (x.sets || []).filter(z => parseInt(z.reps, 10) > 0).length; n += c; desc += c * d; });
+    if (n) { const trab = n * 40; if (reg.min > 0) desc = Math.min(desc, Math.max(0, (reg.min - cmin) * 60 - trab)); kcal += ((trab * W + desc * R) / 60 - (trab + desc) / 60) * peso / 60; }
+  }
   return Math.round(kcal);
 }
 function abrirResumo(reg, k) {
